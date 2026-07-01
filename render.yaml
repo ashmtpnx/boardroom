@@ -19,9 +19,8 @@ services:
   - type: web
     name: boardroom-web
     runtime: static
-    plan: free
     buildCommand: npm install && npm run build
-    staticPublishPath: dist
+    staticPublishPath: ./dist
     envVars:
       - key: VITE_REALTIME
         value: socket

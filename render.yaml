@@ -24,10 +24,22 @@ services:
     envVars:
       - key: VITE_REALTIME
         value: socket
-      # Set this to the boardroom-server URL after its first deploy,
-      # e.g. https://boardroom-server.onrender.com  (include https://)
+      # boardroom-server URL (set after its first deploy)
       - key: VITE_SOCKET_URL
-        sync: false
+        value: https://boardroom-server-ak8i.onrender.com
+      # Firebase Google auth. These web-config values are public by design
+      # (security is enforced by Firebase rules + authorized domains), so it's
+      # safe to keep them in the blueprint.
+      - key: VITE_AUTH
+        value: firebase
+      - key: VITE_FIREBASE_API_KEY
+        value: AIzaSyAB-O9BJYrGVJODZmHdwDfUThjchYO2Ydg
+      - key: VITE_FIREBASE_AUTH_DOMAIN
+        value: boardroom-b5c19.firebaseapp.com
+      - key: VITE_FIREBASE_PROJECT_ID
+        value: boardroom-b5c19
+      - key: VITE_FIREBASE_APP_ID
+        value: "1:334105051058:web:598f2bc8385968bfa7eeab"
     routes:
       - type: rewrite
         source: /*

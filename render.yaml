@@ -1,0 +1,35 @@
+# Render Blueprint — deploys BOARDROOM as two services:
+#   1. boardroom-server  — Node + Socket.io realtime relay (web service)
+#   2. boardroom-web      — Vite static frontend, wired to the server above
+#
+# Deploy: push to GitHub, then in Render click "New +" > "Blueprint" and pick this repo.
+services:
+  - type: web
+    name: boardroom-server
+    runtime: node
+    rootDir: server
+    plan: free
+    buildCommand: npm install
+    startCommand: npm start
+    healthCheckPath: /health
+    envVars:
+      - key: CORS_ORIGIN
+        value: "*"
+
+  - type: web
+    name: boardroom-web
+    runtime: static
+    plan: free
+    buildCommand: npm install && npm run build
+    staticPublishPath: dist
+    envVars:
+      - key: VITE_REALTIME
+        value: socket
+      # Set this to the boardroom-server URL after its first deploy,
+      # e.g. https://boardroom-server.onrender.com  (include https://)
+      - key: VITE_SOCKET_URL
+        sync: false
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html

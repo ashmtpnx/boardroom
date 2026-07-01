@@ -1,0 +1,27 @@
+<svg width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="BOARDROOM">
+  <defs>
+    <linearGradient id="pinStroke" x1="10" y1="6" x2="54" y2="58" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#7a4f93"/>
+      <stop offset="0.55" stop-color="#d8606a"/>
+      <stop offset="1" stop-color="#b23c4a"/>
+    </linearGradient>
+  </defs>
+
+  <!-- location-pin body -->
+  <path d="M32 4 C17 4 6 15 6 28 C6 39 16 46 24 53 C28 56.5 31 59 32 60 C33 59 36 56.5 40 53 C48 46 58 39 58 28 C58 15 47 4 32 4 Z"
+        fill="#a8505d" stroke="url(#pinStroke)" stroke-width="3.4"/>
+  <!-- thin inner outline, like the reference -->
+  <path d="M32 8.5 C19.5 8.5 10 17.5 10 28.2 C10 37.2 18.6 43.6 26 50 C29 52.7 31 54.6 32 55.6 C33 54.6 35 52.7 38 50 C45.4 43.6 54 37.2 54 28.2 C54 17.5 44.5 8.5 32 8.5 Z"
+        fill="none" stroke="#ffffff" stroke-width="1.1" stroke-opacity="0.55"/>
+
+  <!-- neck / collar opening -->
+  <path d="M22 21 Q32 13 42 21" fill="none" stroke="#eaa67c" stroke-width="4.4" stroke-linecap="round"/>
+
+  <!-- shirt collar flaps -->
+  <path d="M18 20 L31 24 L29 36 L23 31 Z" fill="#ffffff"/>
+  <path d="M46 20 L33 24 L35 36 L41 31 Z" fill="#ffffff"/>
+
+  <!-- necktie -->
+  <path d="M30 23 L34 23 L35.6 30 L28.4 30 Z" fill="#2e3d66"/>
+  <path d="M28.4 30 L35.6 30 L33.4 52 L32 54 L30.6 52 Z" fill="#2e3d66"/>
+</svg>

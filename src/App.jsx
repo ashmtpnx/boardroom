@@ -1,0 +1,141 @@
+import { useEffect, useState } from 'react';
+import { Provider, useDispatch, useSelector } from 'react-redux';
+import { store } from './app/store';
+import { restoreSession } from './auth/auth';
+import { createRealtime } from './realtime/RealtimeProvider';
+import { setRealtimeClient } from './realtime/client';
+import { setUser, setRoomId, realtimeConnected, leaving } from './features/session/sessionSlice';
+import { rememberBoard } from './utils/recentBoards';
+import { applyProfile } from './utils/profile';
+import { registerSelf } from './utils/directory';
+import DesktopOnlyGate from './components/DesktopOnlyGate';
+import Login from './components/Login/Login';
+import Home from './components/Home/Home';
+import Account from './components/Account/Account';
+import FriendChat from './components/Chat/FriendChat';
+import TopBar from './components/TopBar';
+import Toolbar from './components/Toolbar/Toolbar';
+import Sidebar from './components/Sidebar/Sidebar';
+import Canvas from './features/canvas/Canvas';
+import styles from './App.module.css';
+
+// The URL hash is the router: '' = home, 'account' = account page, else a board.
+function getRoute() {
+  const h = window.location.hash.replace(/^#/, '').trim();
+  if (!h) return { name: 'home' };
+  if (h === 'account') return { name: 'account' };
+  if (h.startsWith('dm/')) return { name: 'dm', friendTag: h.slice(3) };
+  return { name: 'board', roomId: h };
+}
+
+// A single board: resolve the room, connect realtime, render the workspace.
+// Mounted with key={roomId} so switching rooms gives a clean reconnect.
+function Board({ roomId }) {
+  const dispatch = useDispatch();
+  const user = useSelector((s) => s.session.currentUser);
+
+  useEffect(() => {
+    let cleanup = () => {};
+    let cancelled = false;
+
+    dispatch(setRoomId(roomId));
+    rememberBoard(roomId);
+
+    (async () => {
+      const rt = await createRealtime();
+      if (cancelled) return;
+      rt.connect(roomId, user);
+      setRealtimeClient(rt);
+      dispatch(realtimeConnected());
+
+      const onUnload = () => dispatch(leaving());
+      window.addEventListener('beforeunload', onUnload);
+      cleanup = () => {
+        window.removeEventListener('beforeunload', onUnload);
+        dispatch(leaving());
+        rt.disconnect();
+      };
+    })();
+
+    return () => {
+      cancelled = true;
+      cleanup();
+    };
+    // user is resolved before any Board mounts (see Root), so it's stable here.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [roomId, dispatch]);
+
+  return (
+    <div className={styles.app}>
+      <TopBar />
+      <div className={styles.body}>
+        <div className={styles.stage}>
+          <Toolbar />
+          <Canvas />
+        </div>
+        <Sidebar />
+      </div>
+    </div>
+  );
+}
+
+// Signs the user in once, then routes between Home and a Board based on the hash.
+function Root() {
+  const dispatch = useDispatch();
+  const user = useSelector((s) => s.session.currentUser);
+  const [route, setRoute] = useState(getRoute);
+  const [restoring, setRestoring] = useState(true);
+
+  // Try to restore an existing session (Google or guest) without prompting.
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const u = await restoreSession();
+      if (cancelled) return;
+      if (u) dispatch(setUser(applyProfile(u)));
+      setRestoring(false);
+    })();
+    return () => { cancelled = true; };
+  }, [dispatch]);
+
+  // Publish our public card to the directory whenever our identity/profile
+  // changes, so friends can resolve our account ID to a real profile.
+  useEffect(() => {
+    if (user?.id) registerSelf(user);
+  }, [user?.id, user?.name, user?.color, user?.photoURL]);
+
+  // Hash is the router.
+  useEffect(() => {
+    const onHash = () => setRoute(getRoute());
+    window.addEventListener('hashchange', onHash);
+    return () => window.removeEventListener('hashchange', onHash);
+  }, []);
+
+  if (restoring) {
+    return (
+      <div className={styles.splash}>
+        <img src="/board.svg" className={styles.splashMark} alt="" />
+      </div>
+    );
+  }
+
+  // No session yet → show the login screen.
+  if (!user) {
+    return <Login onSignedIn={(u) => dispatch(setUser(applyProfile(u)))} />;
+  }
+
+  if (route.name === 'account') return <Account />;
+  if (route.name === 'dm') return <FriendChat key={route.friendTag} friendTag={route.friendTag} />;
+  if (route.name === 'board') return <Board key={route.roomId} roomId={route.roomId} />;
+  return <Home />;
+}
+
+export default function App() {
+  return (
+    <Provider store={store}>
+      <DesktopOnlyGate>
+        <Root />
+      </DesktopOnlyGate>
+    </Provider>
+  );
+}

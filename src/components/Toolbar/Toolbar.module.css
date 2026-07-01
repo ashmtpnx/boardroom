@@ -1,0 +1,164 @@
+.wrap {
+  position: absolute;
+  left: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  z-index: 4;
+}
+
+.palette {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 8px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  box-shadow: var(--shadow-2);
+}
+
+.group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.divider {
+  height: 1px;
+  background: var(--border);
+  margin: 3px 4px;
+}
+
+.tool {
+  width: 42px;
+  height: 42px;
+  display: grid;
+  place-items: center;
+  border-radius: 12px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--text-2);
+  transition: background 0.12s, color 0.12s;
+}
+.tool:hover {
+  background: var(--surface-2);
+  color: var(--text);
+}
+.toolActive {
+  background: var(--accent-weak);
+  color: var(--accent);
+  border-color: rgba(26, 115, 232, 0.25);
+}
+
+/* ---- style fly-out ---- */
+.stylePanel {
+  width: 232px;
+  padding: 16px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  box-shadow: var(--shadow-2);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.sectionLabel {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-2);
+  display: flex;
+  justify-content: space-between;
+}
+.widthVal {
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.swatches {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 8px;
+}
+.swatch {
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  cursor: pointer;
+  transition: transform 0.1s;
+}
+.swatch:hover {
+  transform: scale(1.08);
+}
+.swatchActive {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+/* "No fill" / transparent swatch — checker hint with a red cancel slash. */
+.swatchNone {
+  background:
+    linear-gradient(to top left,
+      transparent calc(50% - 1px), #ea4335 calc(50% - 1px),
+      #ea4335 calc(50% + 1px), transparent calc(50% + 1px)),
+    #ffffff;
+}
+.customColor {
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px dashed var(--border);
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+}
+.customColor input {
+  width: 150%;
+  height: 150%;
+  border: none;
+  padding: 0;
+  background: none;
+  cursor: pointer;
+}
+
+.segment {
+  display: flex;
+  background: var(--surface-2);
+  border-radius: 10px;
+  padding: 3px;
+  gap: 3px;
+}
+.segmentBtn {
+  flex: 1;
+  border: none;
+  background: transparent;
+  color: var(--text-2);
+  font-size: 12px;
+  font-weight: 500;
+  padding: 6px 0;
+  border-radius: 8px;
+}
+.segmentBtn:hover {
+  color: var(--text);
+}
+.segmentActive {
+  background: var(--surface);
+  color: var(--accent);
+  box-shadow: var(--shadow-1);
+}
+
+.range {
+  width: 100%;
+  accent-color: var(--accent);
+}

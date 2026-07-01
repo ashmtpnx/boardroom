@@ -1,0 +1,44 @@
+import { io } from 'socket.io-client';
+import { uid } from '../utils/ids';
+
+// Pass-2 transport. Mirrors the mock interface using socket.io for true
+// cross-machine sync. Inert until a server exists and VITE_REALTIME=socket.
+//
+// Expected server contract: clients join a room, then the server relays every
+// { event, payload, sender } envelope to the *other* members of that room.
+export function createSocketRealtime() {
+  const senderId = uid('peer');
+  const handlers = new Map();
+  let socket = null;
+
+  return {
+    id: senderId,
+
+    connect(roomId, user) {
+      const url = import.meta.env.VITE_SOCKET_URL || 'http://localhost:3001';
+      socket = io(url, { transports: ['websocket'], query: { roomId, senderId } });
+      socket.emit('room:join', { roomId, user, senderId });
+      socket.on('rt', (env) => {
+        if (!env || env.sender === senderId) return;
+        const set = handlers.get(env.event);
+        if (set) set.forEach((fn) => fn(env.payload, { sender: env.sender }));
+      });
+    },
+
+    emit(event, payload) {
+      socket?.emit('rt', { event, payload, sender: senderId });
+    },
+
+    on(event, handler) {
+      if (!handlers.has(event)) handlers.set(event, new Set());
+      handlers.get(event).add(handler);
+      return () => handlers.get(event)?.delete(handler);
+    },
+
+    disconnect() {
+      socket?.disconnect();
+      socket = null;
+      handlers.clear();
+    },
+  };
+}

@@ -1,0 +1,126 @@
+.panel {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.messages {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.empty {
+  margin: auto;
+  color: var(--text-2);
+  font-size: 13px;
+}
+
+.msg {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+}
+.msgMine {
+  flex-direction: row-reverse;
+}
+
+.avatar {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.bubbleWrap {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  max-width: 78%;
+}
+.msgMine .bubbleWrap {
+  align-items: flex-end;
+}
+
+.meta {
+  display: flex;
+  gap: 8px;
+  align-items: baseline;
+  font-size: 11px;
+}
+.name {
+  font-weight: 600;
+  color: var(--text);
+}
+.time {
+  color: var(--text-2);
+}
+
+.bubble {
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  padding: 8px 12px;
+  border-radius: 12px;
+  border-top-left-radius: 4px;
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--text);
+  word-break: break-word;
+  white-space: pre-wrap;
+}
+.msgMine .bubble {
+  background: var(--accent-weak);
+  border-color: rgba(26, 115, 232, 0.2);
+  border-top-left-radius: 12px;
+  border-top-right-radius: 4px;
+}
+
+.composer {
+  display: flex;
+  gap: 8px;
+  padding: 12px;
+  border-top: 1px solid var(--border);
+}
+.input {
+  flex: 1;
+  height: 40px;
+  padding: 0 14px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+  font-size: 13px;
+  color: var(--text);
+  outline: none;
+}
+.input:focus {
+  border-color: var(--accent);
+  background: var(--surface);
+}
+.send {
+  width: 40px;
+  height: 40px;
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  border: none;
+  background: var(--accent);
+  color: #fff;
+}
+.send:hover {
+  background: #1765cc;
+}
+.send:disabled {
+  background: var(--border);
+  color: var(--text-2);
+  cursor: not-allowed;
+}

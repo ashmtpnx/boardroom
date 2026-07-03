@@ -16,7 +16,16 @@ export function createSocketRealtime() {
 
     connect(roomId, user) {
       const url = import.meta.env.VITE_SOCKET_URL || 'http://localhost:3001';
-      socket = io(url, { transports: ['websocket'], query: { roomId, senderId } });
+      // Start with HTTP long-polling and upgrade to websocket. Polling-first is
+      // more robust behind proxies/free hosts (e.g. Render) that need the initial
+      // handshake for sticky routing, and it survives the ~50s cold start when the
+      // relay was asleep — socket.io keeps retrying until the server wakes.
+      socket = io(url, {
+        transports: ['polling', 'websocket'],
+        query: { roomId, senderId },
+        reconnectionAttempts: Infinity,
+        timeout: 60000,
+      });
       socket.emit('room:join', { roomId, user, senderId });
       socket.on('rt', (env) => {
         if (!env || env.sender === senderId) return;

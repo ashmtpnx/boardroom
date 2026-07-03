@@ -95,3 +95,15 @@ io.on('connection', (socket) => {
 server.listen(PORT, () => {
   console.log(`BOARDROOM relay listening on http://localhost:${PORT}  (origins: ${ORIGIN})`);
 });
+
+// Keep-alive: Render's free tier spins a web service down after ~15 min with no
+// inbound requests, and cold-starting it again costs the first visitor ~50s. A
+// self-ping every 10 min is itself inbound traffic, so the relay never idles out.
+// Render injects RENDER_EXTERNAL_URL in production; skip this entirely in local dev.
+const SELF_URL = process.env.RENDER_EXTERNAL_URL;
+if (SELF_URL) {
+  const PING_MS = 10 * 60 * 1000;
+  setInterval(() => {
+    fetch(`${SELF_URL}/health`).catch((err) => console.warn('keep-alive ping failed:', err.message));
+  }, PING_MS).unref(); // don't hold the process open on shutdown
+}

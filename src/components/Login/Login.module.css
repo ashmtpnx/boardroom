@@ -1,8 +1,11 @@
 .page {
   min-height: 100vh;
+  min-height: 100dvh;
   display: grid;
   place-items: center;
   padding: 24px;
+  padding: max(16px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right))
+    max(16px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left));
   background:
     radial-gradient(1000px 500px at 80% -10%, var(--accent-weak) 0%, transparent 60%),
     radial-gradient(800px 460px at 0% 110%, #eaf7ee 0%, transparent 55%),
@@ -13,11 +16,19 @@
   width: 100%;
   max-width: 400px;
   padding: 40px 36px;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 22px;
-  box-shadow: var(--shadow-2);
+  background: var(--glass-bg-strong);
+  -webkit-backdrop-filter: var(--glass-blur-strong);
+  backdrop-filter: var(--glass-blur-strong);
+  border: 1px solid var(--glass-border);
+  border-radius: 24px;
+  box-shadow: var(--glass-shadow), var(--glass-highlight);
   text-align: center;
+}
+@media (max-width: 420px) {
+  .card {
+    padding: 32px 22px;
+    border-radius: 18px;
+  }
 }
 
 .logo {
@@ -61,18 +72,19 @@
   align-items: center;
   justify-content: center;
   gap: 11px;
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  background: var(--surface);
+  border: 1px solid var(--glass-border);
+  border-radius: 14px;
+  background: var(--glass-bg-faint);
   color: var(--text);
   font-size: 15px;
   font-weight: 600;
-  box-shadow: var(--shadow-1);
-  transition: background 0.12s, box-shadow 0.12s;
+  box-shadow: var(--glass-highlight);
+  transition: background 0.15s, box-shadow 0.15s, transform 0.15s;
 }
 .googleBtn:hover:not(:disabled) {
-  background: var(--surface-2);
-  box-shadow: var(--shadow-2);
+  background: var(--glass-bg-strong);
+  transform: translateY(-1px);
+  box-shadow: var(--glass-highlight), 0 8px 20px rgba(31, 41, 92, 0.14);
 }
 .googleBtn:disabled {
   opacity: 0.6;
@@ -116,18 +128,18 @@
   align-items: center;
   justify-content: center;
   gap: 8px;
-  border: none;
-  border-radius: 12px;
-  background: var(--accent);
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  border-radius: 14px;
+  background: linear-gradient(180deg, #3d86ee 0%, var(--accent) 100%);
   color: #fff;
   font-size: 15px;
   font-weight: 600;
-  box-shadow: 0 6px 18px rgba(26, 115, 232, 0.3);
-  transition: background 0.12s, transform 0.12s;
+  box-shadow: var(--accent-glow), inset 0 1px 0 rgba(255, 255, 255, 0.4);
+  transition: box-shadow 0.15s, transform 0.15s;
 }
 .guestBtn:hover:not(:disabled) {
-  background: #1765cc;
   transform: translateY(-1px);
+  box-shadow: 0 12px 30px rgba(26, 115, 232, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.4);
 }
 .guestBtn:disabled {
   opacity: 0.7;

@@ -8,7 +8,6 @@ import { setUser, setRoomId, realtimeConnected, leaving } from './features/sessi
 import { rememberBoard } from './utils/recentBoards';
 import { applyProfile } from './utils/profile';
 import { registerSelf } from './utils/directory';
-import DesktopOnlyGate from './components/DesktopOnlyGate';
 import Login from './components/Login/Login';
 import Home from './components/Home/Home';
 import Account from './components/Account/Account';
@@ -133,9 +132,7 @@ function Root() {
 export default function App() {
   return (
     <Provider store={store}>
-      <DesktopOnlyGate>
-        <Root />
-      </DesktopOnlyGate>
+      <Root />
     </Provider>
   );
 }

@@ -3,6 +3,11 @@
   inset: 0;
   overflow: hidden;
   background: #f1f3f4;
+  /* Let Fabric own touch gestures (draw/drag/pan) instead of the browser
+     scrolling or zooming the page out from under the board. */
+  touch-action: none;
+  -webkit-user-select: none;
+  user-select: none;
 }
 
 /* Fabric injects a .canvas-container wrapper around the <canvas>; keep it pinned. */

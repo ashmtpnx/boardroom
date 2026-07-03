@@ -1,5 +1,6 @@
 .page {
   min-height: 100vh;
+  min-height: 100dvh;
   display: flex;
   flex-direction: column;
   background:
@@ -15,6 +16,8 @@
   align-items: center;
   justify-content: space-between;
   padding: 0 24px;
+  padding-left: max(24px, env(safe-area-inset-left));
+  padding-right: max(24px, env(safe-area-inset-right));
 }
 .back {
   display: inline-flex;
@@ -22,16 +25,20 @@
   gap: 7px;
   height: 38px;
   padding: 0 14px 0 10px;
-  border: 1px solid var(--border);
-  background: var(--surface);
+  border: 1px solid var(--glass-border);
+  background: var(--glass-bg);
+  -webkit-backdrop-filter: var(--glass-blur);
+  backdrop-filter: var(--glass-blur);
   border-radius: 999px;
   font-size: 14px;
   font-weight: 500;
   color: var(--text);
-  box-shadow: var(--shadow-1);
+  box-shadow: var(--glass-highlight);
+  transition: background 0.15s, transform 0.15s;
 }
 .back:hover {
-  background: var(--surface-2);
+  background: var(--glass-bg-strong);
+  transform: translateY(-1px);
 }
 .brand {
   display: flex;
@@ -50,6 +57,27 @@
   max-width: 980px;
   margin: 0 auto;
   padding: 18px 24px 48px;
+}
+@media (max-width: 560px) {
+  .header {
+    padding: 0 16px;
+    padding-left: max(16px, env(safe-area-inset-left));
+    padding-right: max(16px, env(safe-area-inset-right));
+  }
+  .main {
+    padding: 12px 16px calc(32px + env(safe-area-inset-bottom));
+  }
+  .card {
+    padding: 18px;
+  }
+  .avatarRow {
+    gap: 14px;
+  }
+  /* Let long emails / account IDs use the full row instead of clipping at 220px. */
+  .email,
+  .mono {
+    max-width: 60vw;
+  }
 }
 .title {
   margin: 8px 0 4px;
@@ -91,10 +119,12 @@
 
 .card {
   padding: 22px;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 16px;
-  box-shadow: var(--shadow-1);
+  background: var(--glass-bg-strong);
+  -webkit-backdrop-filter: var(--glass-blur);
+  backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--glass-border);
+  border-radius: 18px;
+  box-shadow: var(--glass-shadow), var(--glass-highlight);
 }
 .cardTitle {
   font-size: 12px;
@@ -222,12 +252,14 @@
   cursor: not-allowed;
 }
 .btnPrimary {
-  background: var(--accent);
+  background: linear-gradient(180deg, #3d86ee 0%, var(--accent) 100%);
   color: #fff;
-  border-color: var(--accent);
+  border-color: rgba(255, 255, 255, 0.35);
+  box-shadow: var(--accent-glow), inset 0 1px 0 rgba(255, 255, 255, 0.4);
 }
 .btnPrimary:hover:not(:disabled) {
-  background: #1765cc;
+  transform: translateY(-1px);
+  box-shadow: 0 10px 26px rgba(26, 115, 232, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.4);
 }
 .btnPrimary:disabled {
   background: var(--accent);

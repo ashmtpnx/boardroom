@@ -1,9 +1,9 @@
 :root {
-  --bg: #f1f3f4;
+  --bg: #eaeef6;
   --surface: #ffffff;
   --surface-2: #f6f8fa;
   --border: #e3e6ea;
-  --text: #202124;
+  --text: #1a1c21;
   --text-2: #5f6368;
   --accent: #1a73e8;
   --accent-weak: #e8f0fe;
@@ -15,6 +15,25 @@
 
   --radius: 12px;
   --radius-sm: 8px;
+  --radius-lg: 20px;
+
+  /* ---- Liquid glass material ----
+     Translucent panes that frost whatever floats behind them, ringed by a soft
+     specular highlight and lifted off the page with layered ambient shadow. */
+  --glass-bg: rgba(255, 255, 255, 0.5);
+  --glass-bg-strong: rgba(255, 255, 255, 0.72);
+  --glass-bg-faint: rgba(255, 255, 255, 0.28);
+  --glass-border: rgba(255, 255, 255, 0.6);
+  --glass-stroke: rgba(60, 64, 67, 0.1);
+  --glass-blur: saturate(180%) blur(22px);
+  --glass-blur-strong: saturate(200%) blur(30px);
+  /* Ambient drop shadow + inner top highlight — the "floating in space" read. */
+  --glass-shadow:
+    0 14px 40px rgba(31, 41, 92, 0.14),
+    0 3px 10px rgba(31, 41, 92, 0.08);
+  --glass-highlight: inset 0 1px 0 rgba(255, 255, 255, 0.75),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.12);
+  --accent-glow: 0 8px 22px rgba(26, 115, 232, 0.4);
 }
 
 * {
@@ -31,9 +50,35 @@ body,
 body {
   font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
   color: var(--text);
-  background: var(--bg);
+  /* Ambient spatial field — drifting color light the glass chrome picks up.
+     NOTE: do NOT use `background-attachment: fixed` here — combined with a
+     `backdrop-filter` surface stacked directly on top (the TopBar), Chromium/
+     Edge render that surface and its whole subtree blank. */
+  background:
+    radial-gradient(1200px 820px at 8% -12%, rgba(26, 115, 232, 0.22), transparent 55%),
+    radial-gradient(1050px 760px at 108% 4%, rgba(150, 100, 255, 0.18), transparent 55%),
+    radial-gradient(980px 760px at 46% 118%, rgba(52, 168, 133, 0.16), transparent 55%),
+    var(--bg);
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
+  /* Stop iOS from auto-inflating text in landscape, and rubber-banding the page. */
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+  overscroll-behavior: none;
+}
+
+/* Never let a stray element force horizontal scrolling on small screens. */
+html,
+body {
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+/* Give interactive controls a comfortable touch target on coarse pointers. */
+@media (pointer: coarse) {
+  button {
+    touch-action: manipulation;
+  }
 }
 
 button {

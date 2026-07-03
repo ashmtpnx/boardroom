@@ -130,8 +130,7 @@ export function useFabricCanvas({ canvasElRef, containerRef }) {
       if (t === TOOLS.STICKY) {
         const s = createSticky({ left: p.x, top: p.y, color: stc });
         canvas.add(s);
-        canvas.setActiveObject(s);
-        dispatch(setTool(TOOLS.SELECT));
+        // Stay on the sticky tool so several notes can be dropped in a row.
         return;
       }
       if (t === TOOLS.TEXT) {
@@ -194,10 +193,10 @@ export function useFabricCanvas({ canvasElRef, containerRef }) {
       } else {
         obj.__suppressSync = false;
         obj.setCoords();
-        canvas.setActiveObject(obj);
         rtRef.current?.emit(EVENTS.OBJECT_ADD, { json: obj.toObject(['id']) });
       }
-      dispatch(setTool(TOOLS.SELECT));
+      // Stay on the active shape tool so several shapes can be drawn in a row;
+      // switch to the Select tool manually to move/resize them.
       canvas.requestRenderAll();
     });
 

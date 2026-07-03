@@ -1,12 +1,15 @@
 .wrap {
   position: absolute;
   left: 16px;
+  left: max(16px, env(safe-area-inset-left));
   top: 50%;
   transform: translateY(-50%);
   display: flex;
   align-items: flex-start;
   gap: 10px;
   z-index: 4;
+  /* Never taller than the stage: the palette scrolls if the viewport is short. */
+  max-height: calc(100% - 24px);
 }
 
 .palette {
@@ -14,10 +17,19 @@
   flex-direction: column;
   gap: 6px;
   padding: 8px;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 18px;
-  box-shadow: var(--shadow-2);
+  background: var(--glass-bg);
+  -webkit-backdrop-filter: var(--glass-blur-strong);
+  backdrop-filter: var(--glass-blur-strong);
+  border: 1px solid var(--glass-border);
+  border-radius: 20px;
+  box-shadow: var(--glass-shadow), var(--glass-highlight);
+  max-height: 100%;
+  overflow-y: auto;
+  /* Hide the scrollbar on the tool rail — it stays compact. */
+  scrollbar-width: none;
+}
+.palette::-webkit-scrollbar {
+  display: none;
 }
 
 .group {
@@ -37,30 +49,37 @@
   height: 42px;
   display: grid;
   place-items: center;
-  border-radius: 12px;
+  border-radius: 13px;
   border: 1px solid transparent;
   background: transparent;
   color: var(--text-2);
-  transition: background 0.12s, color 0.12s;
+  transition: background 0.15s, color 0.15s, transform 0.15s, box-shadow 0.15s;
 }
 .tool:hover {
-  background: var(--surface-2);
+  background: var(--glass-bg-strong);
   color: var(--text);
+  transform: translateY(-1px);
 }
 .toolActive {
-  background: var(--accent-weak);
+  background: linear-gradient(180deg, rgba(26, 115, 232, 0.16), rgba(26, 115, 232, 0.1));
   color: var(--accent);
-  border-color: rgba(26, 115, 232, 0.25);
+  border-color: rgba(26, 115, 232, 0.35);
+  box-shadow: 0 4px 14px rgba(26, 115, 232, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.5);
+}
+.toolActive:hover {
+  transform: none;
 }
 
 /* ---- style fly-out ---- */
 .stylePanel {
   width: 232px;
   padding: 16px;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 16px;
-  box-shadow: var(--shadow-2);
+  background: var(--glass-bg-strong);
+  -webkit-backdrop-filter: var(--glass-blur-strong);
+  backdrop-filter: var(--glass-blur-strong);
+  border: 1px solid var(--glass-border);
+  border-radius: 18px;
+  box-shadow: var(--glass-shadow), var(--glass-highlight);
   display: flex;
   flex-direction: column;
   gap: 16px;
@@ -161,4 +180,43 @@
 .range {
   width: 100%;
   accent-color: var(--accent);
+}
+
+/* ---------------------------------------------------------------- responsive */
+
+/* Phones/tablets: shrink the rail and cap the style fly-out so both stay on
+   screen next to a small canvas. The fly-out scrolls if it can't fully fit. */
+@media (max-width: 860px) {
+  .wrap {
+    left: 8px;
+    left: max(8px, env(safe-area-inset-left));
+    gap: 8px;
+    max-height: calc(100% - 16px);
+  }
+  .tool {
+    width: 38px;
+    height: 38px;
+    border-radius: 11px;
+  }
+  .stylePanel {
+    width: min(220px, 60vw);
+    padding: 14px;
+    max-height: 100%;
+    overflow-y: auto;
+  }
+  .swatch {
+    width: 26px;
+    height: 26px;
+  }
+}
+
+/* Very narrow: keep the rail usable but even more compact. */
+@media (max-width: 400px) {
+  .tool {
+    width: 34px;
+    height: 34px;
+  }
+  .stylePanel {
+    width: min(200px, 62vw);
+  }
 }

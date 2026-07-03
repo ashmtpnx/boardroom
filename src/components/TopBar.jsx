@@ -33,7 +33,7 @@ export default function TopBar() {
     <header className={styles.bar}>
       <button className={styles.brand} onClick={goHome} title="Back to home">
         <img src="/board.svg" className={styles.brandMark} alt="" />
-        <span>BOARDROOM</span>
+        <span className={styles.brandText}>BOARDROOM</span>
       </button>
       <span className={styles.room} title="Share this room code with collaborators">
         Room · {roomId || '…'}
@@ -54,17 +54,21 @@ export default function TopBar() {
       <div className={styles.spacer} />
 
       <div className={styles.actions}>
-        <button className={styles.btn} onClick={onBoardPdf}>
-          <Download size={16} /> Board PDF
+        <button className={styles.btn} onClick={onBoardPdf} title="Export board to PDF">
+          <Download size={16} /> <span className={styles.btnLabel}>Board PDF</span>
         </button>
-        <button className={styles.btn} onClick={() => exportChatPdf(messages, { room: roomId })}>
-          <Download size={16} /> Chat PDF
+        <button
+          className={styles.btn}
+          onClick={() => exportChatPdf(messages, { room: roomId })}
+          title="Export chat to PDF"
+        >
+          <Download size={16} /> <span className={styles.btnLabel}>Chat PDF</span>
         </button>
-        <button className={`${styles.btn} ${styles.btnPrimary}`} onClick={share}>
-          <Share2 size={16} /> {copied ? 'Link copied!' : 'Share'}
+        <button className={`${styles.btn} ${styles.btnPrimary}`} onClick={share} title="Copy room link">
+          <Share2 size={16} /> <span className={styles.btnLabel}>{copied ? 'Link copied!' : 'Share'}</span>
         </button>
         <button className={`${styles.btn} ${styles.btnLeave}`} onClick={goHome} title="Leave board">
-          <LogOut size={16} /> Leave
+          <LogOut size={16} /> <span className={styles.btnLabel}>Leave</span>
         </button>
         {user && (
           <button className={styles.avatarBtn} onClick={goToAccount} title={`${user.name} — your account`}>

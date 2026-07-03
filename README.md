@@ -45,7 +45,9 @@ To try collaboration: copy the room link (**Share** button) into a second browse
 - **Delete** selected objects with Delete/Backspace; **Clear board** from the toolbar.
 - **Chat** and **People** in the collapsible right sidebar.
 - **Export**: *Board PDF* (canvas snapshot) and *Chat PDF* (selectable transcript).
-- **Desktop-only**: phones/tablets get a friendly notice instead of the canvas.
+- **Fully responsive**: the canvas, top bar, tool rail, and sidebar adapt from
+  phones (the sidebar becomes an overlay drawer) up to large desktops, with
+  touch drawing/panning on coarse-pointer devices.
 
 ## Project structure
 ```
@@ -54,11 +56,10 @@ src/
   features/
     canvas/                 Fabric integration — slice, hook, factories, tools
     chat/  people/  session/  ui/   feature slices + panels
-  components/               TopBar, Toolbar/, Sidebar/, DesktopOnlyGate
+  components/               TopBar, Toolbar/, Sidebar/
   realtime/                 swappable transport (mock BroadcastChannel | socket.io) + middleware
   auth/                     swappable auth (mock | firebase Google OAuth)
-  utils/                    ids, colors, deviceDetect, exportPdf
-  hooks/                    useIsDesktop
+  utils/                    ids, colors, exportPdf
 ```
 
 ## Architecture notes

@@ -1,5 +1,6 @@
 .page {
   min-height: 100vh;
+  min-height: 100dvh;
   display: flex;
   flex-direction: column;
   background:
@@ -17,6 +18,8 @@
   align-items: center;
   justify-content: space-between;
   padding: 0 28px;
+  padding-left: max(28px, env(safe-area-inset-left));
+  padding-right: max(28px, env(safe-area-inset-right));
 }
 .brand {
   display: flex;
@@ -35,15 +38,18 @@
   align-items: center;
   gap: 9px;
   padding: 5px 14px 5px 5px;
-  background: var(--surface);
-  border: 1px solid var(--border);
+  background: var(--glass-bg);
+  -webkit-backdrop-filter: var(--glass-blur);
+  backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--glass-border);
   border-radius: 999px;
-  box-shadow: var(--shadow-1);
-  transition: background 0.12s, box-shadow 0.12s;
+  box-shadow: var(--glass-highlight);
+  transition: background 0.15s, box-shadow 0.15s, transform 0.15s;
 }
 .userChip:hover {
-  background: var(--surface-2);
-  box-shadow: var(--shadow-2);
+  background: var(--glass-bg-strong);
+  transform: translateY(-1px);
+  box-shadow: var(--glass-highlight), 0 8px 20px rgba(31, 41, 92, 0.14);
 }
 .userName {
   font-size: 13px;
@@ -112,19 +118,18 @@
   gap: 9px;
   height: 52px;
   padding: 0 24px;
-  border: none;
-  border-radius: 14px;
-  background: var(--accent);
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  border-radius: 16px;
+  background: linear-gradient(180deg, #3d86ee 0%, var(--accent) 100%);
   color: #fff;
   font-size: 16px;
   font-weight: 600;
-  box-shadow: 0 6px 18px rgba(26, 115, 232, 0.32);
-  transition: transform 0.12s, box-shadow 0.12s, background 0.12s;
+  box-shadow: 0 8px 22px rgba(26, 115, 232, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.4);
+  transition: transform 0.15s, box-shadow 0.15s;
 }
 .newBtn:hover {
-  background: #1765cc;
   transform: translateY(-1px);
-  box-shadow: 0 10px 24px rgba(26, 115, 232, 0.38);
+  box-shadow: 0 12px 30px rgba(26, 115, 232, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.4);
 }
 .newBtn:active {
   transform: translateY(0);
@@ -135,11 +140,13 @@
   align-items: center;
   height: 52px;
   padding-left: 14px;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 14px;
-  box-shadow: var(--shadow-1);
-  transition: border-color 0.12s, box-shadow 0.12s;
+  background: var(--glass-bg);
+  -webkit-backdrop-filter: var(--glass-blur);
+  backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--glass-border);
+  border-radius: 16px;
+  box-shadow: var(--glass-highlight);
+  transition: border-color 0.15s, box-shadow 0.15s;
 }
 .joinGroup:focus-within {
   border-color: var(--accent);
@@ -220,16 +227,18 @@
   gap: 11px;
   padding: 11px 12px;
   text-align: left;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  box-shadow: var(--shadow-1);
-  transition: transform 0.12s, box-shadow 0.12s, border-color 0.12s;
+  background: var(--glass-bg);
+  -webkit-backdrop-filter: var(--glass-blur);
+  backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--glass-border);
+  border-radius: 14px;
+  box-shadow: var(--glass-highlight);
+  transition: transform 0.15s, box-shadow 0.15s, border-color 0.15s;
 }
 .recentCard:hover {
   transform: translateY(-2px);
-  border-color: #d2d6db;
-  box-shadow: var(--shadow-2);
+  border-color: var(--glass-border);
+  box-shadow: var(--glass-shadow), var(--glass-highlight);
 }
 .recentThumb {
   width: 38px;
@@ -291,10 +300,12 @@
   width: 100%;
   max-width: 460px;
   aspect-ratio: 7 / 5;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 20px;
-  box-shadow: var(--shadow-2);
+  background: var(--glass-bg-strong);
+  -webkit-backdrop-filter: var(--glass-blur);
+  backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--glass-border);
+  border-radius: 24px;
+  box-shadow: var(--glass-shadow), var(--glass-highlight);
   overflow: hidden;
   transform: rotate(1.2deg);
 }
@@ -388,12 +399,61 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* Phones: full-bleed actions, single-column recents, tighter gutters. */
+@media (max-width: 560px) {
+  .header {
+    padding: 0 16px;
+    padding-left: max(16px, env(safe-area-inset-left));
+    padding-right: max(16px, env(safe-area-inset-right));
+  }
+  .main {
+    padding: 12px 16px 8px;
+    gap: 28px;
+  }
+  .actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .newBtn {
+    justify-content: center;
+  }
+  .joinGroup {
+    width: 100%;
+  }
+  .joinInput {
+    flex: 1;
+    width: auto;
+    min-width: 0;
+  }
+  .recentGrid {
+    grid-template-columns: 1fr;
+  }
+  /* Touch has no hover, so keep the remove-from-recent control visible. */
+  .recentDrop {
+    opacity: 1;
+  }
+  .features {
+    margin-top: 20px;
+    padding: 0 16px;
+  }
+  .footer {
+    padding: 24px 16px calc(20px + env(safe-area-inset-bottom));
+  }
+}
 .featureCard {
   padding: 22px;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 16px;
-  box-shadow: var(--shadow-1);
+  background: var(--glass-bg);
+  -webkit-backdrop-filter: var(--glass-blur);
+  backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--glass-border);
+  border-radius: 18px;
+  box-shadow: var(--glass-highlight);
+  transition: transform 0.15s, box-shadow 0.15s;
+}
+.featureCard:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--glass-shadow), var(--glass-highlight);
 }
 .featureIcon {
   display: inline-grid;

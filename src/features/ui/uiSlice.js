@@ -2,7 +2,9 @@ import { createSlice } from '@reduxjs/toolkit';
 import { uid } from '../../utils/ids';
 
 const initialState = {
-  sidebarOpen: true,
+  // Open by default on desktop; collapsed on phones/tablets so the canvas isn't
+  // covered on first load (the drawer overlays the board on small screens).
+  sidebarOpen: typeof window === 'undefined' ? true : window.innerWidth > 900,
   activeTab: 'chat', // chat | people
   toasts: [], // { id, text }
 };

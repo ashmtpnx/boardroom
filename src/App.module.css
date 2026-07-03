@@ -2,7 +2,13 @@
   display: flex;
   flex-direction: column;
   height: 100vh;
+  height: 100dvh; /* excludes mobile browser chrome so nothing is cut off */
   overflow: hidden;
+  /* A real painted background under the whole board so the frosted TopBar has
+     a normal layer to sample — avoids the blank-backdrop-filter compositing bug. */
+  background:
+    radial-gradient(1000px 600px at 6% -10%, rgba(26, 115, 232, 0.12), transparent 60%),
+    var(--bg);
 }
 
 .body {
@@ -22,6 +28,7 @@
 /* Brief splash while the user is being signed in (before routing). */
 .splash {
   height: 100vh;
+  height: 100dvh;
   display: grid;
   place-items: center;
   background: var(--bg);

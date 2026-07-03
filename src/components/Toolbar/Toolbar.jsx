@@ -27,7 +27,11 @@ const TOOL_LIST = [
 export default function Toolbar() {
   const dispatch = useDispatch();
   const activeTool = useSelector((s) => s.canvas.activeTool);
-  const [styleOpen, setStyleOpen] = useState(true);
+  // Start the style fly-out open on roomy screens, collapsed on phones/tablets
+  // where it would otherwise cover most of the canvas.
+  const [styleOpen, setStyleOpen] = useState(
+    () => typeof window === 'undefined' || window.innerWidth > 900,
+  );
   const fileRef = useRef(null);
 
   const onImagePick = (e) => {

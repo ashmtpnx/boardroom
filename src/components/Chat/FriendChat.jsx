@@ -122,7 +122,7 @@ export default function FriendChat({ friendTag }) {
       <div className={styles.page}>
         <header className={styles.header}>
           <button className={styles.back} onClick={goToAccount}>
-            <ArrowLeft size={18} /> Friends
+            <ArrowLeft size={18} /> <span>Friends</span>
           </button>
         </header>
         <div className={styles.missing}>That conversation link isn’t valid.</div>
@@ -134,7 +134,7 @@ export default function FriendChat({ friendTag }) {
     <div className={styles.page}>
       <header className={styles.header}>
         <button className={styles.back} onClick={goToAccount}>
-          <ArrowLeft size={18} /> Friends
+          <ArrowLeft size={18} /> <span>Friends</span>
         </button>
         <div className={styles.peer}>
           <Avatar user={friend} size={34} />

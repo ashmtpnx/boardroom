@@ -1,5 +1,7 @@
 # BOARDROOM
 
+Author : Ashmeet Mahananda
+
 A real-time collaborative whiteboard with a clean, Google Meet–inspired layout.
 Infinite Fabric.js canvas, drawing tools, sticky notes, image drop, chat, and a
 people panel — all syncing live.

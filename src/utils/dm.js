@@ -63,3 +63,28 @@ export function clearConversation(friendTag) {
     try { localStorage.removeItem(key); } catch { /* ignore */ }
   }
 }
+
+// Build the conversation rows shown in the home Messages section: one row per
+// friend (with an account tag), carrying their most recent message preview and
+// timestamp. Sorted most-recent-first; friends with no messages yet fall to the
+// bottom, ordered by name. Pure over its inputs — reads localStorage only.
+export function listConversations(friends = []) {
+  const rows = friends
+    .filter((f) => f && f.account)
+    .map((f) => {
+      const thread = loadConversation(f.account);
+      const last = thread.length ? thread[thread.length - 1] : null;
+      return {
+        friend: f,
+        tag: normalizeAccountId(f.account),
+        lastText: last ? last.text : '',
+        lastTs: last ? last.ts : 0,
+        lastUserId: last ? last.userId : null, // caller compares to their own id for a "You:" prefix
+      };
+    });
+  rows.sort((a, b) => {
+    if (a.lastTs || b.lastTs) return b.lastTs - a.lastTs;
+    return (a.friend.name || '').localeCompare(b.friend.name || '');
+  });
+  return rows;
+}

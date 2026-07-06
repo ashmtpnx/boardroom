@@ -96,6 +96,28 @@
   min-height: 0;
 }
 
+/* Tablet & desktop: present the conversation as a centered chat-window card,
+   floating over the page background, instead of a full-bleed column. On phones
+   (below this width) it stays edge-to-edge for maximum space. */
+@media (min-width: 640px) {
+  .thread {
+    max-width: 820px;
+    margin: 20px auto;
+    width: calc(100% - 40px);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    background: var(--surface);
+    box-shadow: var(--shadow-2);
+    overflow: hidden;
+  }
+  .composer {
+    padding-bottom: 14px;
+  }
+}
+@media (min-width: 1100px) {
+  .thread { max-width: 900px; }
+}
+
 .messages {
   flex: 1;
   overflow-y: auto;

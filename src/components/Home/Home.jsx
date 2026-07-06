@@ -5,6 +5,7 @@ import { startNewBoard, goToRoom, goToAccount, normalizeCode } from '../../utils
 import { getRecentBoards, forgetBoard } from '../../utils/recentBoards';
 import Avatar from '../Avatar';
 import BoardPreview from './BoardPreview';
+import HomeMessages from './HomeMessages';
 import styles from './Home.module.css';
 
 function relativeTime(ts) {
@@ -135,6 +136,8 @@ export default function Home() {
           <BoardPreview />
         </aside>
       </main>
+
+      {user && <HomeMessages />}
 
       <section className={styles.features}>
         {FEATURES.map((f) => (

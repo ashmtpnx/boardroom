@@ -11,6 +11,7 @@ import { registerSelf } from './utils/directory';
 import Login from './components/Login/Login';
 import Home from './components/Home/Home';
 import Account from './components/Account/Account';
+import Messages from './components/Messages/Messages';
 import FriendChat from './components/Chat/FriendChat';
 import TopBar from './components/TopBar';
 import Toolbar from './components/Toolbar/Toolbar';
@@ -26,6 +27,7 @@ function getRoute() {
   const h = window.location.hash.replace(/^#/, '').trim();
   if (!h) return { name: 'home' };
   if (h === 'account') return { name: 'account' };
+  if (h === 'messages') return { name: 'messages' };
   if (h.startsWith('dm/')) return { name: 'dm', friendTag: h.slice(3) };
   return { name: 'board', roomId: h };
 }
@@ -129,6 +131,7 @@ function Root() {
   }
 
   if (route.name === 'account') return <Account />;
+  if (route.name === 'messages') return <Messages />;
   if (route.name === 'dm') return <FriendChat key={route.friendTag} friendTag={route.friendTag} />;
   if (route.name === 'board') return <Board key={route.roomId} roomId={route.roomId} />;
   return <Home />;

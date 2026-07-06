@@ -1,11 +1,10 @@
 import { useState } from 'react';
 import { useSelector } from 'react-redux';
-import { Plus, KeyRound, ArrowRight, X, Users, Shapes, FileDown, Clock } from 'lucide-react';
-import { startNewBoard, goToRoom, goToAccount, normalizeCode } from '../../utils/nav';
+import { Plus, KeyRound, ArrowRight, X, Users, Shapes, FileDown, Clock, MessageCircle } from 'lucide-react';
+import { startNewBoard, goToRoom, goToAccount, goToMessages, normalizeCode } from '../../utils/nav';
 import { getRecentBoards, forgetBoard } from '../../utils/recentBoards';
 import Avatar from '../Avatar';
 import BoardPreview from './BoardPreview';
-import HomeMessages from './HomeMessages';
 import styles from './Home.module.css';
 
 function relativeTime(ts) {
@@ -50,10 +49,15 @@ export default function Home() {
           <span>BOARDROOM</span>
         </div>
         {user && (
-          <button className={styles.userChip} onClick={goToAccount} title="Your account">
-            <Avatar user={user} size={28} />
-            <span className={styles.userName}>{user.name}</span>
-          </button>
+          <div className={styles.headerActions}>
+            <button className={styles.msgBtn} onClick={goToMessages} title="Messages" aria-label="Messages">
+              <MessageCircle size={20} />
+            </button>
+            <button className={styles.userChip} onClick={goToAccount} title="Your account">
+              <Avatar user={user} size={28} />
+              <span className={styles.userName}>{user.name}</span>
+            </button>
+          </div>
         )}
       </header>
 
@@ -136,8 +140,6 @@ export default function Home() {
           <BoardPreview />
         </aside>
       </main>
-
-      {user && <HomeMessages />}
 
       <section className={styles.features}>
         {FEATURES.map((f) => (

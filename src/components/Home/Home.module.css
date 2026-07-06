@@ -33,6 +33,31 @@
   width: 26px;
   height: 26px;
 }
+.headerActions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.msgBtn {
+  width: 42px;
+  height: 42px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--glass-bg);
+  -webkit-backdrop-filter: var(--glass-blur);
+  backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--glass-border);
+  color: var(--text);
+  box-shadow: var(--glass-highlight);
+  transition: background 0.15s, box-shadow 0.15s, transform 0.15s;
+}
+.msgBtn:hover {
+  background: var(--glass-bg-strong);
+  transform: translateY(-1px);
+  box-shadow: var(--glass-highlight), 0 8px 20px rgba(31, 41, 92, 0.14);
+}
+
 .userChip {
   display: flex;
   align-items: center;

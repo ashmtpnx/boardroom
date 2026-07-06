@@ -26,6 +26,11 @@ export function goToAccount() {
   window.location.hash = 'account';
 }
 
+// Reserved app route for the messages inbox (the Instagram-style DM list).
+export function goToMessages() {
+  window.location.hash = 'messages';
+}
+
 // Open a one-to-one chat with a friend, addressed by their account tag.
 export function goToFriendChat(accountTag) {
   const tag = String(accountTag || '').trim();

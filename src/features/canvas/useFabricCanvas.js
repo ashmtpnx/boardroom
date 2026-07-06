@@ -16,6 +16,7 @@ import { setCanvasApi } from './canvasApi';
 import { getRealtimeClient } from '../../realtime/client';
 import { EVENTS } from '../../realtime/events';
 import { uid } from '../../utils/ids';
+import { throttleTrailing } from '../../utils/throttle';
 
 const SHAPE_TOOLS = [TOOLS.RECT, TOOLS.CIRCLE, TOOLS.TRIANGLE];
 const ZOOM_MIN = 0.2;
@@ -81,6 +82,13 @@ export function useFabricCanvas({ canvasElRef, containerRef }) {
     const scenePoint = (e) => (canvas.getScenePoint ? canvas.getScenePoint(e) : canvas.getPointer(e));
 
     // ---- broadcast local changes to peers ----
+    // Throttled modify emitter for high-frequency streams (drag, resize, typing).
+    // object:modified still fires the final authoritative state on release, so the
+    // trailing edge here just keeps peers smooth mid-gesture without flooding.
+    const emitModifyThrottled = throttleTrailing((obj) => {
+      rtRef.current?.emit(EVENTS.OBJECT_MODIFY, { json: obj.toObject(['id']) });
+    }, 80);
+
     canvas.on('object:added', (e) => {
       const obj = e.target;
       if (!obj || applyingRemote.current || obj.__suppressSync) return;
@@ -97,11 +105,26 @@ export function useFabricCanvas({ canvasElRef, containerRef }) {
       if (!obj || applyingRemote.current) return;
       rtRef.current?.emit(EVENTS.OBJECT_REMOVE, { id: obj.id });
     });
-    // Live-sync text as it's typed.
+    // Stream in-progress gestures so peers see a shape move/resize/rotate live,
+    // instead of it jumping only when the mouse is released. Throttled to bound
+    // traffic on slow (free-tier) relays.
+    const onLiveGesture = (e) => {
+      const obj = e.target;
+      if (!obj || applyingRemote.current || obj.__suppressSync) return;
+      emitModifyThrottled(obj);
+    };
+    canvas.on('object:moving', onLiveGesture);
+    canvas.on('object:scaling', onLiveGesture);
+    canvas.on('object:rotating', onLiveGesture);
+    // Live-sync text as it's typed, throttled so each keystroke isn't a full
+    // object broadcast; the trailing call syncs the final text.
+    const emitTextThrottled = throttleTrailing((obj) => {
+      rtRef.current?.emit(EVENTS.OBJECT_MODIFY, { json: obj.toObject(['id']) });
+    }, 120);
     canvas.on('text:changed', (e) => {
       const obj = e.target;
       if (!obj || applyingRemote.current) return;
-      rtRef.current?.emit(EVENTS.OBJECT_MODIFY, { json: obj.toObject(['id']) });
+      emitTextThrottled(obj);
     });
 
     // ---- pointer: shapes / sticky / text / eraser / pan ----

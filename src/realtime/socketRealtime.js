@@ -17,12 +17,13 @@ export function createSocketRealtime() {
 
     connect(roomId, user) {
       const url = resolveRelayUrl(import.meta.env.VITE_SOCKET_URL);
-      // Start with HTTP long-polling and upgrade to websocket. Polling-first is
-      // more robust behind proxies/free hosts (e.g. Render) that need the initial
-      // handshake for sticky routing, and it survives the ~50s cold start when the
-      // relay was asleep — socket.io keeps retrying until the server wakes.
+      // Websocket-first for low-latency sync: on Render's free tier HTTP polling
+      // adds a request/response round-trip to every event, which is the main
+      // source of "changes show up late". We still list polling as a fallback so
+      // the connection survives the ~50s cold start (socket.io keeps retrying,
+      // falling back to polling if the websocket handshake can't complete yet).
       socket = io(url, {
-        transports: ['polling', 'websocket'],
+        transports: ['websocket', 'polling'],
         query: { roomId, senderId },
         reconnectionAttempts: Infinity,
         timeout: 60000,

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { lazy, Suspense, useEffect, useState } from 'react';
 import { Provider, useDispatch, useSelector } from 'react-redux';
 import { store } from './app/store';
 import { restoreSession } from './auth/auth';
@@ -15,8 +15,11 @@ import FriendChat from './components/Chat/FriendChat';
 import TopBar from './components/TopBar';
 import Toolbar from './components/Toolbar/Toolbar';
 import Sidebar from './components/Sidebar/Sidebar';
-import Canvas from './features/canvas/Canvas';
 import styles from './App.module.css';
+
+// Fabric.js is ~500 KB — the single biggest dependency, and it's only needed on a
+// board. Load it lazily so the login/home flow doesn't pay for it up front.
+const Canvas = lazy(() => import('./features/canvas/Canvas'));
 
 // The URL hash is the router: '' = home, 'account' = account page, else a board.
 function getRoute() {
@@ -70,7 +73,9 @@ function Board({ roomId }) {
       <div className={styles.body}>
         <div className={styles.stage}>
           <Toolbar />
-          <Canvas />
+          <Suspense fallback={<div className={styles.canvasLoading} aria-busy="true" />}>
+            <Canvas />
+          </Suspense>
         </div>
         <Sidebar />
       </div>

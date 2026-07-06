@@ -25,6 +25,13 @@
   background: var(--surface);
 }
 
+/* Placeholder while the lazily-loaded canvas chunk is fetched. */
+.canvasLoading {
+  position: absolute;
+  inset: 0;
+  background: var(--surface);
+}
+
 /* Brief splash while the user is being signed in (before routing). */
 .splash {
   height: 100vh;

@@ -1,5 +1,6 @@
 import { io } from 'socket.io-client';
 import { uid } from '../utils/ids';
+import { resolveRelayUrl } from '../utils/relayUrl';
 
 // Pass-2 transport. Mirrors the mock interface using socket.io for true
 // cross-machine sync. Inert until a server exists and VITE_REALTIME=socket.
@@ -15,7 +16,7 @@ export function createSocketRealtime() {
     id: senderId,
 
     connect(roomId, user) {
-      const url = import.meta.env.VITE_SOCKET_URL || 'http://localhost:3001';
+      const url = resolveRelayUrl(import.meta.env.VITE_SOCKET_URL);
       // Start with HTTP long-polling and upgrade to websocket. Polling-first is
       // more robust behind proxies/free hosts (e.g. Render) that need the initial
       // handshake for sticky routing, and it survives the ~50s cold start when the

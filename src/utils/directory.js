@@ -5,14 +5,13 @@
 // app still works offline against localStorage alone.
 import { normalizeAccountId } from './accountId';
 import { publishLocal, lookupLocal } from './localDirectory';
+import { resolveRelayUrl } from './relayUrl';
 
 // Directory shares the realtime host by default; override with VITE_API_URL.
+// resolveRelayUrl filters out the known-dead placeholder host and supplies the
+// right default per environment, so friend lookup can't be pinned to a dead relay.
 function apiBase() {
-  return (
-    import.meta.env.VITE_API_URL ||
-    import.meta.env.VITE_SOCKET_URL ||
-    'http://localhost:3001'
-  ).replace(/\/$/, '');
+  return resolveRelayUrl(import.meta.env.VITE_API_URL, import.meta.env.VITE_SOCKET_URL);
 }
 
 // Publish our public card so others can find us by our tag. Best-effort: a

@@ -63,6 +63,83 @@
   transition: background 0.15s, transform 0.15s;
 }
 .addBtn:hover { background: var(--glass-bg-strong); transform: translateY(-1px); }
+.addBtnOpen { background: var(--accent); color: #fff; border-color: transparent; }
+.addBtnOpen:hover { background: #1765cc; }
+
+/* ---- add-friend panel ---- */
+.addPanel {
+  margin: 4px 4px 14px;
+  padding: 14px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  box-shadow: var(--shadow-1);
+}
+.yourId {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  border-radius: var(--radius);
+  background: var(--accent-weak);
+}
+.yourIdMeta { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.yourIdLabel { font-size: 11.5px; font-weight: 600; color: var(--accent); text-transform: uppercase; letter-spacing: 0.03em; }
+.mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+.yourId .mono { font-size: 15px; font-weight: 600; color: var(--text); }
+.copyBtn {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 34px;
+  padding: 0 13px;
+  flex-shrink: 0;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  font-size: 13px;
+  font-weight: 600;
+  transition: background 0.15s;
+}
+.copyBtn:hover { background: var(--surface-2); }
+.addHint { margin: 10px 2px; font-size: 12.5px; color: var(--text-2); }
+
+.addRow { display: flex; flex-wrap: wrap; gap: 8px; }
+.field {
+  flex: 1 1 180px;
+  min-width: 0;
+  height: 42px;
+  padding: 0 14px;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+  font-size: 14px;
+  color: var(--text);
+  outline: none;
+}
+.field:focus { border-color: var(--accent); background: var(--surface); }
+.addConfirm {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  height: 42px;
+  padding: 0 18px;
+  border-radius: var(--radius);
+  border: none;
+  background: var(--accent);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 600;
+  transition: background 0.15s;
+}
+.addConfirm:hover { background: #1765cc; }
+.addConfirm:disabled { background: var(--border); color: var(--text-2); cursor: not-allowed; }
+.error { margin: 10px 2px 0; font-size: 13px; color: var(--danger); }
+.spin { animation: msg-spin 0.8s linear infinite; }
+@keyframes msg-spin { to { transform: rotate(360deg); } }
 
 /* ---- body ---- */
 .body {
@@ -108,8 +185,15 @@
   display: flex;
   flex-direction: column;
 }
+.rowWrap {
+  display: flex;
+  align-items: center;
+  border-radius: var(--radius);
+}
+.rowWrap:hover { background: var(--surface-2); }
 .row {
-  width: 100%;
+  flex: 1;
+  min-width: 0;
   display: flex;
   align-items: center;
   gap: 14px;
@@ -119,10 +203,28 @@
   border-radius: var(--radius);
   text-align: left;
   cursor: pointer;
-  transition: background 0.14s;
 }
-.row:hover { background: var(--surface-2); }
 .row:active { background: var(--accent-weak); }
+.rowRemove {
+  flex-shrink: 0;
+  width: 34px;
+  height: 34px;
+  margin-right: 8px;
+  display: grid;
+  place-items: center;
+  border: none;
+  background: transparent;
+  border-radius: 50%;
+  color: var(--text-2);
+  opacity: 0;
+  transition: opacity 0.14s, background 0.14s, color 0.14s;
+}
+.rowWrap:hover .rowRemove { opacity: 1; }
+.rowRemove:hover { background: var(--danger); color: #fff; }
+/* Touch devices can't hover — always show the remove control there. */
+@media (hover: none) {
+  .rowRemove { opacity: 0.6; }
+}
 
 .meta {
   flex: 1;

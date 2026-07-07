@@ -5,6 +5,7 @@ import { startNewBoard, goToRoom, goToAccount, goToMessages, normalizeCode } fro
 import { getRecentBoards, forgetBoard } from '../../utils/recentBoards';
 import Avatar from '../Avatar';
 import BoardPreview from './BoardPreview';
+import NotificationBell from '../Notifications/NotificationBell';
 import styles from './Home.module.css';
 
 function relativeTime(ts) {
@@ -50,6 +51,7 @@ export default function Home() {
         </div>
         {user && (
           <div className={styles.headerActions}>
+            <NotificationBell />
             <button className={styles.msgBtn} onClick={goToMessages} title="Messages" aria-label="Messages">
               <MessageCircle size={20} />
             </button>

@@ -1,12 +1,15 @@
 import { useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { ArrowLeft, UserPlus, MessageSquare, Search, X, Copy, Check, Loader } from 'lucide-react';
-import { getFriends, addFriend, removeFriend } from '../../utils/friends';
+import { getFriends, removeFriend } from '../../utils/friends';
 import { accountId, normalizeAccountId } from '../../utils/accountId';
 import { lookupAccount } from '../../utils/directory';
+import { sendFriendRequest } from '../../utils/friendRequests';
+import { getOutgoing, REQUESTS_EVENT } from '../../utils/requests';
 import { listConversations } from '../../utils/dm';
 import { goHome, goToFriendChat } from '../../utils/nav';
 import Avatar from '../Avatar';
+import NotificationBell from '../Notifications/NotificationBell';
 import styles from './Messages.module.css';
 
 function relTime(ts) {
@@ -28,6 +31,7 @@ function relTime(ts) {
 export default function Messages() {
   const me = useSelector((s) => s.session.currentUser);
   const [rows, setRows] = useState(() => listConversations(getFriends()));
+  const [pending, setPending] = useState(() => getOutgoing());
   const [query, setQuery] = useState('');
 
   // add-friend panel
@@ -36,19 +40,25 @@ export default function Messages() {
   const [friendName, setFriendName] = useState('');
   const [adding, setAdding] = useState(false);
   const [error, setError] = useState('');
+  const [sent, setSent] = useState('');
   const [copied, setCopied] = useState(false);
 
   const myTag = accountId(me?.id || '');
 
-  const refresh = () => setRows(listConversations(getFriends()));
+  const refresh = () => {
+    setRows(listConversations(getFriends()));
+    setPending(getOutgoing());
+  };
 
   useEffect(() => {
     refresh();
     window.addEventListener('focus', refresh);
     window.addEventListener('storage', refresh);
+    window.addEventListener(REQUESTS_EVENT, refresh);
     return () => {
       window.removeEventListener('focus', refresh);
       window.removeEventListener('storage', refresh);
+      window.removeEventListener(REQUESTS_EVENT, refresh);
     };
   }, []);
 
@@ -58,38 +68,28 @@ export default function Messages() {
       setError('That account ID doesn’t look right. Expected format: BR-4K7P-2QX9');
       return;
     }
-    if (myTag && normalized === myTag) {
-      setError('That’s your own account ID.');
-      return;
-    }
-    if (getFriends().some((f) => f.account === normalized)) {
-      setError('That person is already in your messages.');
-      return;
-    }
 
     setError('');
+    setSent('');
     setAdding(true);
 
-    // Resolve the ID to a real profile from the directory; fall back to the typed
-    // name (or the tag) when offline so adding never fails hard.
+    // Resolve the ID to a real profile from the directory so the outgoing request
+    // carries a friendly name; fall back to the typed name when offline.
     let name = friendName.trim();
-    let color;
-    let photoURL = null;
     const result = await lookupAccount(normalized);
-    if (result.ok) {
-      const p = result.profile;
-      if (!name) name = p.name || normalized;
-      color = p.color;
-      photoURL = p.photoURL || null;
-    } else if (!name) {
-      name = normalized;
-    }
+    if (result.ok && !name) name = result.profile.name || normalized;
 
-    addFriend({ name, color, photoURL, account: normalized });
+    // Send a friend request — they must accept before you can message. (Instagram
+    // style; the accept handshake lives in utils/friendRequests.js.)
+    const res = await sendFriendRequest(me, normalized, name);
+    setAdding(false);
+    if (!res.ok) {
+      setError(res.error);
+      return;
+    }
     setFriendAccount('');
     setFriendName('');
-    setAdding(false);
-    setShowAdd(false);
+    setSent(`Request sent. You can message them once they accept.`);
     refresh();
   };
 
@@ -126,14 +126,17 @@ export default function Messages() {
           <ArrowLeft size={18} /> <span>Home</span>
         </button>
         <h1 className={styles.title}>Messages</h1>
-        <button
-          className={`${styles.addBtn} ${showAdd ? styles.addBtnOpen : ''}`}
-          onClick={() => { setShowAdd((v) => !v); setError(''); }}
-          title={showAdd ? 'Close' : 'Add a friend'}
-          aria-label={showAdd ? 'Close add friend' : 'Add a friend'}
-        >
-          {showAdd ? <X size={18} /> : <UserPlus size={18} />}
-        </button>
+        <div className={styles.headerActions}>
+          <NotificationBell />
+          <button
+            className={`${styles.addBtn} ${showAdd ? styles.addBtnOpen : ''}`}
+            onClick={() => { setShowAdd((v) => !v); setError(''); setSent(''); }}
+            title={showAdd ? 'Close' : 'Add a friend'}
+            aria-label={showAdd ? 'Close add friend' : 'Add a friend'}
+          >
+            {showAdd ? <X size={18} /> : <UserPlus size={18} />}
+          </button>
+        </div>
       </header>
 
       <main className={styles.body}>
@@ -173,10 +176,26 @@ export default function Messages() {
                 onClick={onAddFriend}
                 disabled={!friendAccount.trim() || adding}
               >
-                {adding ? <><Loader size={15} className={styles.spin} /> Adding…</> : <><UserPlus size={15} /> Add</>}
+                {adding ? <><Loader size={15} className={styles.spin} /> Sending…</> : <><UserPlus size={15} /> Send request</>}
               </button>
             </div>
             {error && <p className={styles.error}>{error}</p>}
+            {sent && <p className={styles.sent}>{sent}</p>}
+          </div>
+        )}
+
+        {pending.length > 0 && (
+          <div className={styles.pending}>
+            <div className={styles.pendingLabel}>Sent requests · waiting to accept</div>
+            <ul className={styles.pendingList}>
+              {pending.map((r) => (
+                <li key={r.toTag} className={styles.pendingRow}>
+                  <Avatar user={{ name: r.name, color: r.color, photoURL: r.photoURL }} size={34} />
+                  <span className={styles.pendingName}>{r.name || r.toTag}</span>
+                  <span className={styles.pendingState}><Loader size={13} className={styles.spin} /> Requested</span>
+                </li>
+              ))}
+            </ul>
           </div>
         )}
 

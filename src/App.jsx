@@ -13,6 +13,7 @@ import Home from './components/Home/Home';
 import Account from './components/Account/Account';
 import Messages from './components/Messages/Messages';
 import FriendChat from './components/Chat/FriendChat';
+import InboxProvider from './realtime/InboxProvider';
 import TopBar from './components/TopBar';
 import Toolbar from './components/Toolbar/Toolbar';
 import Sidebar from './components/Sidebar/Sidebar';
@@ -130,11 +131,23 @@ function Root() {
     return <Login onSignedIn={(u) => dispatch(setUser(applyProfile(u)))} />;
   }
 
-  if (route.name === 'account') return <Account />;
-  if (route.name === 'messages') return <Messages />;
-  if (route.name === 'dm') return <FriendChat key={route.friendTag} friendTag={route.friendTag} />;
-  if (route.name === 'board') return <Board key={route.roomId} roomId={route.roomId} />;
-  return <Home />;
+  // Resolve the current route's screen.
+  let screen;
+  if (route.name === 'account') screen = <Account />;
+  else if (route.name === 'messages') screen = <Messages />;
+  else if (route.name === 'dm') screen = <FriendChat key={route.friendTag} friendTag={route.friendTag} />;
+  else if (route.name === 'board') screen = <Board key={route.roomId} roomId={route.roomId} />;
+  else screen = <Home />;
+
+  // InboxProvider is a route-independent side-effect mount: it keeps us connected
+  // to our personal inbox channel so friend requests / accepts arrive on every
+  // screen (even Home), turning them into local state + notifications.
+  return (
+    <>
+      <InboxProvider />
+      {screen}
+    </>
+  );
 }
 
 export default function App() {

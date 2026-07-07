@@ -40,6 +40,11 @@ export function createSocketRealtime() {
       socket?.emit('rt', { event, payload, sender: senderId });
     },
 
+    // Acknowledge queued inbox events by id so the relay stops re-delivering them.
+    ack(eventIds) {
+      if (eventIds?.length) socket?.emit('inbox:ack', { eventIds });
+    },
+
     on(event, handler) {
       if (!handlers.has(event)) handlers.set(event, new Set());
       handlers.get(event).add(handler);

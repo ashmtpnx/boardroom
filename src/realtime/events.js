@@ -14,6 +14,12 @@ export const EVENTS = {
   // "Friend is typing" ping (payload: { userId, name }). Fired while composing;
   // the receiver shows an indicator that auto-expires if no ping follows.
   DM_TYPING: 'dm:typing',
+  // Friend-request handshake, delivered on a recipient's personal inbox channel
+  // (see utils/inbox.js) rather than a board room. Payloads carry the sender's
+  // public card { tag, name, color, photoURL } so the receiver can render it.
+  FRIEND_REQUEST: 'friend:request', // "I'd like to add you"
+  FRIEND_ACCEPT: 'friend:accept', // "I accepted your request"
+  FRIEND_DECLINE: 'friend:decline', // "I declined your request"
   // Presence (payload: user object)
   PRESENCE_JOIN: 'presence:join', // "I just arrived"
   PRESENCE_SYNC: 'presence:sync', // "here's who I am" (reply to a join)

@@ -6,6 +6,12 @@ import { normalizeAccountId } from './accountId';
 
 const KEY = 'boardroom:friends';
 
+// Fired after any write so views in THIS tab refresh (the native 'storage' event
+// only reaches other tabs). The friends list is mutated from two places now —
+// the Messages UI and the inbox provider on an accepted request — so a live
+// signal keeps both in sync without a manual refresh call.
+export const FRIENDS_EVENT = 'boardroom:friends-changed';
+
 export function getFriends() {
   try {
     const list = JSON.parse(localStorage.getItem(KEY));
@@ -15,11 +21,23 @@ export function getFriends() {
   }
 }
 
+// Find a friend by their shareable account tag (any accepted format), or null.
+export function getFriendByTag(tag) {
+  const account = normalizeAccountId(tag);
+  if (!account) return null;
+  return getFriends().find((f) => f.account === account) || null;
+}
+
 function persist(list) {
   try {
     localStorage.setItem(KEY, JSON.stringify(list));
   } catch {
     /* ignore */
+  }
+  try {
+    window.dispatchEvent(new CustomEvent(FRIENDS_EVENT));
+  } catch {
+    /* SSR / no window — ignore */
   }
   return list;
 }
@@ -27,11 +45,17 @@ function persist(list) {
 export function addFriend({ name, color, photoURL = null, account = null }) {
   const clean = (name || '').trim();
   if (!clean) return getFriends();
+  const normAccount = account ? normalizeAccountId(account) : null;
+  // Never add the same account twice — the two call sites (Messages accept and
+  // the inbox provider) can race on an accepted request.
+  if (normAccount && getFriends().some((f) => f.account === normAccount)) {
+    return getFriends();
+  }
   const friend = {
     id: uid('friend'),
-    account: account || null,
+    account: normAccount,
     name: clean,
-    color: color || pickColor(account || clean),
+    color: color || pickColor(normAccount || clean),
     photoURL,
   };
   return persist([...getFriends(), friend]);

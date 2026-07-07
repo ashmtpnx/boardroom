@@ -32,6 +32,11 @@ export function createMockRealtime() {
       channel.postMessage({ event, payload, sender: senderId });
     },
 
+    // No server queue in the BroadcastChannel transport — events are delivered
+    // live to open tabs only, so there's nothing to acknowledge. No-op for
+    // interface parity with the socket transport.
+    ack() {},
+
     on(event, handler) {
       if (!handlers.has(event)) handlers.set(event, new Set());
       handlers.get(event).add(handler);

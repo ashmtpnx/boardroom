@@ -12,6 +12,16 @@ import {
 } from './rooms.js';
 import { registerUser, lookupUser, directoryStats } from './directory.js';
 import { normalizeAccountId } from './accountId.js';
+import {
+  isDmRoom,
+  isInboxRoom,
+  storeDm,
+  getDmHistory,
+  enqueueInbox,
+  getInboxQueue,
+  ackInbox,
+  socialStats,
+} from './social.js';
 
 const PORT = Number(process.env.PORT) || 3001;
 const ORIGIN = process.env.CORS_ORIGIN || '*';
@@ -23,7 +33,7 @@ app.use(express.json({ limit: '256kb' })); // photoURL data-URLs can be largish
 
 // Lightweight health/stats endpoint — handy for uptime checks and debugging.
 app.get('/health', (_req, res) => {
-  res.json({ ok: true, ...roomStats(), ...directoryStats(), uptime: process.uptime() });
+  res.json({ ok: true, ...roomStats(), ...directoryStats(), ...socialStats(), uptime: process.uptime() });
 });
 
 // ---- public user directory (powers "add friend by account ID") ----
@@ -53,13 +63,19 @@ const io = new Server(server, {
 
 // Canvas events fold into per-room state for board replay; the rest just relay.
 const CANVAS_EVENTS = new Set(['object:add', 'object:modify', 'object:remove', 'canvas:clear']);
+// DM history replays on join so a second device / reload sees the whole thread.
+const DM_MESSAGE = 'dm:message';
+// Inbox events are queued until the recipient connects and acknowledges them, so
+// a friend request sent while they're offline still lands. Typing pings are
+// transient and never persisted.
+const INBOX_EVENTS = new Set(['friend:request', 'friend:accept', 'friend:decline']);
 
 io.on('connection', (socket) => {
   // Client joins exactly one room (room id = URL hash on the frontend).
   socket.on('room:join', ({ roomId, user, senderId }) => {
     if (!roomId || !senderId) return;
     socket.data = { roomId, senderId, user: user || null };
-    socket.join(roomId); 
+    socket.join(roomId);
     addMember(roomId, senderId, user);
 
     // Replay the current board so a late joiner sees everything already drawn.
@@ -67,14 +83,53 @@ io.on('connection', (socket) => {
     for (const json of getBoardSnapshot(roomId)) {
       socket.emit('rt', { event: 'object:add', payload: { json }, sender: 'server' });
     }
+
+    // Replay a direct-message thread's full history — this is what makes a DM
+    // conversation sync across devices, not just persist on the one that sent it.
+    if (isDmRoom(roomId)) {
+      for (const msg of getDmHistory(roomId)) {
+        socket.emit('rt', { event: DM_MESSAGE, payload: msg, sender: 'server' });
+      }
+    }
+
+    // Deliver any queued inbox events (friend requests etc.) that arrived while
+    // this user was offline. Each carries its eventId; the client acks to clear.
+    if (isInboxRoom(roomId)) {
+      for (const { eventId, event, payload } of getInboxQueue(roomId)) {
+        socket.emit('rt', { event, payload: { ...payload, eventId }, sender: 'server' });
+      }
+    }
   });
 
-  // Generic relay: fold canvas state, then forward to everyone else in the room.
+  // Generic relay: fold canvas state / persist social state, then forward to
+  // everyone else in the room.
   socket.on('rt', (env) => {
     const { roomId } = socket.data || {};
     if (!roomId || !env || !env.event) return;
-    if (CANVAS_EVENTS.has(env.event)) applyCanvasEvent(roomId, env.event, env.payload);
+
+    if (CANVAS_EVENTS.has(env.event)) {
+      applyCanvasEvent(roomId, env.event, env.payload);
+    } else if (env.event === DM_MESSAGE && isDmRoom(roomId)) {
+      storeDm(roomId, env.payload); // durable thread for cross-device replay
+    } else if (INBOX_EVENTS.has(env.event) && isInboxRoom(roomId)) {
+      // Queue for offline delivery and stamp the relayed copy with its id so an
+      // online recipient can ack immediately (and won't get it again on rejoin).
+      const eventId = enqueueInbox(roomId, env.event, env.payload);
+      socket.to(roomId).emit('rt', {
+        ...env,
+        payload: { ...env.payload, eventId },
+      });
+      return;
+    }
+
     socket.to(roomId).emit('rt', env);
+  });
+
+  // Recipient acknowledges inbox events it has processed, so they're not
+  // re-delivered on the next reconnect. Uses the joined inbox room.
+  socket.on('inbox:ack', ({ eventIds }) => {
+    const { roomId } = socket.data || {};
+    if (roomId && isInboxRoom(roomId)) ackInbox(roomId, eventIds);
   });
 
   // On drop, tell the room the user left — beforeunload on the client isn't reliable.
@@ -91,6 +146,7 @@ io.on('connection', (socket) => {
     }
   });
 });
+
 
 server.listen(PORT, () => {
   console.log(`BOARDROOM relay listening on http://localhost:${PORT}  (origins: ${ORIGIN})`);

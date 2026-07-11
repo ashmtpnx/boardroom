@@ -5,12 +5,12 @@
 // This is intentionally ephemeral — restart the server and rooms reset. Swap this
 // module for a Redis/DB-backed store if you need durability across restarts.
 
-const rooms = new Map(); // roomId -> { objects: Map, members: Map }
+const rooms = new Map(); // roomId -> { objects: Map, members: Map, pages: Array }
 
 function getRoom(roomId) {
   let room = rooms.get(roomId);
   if (!room) {
-    room = { objects: new Map(), members: new Map() };
+    room = { objects: new Map(), members: new Map(), pages: [{ id: 'page-1', title: 'Page 1' }] };
     rooms.set(roomId, room);
   }
   return room;
@@ -32,7 +32,22 @@ export function applyCanvasEvent(roomId, event, payload) {
       break;
     }
     case 'canvas:clear': {
-      objects.clear();
+      const pageId = payload?.pageId;
+      if (pageId) {
+        for (const [key, val] of objects.entries()) {
+          if ((val.pageId || 'page-1') === pageId) {
+            objects.delete(key);
+          }
+        }
+      } else {
+        objects.clear();
+      }
+      break;
+    }
+    case 'page:list': {
+      if (Array.isArray(payload?.pages) && payload.pages.length > 0) {
+        room.pages = payload.pages;
+      }
       break;
     }
     default:
@@ -43,6 +58,10 @@ export function applyCanvasEvent(roomId, event, payload) {
 // Snapshot of every object in a room, oldest first — replayed to a joining client.
 export function getBoardSnapshot(roomId) {
   return [...getRoom(roomId).objects.values()];
+}
+
+export function getRoomPages(roomId) {
+  return getRoom(roomId).pages;
 }
 
 export function addMember(roomId, senderId, user) {

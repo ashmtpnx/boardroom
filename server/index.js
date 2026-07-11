@@ -6,6 +6,7 @@ import { Server } from 'socket.io';
 import {
   applyCanvasEvent,
   getBoardSnapshot,
+  getRoomPages,
   addMember,
   removeMember,
   roomStats,
@@ -63,7 +64,7 @@ const io = new Server(server, {
 });
 
 // Canvas events fold into per-room state for board replay; the rest just relay.
-const CANVAS_EVENTS = new Set(['object:add', 'object:modify', 'object:remove', 'canvas:clear']);
+const CANVAS_EVENTS = new Set(['object:add', 'object:modify', 'object:remove', 'canvas:clear', 'page:list']);
 // DM history replays on join so a second device / reload sees the whole thread.
 const DM_MESSAGE = 'dm:message';
 // Inbox events are queued until the recipient connects and acknowledges them, so
@@ -87,6 +88,8 @@ io.on('connection', (socket) => {
     for (const json of getBoardSnapshot(roomId)) {
       socket.emit('rt', { event: 'object:add', payload: { json }, sender: 'server' });
     }
+    // Replay multi-page state
+    socket.emit('rt', { event: 'page:list', payload: { pages: getRoomPages(roomId) }, sender: 'server' });
 
     // Replay a direct-message thread's full history — this is what makes a DM
     // conversation sync across devices, not just persist on the one that sent it.

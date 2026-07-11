@@ -9,7 +9,7 @@ import {
   FabricImage,
   util,
 } from 'fabric';
-import { setTool, setZoom } from './canvasSlice';
+import { setTool, setZoom, setPages } from './canvasSlice';
 import { TOOLS, BRUSHES } from './tools';
 import { createRect, createCircle, createTriangle, createText, createSticky } from './fabricFactories';
 import { setCanvasApi } from './canvasApi';
@@ -42,10 +42,12 @@ export function useFabricCanvas({ canvasElRef, containerRef }) {
   const stickyColor = useSelector((s) => s.canvas.stickyColor);
   const brushType = useSelector((s) => s.canvas.brushType);
   const lineWidth = useSelector((s) => s.canvas.lineWidth);
+  const currentPageId = useSelector((s) => s.canvas.currentPageId || 'page-1');
   const connected = useSelector((s) => s.session.status === 'connected');
 
   const fcRef = useRef(null);
-  const styleRef = useRef({ tool, strokeColor, fillColor, stickyColor, brushType, lineWidth });
+  const styleRef = useRef({ tool, strokeColor, fillColor, stickyColor, brushType, lineWidth, currentPageId });
+  const storeByPageRef = useRef(new Map()); // id -> json
   const rtRef = useRef(null);
   const applyingRemote = useRef(false); // guard so applying a remote change doesn't re-broadcast
   const draftRef = useRef(null); // in-progress shape being drag-drawn
@@ -53,8 +55,8 @@ export function useFabricCanvas({ canvasElRef, containerRef }) {
 
   // Keep latest tool/style readable inside the stable event handlers.
   useEffect(() => {
-    styleRef.current = { tool, strokeColor, fillColor, stickyColor, brushType, lineWidth };
-  }, [tool, strokeColor, fillColor, stickyColor, brushType, lineWidth]);
+    styleRef.current = { tool, strokeColor, fillColor, stickyColor, brushType, lineWidth, currentPageId };
+  }, [tool, strokeColor, fillColor, stickyColor, brushType, lineWidth, currentPageId]);
 
   // ---------------------------------------------------------------- init (once)
   useEffect(() => {
@@ -86,23 +88,36 @@ export function useFabricCanvas({ canvasElRef, containerRef }) {
     // object:modified still fires the final authoritative state on release, so the
     // trailing edge here just keeps peers smooth mid-gesture without flooding.
     const emitModifyThrottled = throttleTrailing((obj) => {
-      rtRef.current?.emit(EVENTS.OBJECT_MODIFY, { json: obj.toObject(['id']) });
+      const curPage = styleRef.current.currentPageId || 'page-1';
+      if (!obj.pageId) obj.set('pageId', curPage);
+      const json = obj.toObject(['id', 'pageId']);
+      storeByPageRef.current.set(json.id, json);
+      rtRef.current?.emit(EVENTS.OBJECT_MODIFY, { json });
     }, 80);
 
     canvas.on('object:added', (e) => {
       const obj = e.target;
       if (!obj || applyingRemote.current || obj.__suppressSync) return;
       if (!obj.id) obj.set('id', uid(obj.type || 'obj'));
-      rtRef.current?.emit(EVENTS.OBJECT_ADD, { json: obj.toObject(['id']) });
+      const curPage = styleRef.current.currentPageId || 'page-1';
+      if (!obj.pageId) obj.set('pageId', curPage);
+      const json = obj.toObject(['id', 'pageId']);
+      storeByPageRef.current.set(json.id, json);
+      rtRef.current?.emit(EVENTS.OBJECT_ADD, { json });
     });
     canvas.on('object:modified', (e) => {
       const obj = e.target;
       if (!obj || applyingRemote.current) return;
-      rtRef.current?.emit(EVENTS.OBJECT_MODIFY, { json: obj.toObject(['id']) });
+      const curPage = styleRef.current.currentPageId || 'page-1';
+      if (!obj.pageId) obj.set('pageId', curPage);
+      const json = obj.toObject(['id', 'pageId']);
+      storeByPageRef.current.set(json.id, json);
+      rtRef.current?.emit(EVENTS.OBJECT_MODIFY, { json });
     });
     canvas.on('object:removed', (e) => {
       const obj = e.target;
       if (!obj || applyingRemote.current) return;
+      if (obj.id) storeByPageRef.current.delete(obj.id);
       rtRef.current?.emit(EVENTS.OBJECT_REMOVE, { id: obj.id });
     });
     // Stream in-progress gestures so peers see a shape move/resize/rotate live,
@@ -119,7 +134,11 @@ export function useFabricCanvas({ canvasElRef, containerRef }) {
     // Live-sync text as it's typed, throttled so each keystroke isn't a full
     // object broadcast; the trailing call syncs the final text.
     const emitTextThrottled = throttleTrailing((obj) => {
-      rtRef.current?.emit(EVENTS.OBJECT_MODIFY, { json: obj.toObject(['id']) });
+      const curPage = styleRef.current.currentPageId || 'page-1';
+      if (!obj.pageId) obj.set('pageId', curPage);
+      const json = obj.toObject(['id', 'pageId']);
+      storeByPageRef.current.set(json.id, json);
+      rtRef.current?.emit(EVENTS.OBJECT_MODIFY, { json });
     }, 120);
     canvas.on('text:changed', (e) => {
       const obj = e.target;
@@ -215,8 +234,12 @@ export function useFabricCanvas({ canvasElRef, containerRef }) {
         canvas.remove(obj); // discard accidental click without drag
       } else {
         obj.__suppressSync = false;
+        const curPage = styleRef.current.currentPageId || 'page-1';
+        if (!obj.pageId) obj.set('pageId', curPage);
         obj.setCoords();
-        rtRef.current?.emit(EVENTS.OBJECT_ADD, { json: obj.toObject(['id']) });
+        const json = obj.toObject(['id', 'pageId']);
+        storeByPageRef.current.set(json.id, json);
+        rtRef.current?.emit(EVENTS.OBJECT_ADD, { json });
       }
       // Stay on the active shape tool so several shapes can be drawn in a row;
       // switch to the Select tool manually to move/resize them.
@@ -250,7 +273,11 @@ export function useFabricCanvas({ canvasElRef, containerRef }) {
         const active = c.getActiveObject();
         if (!active) return;
         e.preventDefault();
-        c.getActiveObjects().forEach((o) => c.remove(o));
+        c.getActiveObjects().forEach((o) => {
+          if (o.id) storeByPageRef.current.delete(o.id);
+          c.remove(o);
+          rtRef.current?.emit(EVENTS.OBJECT_REMOVE, { id: o.id });
+        });
         c.discardActiveObject();
         c.requestRenderAll();
       }
@@ -281,17 +308,25 @@ export function useFabricCanvas({ canvasElRef, containerRef }) {
         left = (viewportPoint.x - vpt[4]) / vpt[0];
         top = (viewportPoint.y - vpt[5]) / vpt[3];
       }
-      img.set({ left, top, originX: 'center', originY: 'center', id: uid('image') });
+      const curPage = styleRef.current.currentPageId || 'page-1';
+      img.set({ left, top, originX: 'center', originY: 'center', id: uid('image'), pageId: curPage });
       canvas.add(img);
       canvas.setActiveObject(img);
+      const json = img.toObject(['id', 'pageId']);
+      storeByPageRef.current.set(json.id, json);
+      rtRef.current?.emit(EVENTS.OBJECT_ADD, { json });
       canvas.requestRenderAll();
     };
 
     const clearCanvas = () => {
+      const curPage = styleRef.current.currentPageId || 'page-1';
+      for (const [key, val] of storeByPageRef.current.entries()) {
+        if ((val.pageId || 'page-1') === curPage) storeByPageRef.current.delete(key);
+      }
       canvas.remove(...canvas.getObjects());
       canvas.discardActiveObject();
       canvas.requestRenderAll();
-      rtRef.current?.emit(EVENTS.CANVAS_CLEAR, {});
+      rtRef.current?.emit(EVENTS.CANVAS_CLEAR, { pageId: curPage });
     };
 
     const zoomBy = (factor) => {
@@ -317,6 +352,50 @@ export function useFabricCanvas({ canvasElRef, containerRef }) {
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // ------------------------------------------------ switch active canvas page
+  useEffect(() => {
+    const canvas = fcRef.current;
+    if (!canvas) return;
+    const curPage = currentPageId || 'page-1';
+
+    // Save currently visible objects first right into storeByPageRef
+    canvas.getObjects().forEach((o) => {
+      if (o && o.id) {
+        if (!o.pageId) o.set('pageId', curPage);
+        storeByPageRef.current.set(o.id, o.toObject(['id', 'pageId']));
+      }
+    });
+
+    applyingRemote.current = true;
+    canvas.remove(...canvas.getObjects());
+    canvas.discardActiveObject();
+
+    const toLoad = [];
+    for (const json of storeByPageRef.current.values()) {
+      if ((json.pageId || 'page-1') === curPage) {
+        toLoad.push(json);
+      }
+    }
+
+    if (toLoad.length > 0) {
+      util.enlivenObjects(toLoad).then((objects) => {
+        if (!fcRef.current) return;
+        objects.forEach((obj, idx) => {
+          if (obj && toLoad[idx]) {
+            obj.set('id', toLoad[idx].id);
+            obj.set('pageId', toLoad[idx].pageId || 'page-1');
+            fcRef.current.add(obj);
+          }
+        });
+        fcRef.current.requestRenderAll();
+        applyingRemote.current = false;
+      });
+    } else {
+      canvas.requestRenderAll();
+      applyingRemote.current = false;
+    }
+  }, [currentPageId]);
 
   // ------------------------------------------------ apply tool mode on changes
   useEffect(() => {
@@ -361,7 +440,19 @@ export function useFabricCanvas({ canvasElRef, containerRef }) {
 
     const applyModify = ({ json }) => {
       if (!json) return;
+      storeByPageRef.current.set(json.id, json);
+      const curPage = styleRef.current.currentPageId || 'page-1';
+      const objPage = json.pageId || 'page-1';
       const target = findById(json.id);
+      if (objPage !== curPage) {
+        if (target) {
+          applyingRemote.current = true;
+          canvas.remove(target);
+          canvas.requestRenderAll();
+          applyingRemote.current = false;
+        }
+        return undefined;
+      }
       if (!target) return applyAdd({ json });
       applyingRemote.current = true;
       target.set(json);
@@ -373,6 +464,10 @@ export function useFabricCanvas({ canvasElRef, containerRef }) {
     };
     const applyAdd = async ({ json }) => {
       if (!json) return;
+      storeByPageRef.current.set(json.id, json);
+      const curPage = styleRef.current.currentPageId || 'page-1';
+      const objPage = json.pageId || 'page-1';
+      if (objPage !== curPage) return;
       if (findById(json.id)) {
         applyModify({ json });
         return;
@@ -380,12 +475,14 @@ export function useFabricCanvas({ canvasElRef, containerRef }) {
       const [obj] = await util.enlivenObjects([json]);
       if (!obj) return;
       obj.set('id', json.id);
+      obj.set('pageId', objPage);
       applyingRemote.current = true;
       canvas.add(obj);
       canvas.requestRenderAll();
       applyingRemote.current = false;
     };
     const applyRemove = ({ id }) => {
+      if (id) storeByPageRef.current.delete(id);
       const target = findById(id);
       if (!target) return;
       applyingRemote.current = true;
@@ -393,11 +490,31 @@ export function useFabricCanvas({ canvasElRef, containerRef }) {
       canvas.requestRenderAll();
       applyingRemote.current = false;
     };
-    const applyClear = () => {
-      applyingRemote.current = true;
-      canvas.remove(...canvas.getObjects());
-      canvas.requestRenderAll();
-      applyingRemote.current = false;
+    const applyClear = (payload) => {
+      const targetPageId = payload?.pageId;
+      const curPage = styleRef.current.currentPageId || 'page-1';
+      if (targetPageId) {
+        for (const [key, val] of storeByPageRef.current.entries()) {
+          if ((val.pageId || 'page-1') === targetPageId) storeByPageRef.current.delete(key);
+        }
+        if (targetPageId === curPage) {
+          applyingRemote.current = true;
+          canvas.remove(...canvas.getObjects());
+          canvas.requestRenderAll();
+          applyingRemote.current = false;
+        }
+      } else {
+        storeByPageRef.current.clear();
+        applyingRemote.current = true;
+        canvas.remove(...canvas.getObjects());
+        canvas.requestRenderAll();
+        applyingRemote.current = false;
+      }
+    };
+    const applyPageList = ({ pages: remotePages }) => {
+      if (Array.isArray(remotePages) && remotePages.length > 0) {
+        dispatch(setPages(remotePages));
+      }
     };
 
     const unsubs = [
@@ -405,6 +522,7 @@ export function useFabricCanvas({ canvasElRef, containerRef }) {
       rt.on(EVENTS.OBJECT_MODIFY, applyModify),
       rt.on(EVENTS.OBJECT_REMOVE, applyRemove),
       rt.on(EVENTS.CANVAS_CLEAR, applyClear),
+      rt.on(EVENTS.PAGE_LIST, applyPageList),
     ];
     return () => {
       unsubs.forEach((u) => u && u());

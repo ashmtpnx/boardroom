@@ -9,6 +9,8 @@ const initialState = {
   brushType: BRUSHES.PENCIL, // pencil | spray | circle
   lineWidth: 4,
   zoom: 1,
+  pages: [{ id: 'page-1', title: 'Page 1' }],
+  currentPageId: 'page-1',
 };
 
 const canvasSlice = createSlice({
@@ -22,6 +24,20 @@ const canvasSlice = createSlice({
     setBrushType: (s, a) => { s.brushType = a.payload; },
     setLineWidth: (s, a) => { s.lineWidth = a.payload; },
     setZoom: (s, a) => { s.zoom = a.payload; },
+    setPages: (s, a) => {
+      if (Array.isArray(a.payload) && a.payload.length > 0) {
+        s.pages = a.payload;
+        if (!s.pages.some((p) => p.id === s.currentPageId)) {
+          s.currentPageId = s.pages[0].id;
+        }
+      }
+    },
+    setCurrentPageId: (s, a) => {
+      if (typeof a.payload === 'string') {
+        s.currentPageId = a.payload;
+      }
+    },
+    resetCanvasState: () => initialState,
   },
 });
 
@@ -33,6 +49,9 @@ export const {
   setBrushType,
   setLineWidth,
   setZoom,
+  setPages,
+  setCurrentPageId,
+  resetCanvasState,
 } = canvasSlice.actions;
 
 export default canvasSlice.reducer;

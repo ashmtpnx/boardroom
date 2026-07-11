@@ -17,6 +17,7 @@ import InboxProvider from './realtime/InboxProvider';
 import TopBar from './components/TopBar';
 import Toolbar from './components/Toolbar/Toolbar';
 import Sidebar from './components/Sidebar/Sidebar';
+import PageControls from './components/PageControls/PageControls';
 import styles from './App.module.css';
 
 // Fabric.js is ~500 KB — the single biggest dependency, and it's only needed on a
@@ -79,6 +80,7 @@ function Board({ roomId }) {
           <Suspense fallback={<div className={styles.canvasLoading} aria-busy="true" />}>
             <Canvas />
           </Suspense>
+          <PageControls />
         </div>
         <Sidebar />
       </div>

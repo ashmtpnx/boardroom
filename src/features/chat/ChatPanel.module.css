@@ -3,6 +3,52 @@
   display: flex;
   flex-direction: column;
   min-height: 0;
+  background: transparent;
+}
+
+.quickReactions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  background: var(--surface-2, rgba(0, 0, 0, 0.03));
+  border-bottom: 1px solid var(--border);
+}
+
+.reactionLabel {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--text-2);
+  letter-spacing: 0.03em;
+}
+
+.reactionButtons {
+  display: flex;
+  gap: 6px;
+}
+
+.rxBtn {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  font-size: 14px;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  transition: all 0.15s cubic-bezier(0.3, 1.2, 0.3, 1);
+}
+
+.rxBtn:hover {
+  transform: scale(1.22) translateY(-2px);
+  background: var(--surface-2);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+.rxBtn:active {
+  transform: scale(0.95);
 }
 
 .messages {
@@ -14,10 +60,35 @@
   gap: 14px;
 }
 
-.empty {
+.emptyCard {
   margin: auto;
+  text-align: center;
+  padding: 24px 18px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  max-width: 250px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.emptyIcon {
+  font-size: 32px;
+  margin-bottom: 4px;
+}
+
+.emptyTitle {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.emptyText {
+  font-size: 12px;
+  line-height: 1.5;
   color: var(--text-2);
-  font-size: 13px;
 }
 
 .msg {
@@ -30,22 +101,23 @@
 }
 
 .avatar {
-  width: 30px;
-  height: 30px;
+  width: 32px;
+  height: 32px;
   border-radius: 50%;
   flex-shrink: 0;
   display: grid;
   place-items: center;
   color: #fff;
-  font-size: 11px;
-  font-weight: 600;
+  font-size: 12px;
+  font-weight: 700;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12);
 }
 
 .bubbleWrap {
   display: flex;
   flex-direction: column;
   gap: 3px;
-  max-width: 78%;
+  max-width: 80%;
 }
 .msgMine .bubbleWrap {
   align-items: flex-end;
@@ -58,30 +130,73 @@
   font-size: 11px;
 }
 .name {
-  font-weight: 600;
+  font-weight: 700;
   color: var(--text);
 }
 .time {
   color: var(--text-2);
+  font-size: 10px;
 }
 
 .bubble {
   background: var(--surface-2);
   border: 1px solid var(--border);
-  padding: 8px 12px;
-  border-radius: 12px;
+  padding: 9px 13px;
+  border-radius: 14px;
   border-top-left-radius: 4px;
   font-size: 13px;
   line-height: 1.45;
   color: var(--text);
   word-break: break-word;
   white-space: pre-wrap;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
 }
 .msgMine .bubble {
-  background: var(--accent-weak);
-  border-color: rgba(26, 115, 232, 0.2);
-  border-top-left-radius: 12px;
+  background: var(--accent-weak, rgba(26, 115, 232, 0.12));
+  border-color: rgba(26, 115, 232, 0.22);
+  border-top-left-radius: 14px;
   border-top-right-radius: 4px;
+}
+
+.typingIndicator {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 12px;
+  background: var(--surface-2);
+  border-radius: 9999px;
+  align-self: flex-start;
+  margin-top: 4px;
+}
+
+.typingDot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--accent);
+  animation: typingBounce 1.4s infinite ease-in-out both;
+}
+.typingDot:nth-child(1) {
+  animation-delay: -0.32s;
+}
+.typingDot:nth-child(2) {
+  animation-delay: -0.16s;
+}
+
+.typingText {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-2);
+  margin-left: 4px;
+}
+
+@keyframes typingBounce {
+  0%, 80%, 100% {
+    transform: scale(0);
+  }
+  40% {
+    transform: scale(1);
+  }
 }
 
 .composer {
@@ -89,6 +204,7 @@
   gap: 8px;
   padding: 12px;
   border-top: 1px solid var(--border);
+  background: var(--surface);
 }
 .input {
   flex: 1;
@@ -100,10 +216,12 @@
   font-size: 13px;
   color: var(--text);
   outline: none;
+  transition: all 0.15s ease;
 }
 .input:focus {
   border-color: var(--accent);
   background: var(--surface);
+  box-shadow: 0 0 0 3px rgba(26, 115, 232, 0.14);
 }
 .send {
   width: 40px;
@@ -115,12 +233,15 @@
   border: none;
   background: var(--accent);
   color: #fff;
+  cursor: pointer;
+  transition: all 0.15s ease;
 }
-.send:hover {
-  background: #1765cc;
+.send:hover:not(:disabled) {
+  background: #1557b0;
+  transform: scale(1.05);
+  box-shadow: 0 4px 10px rgba(26, 115, 232, 0.3);
 }
 .send:disabled {
-  background: var(--border);
-  color: var(--text-2);
+  opacity: 0.45;
   cursor: not-allowed;
 }

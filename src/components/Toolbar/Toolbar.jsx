@@ -27,11 +27,9 @@ const TOOL_LIST = [
 export default function Toolbar() {
   const dispatch = useDispatch();
   const activeTool = useSelector((s) => s.canvas.activeTool);
-  // Start the style fly-out open on roomy screens, collapsed on phones/tablets
-  // where it would otherwise cover most of the canvas.
-  const [styleOpen, setStyleOpen] = useState(
-    () => typeof window === 'undefined' || window.innerWidth > 900,
-  );
+  // Start the style fly-out collapsed by default so the board canvas is clean
+  // and unblocked across all devices on first load.
+  const [styleOpen, setStyleOpen] = useState(false);
   const fileRef = useRef(null);
 
   const onImagePick = (e) => {
@@ -56,7 +54,12 @@ export default function Toolbar() {
               icon={t.icon}
               label={t.label}
               active={activeTool === t.tool}
-              onClick={() => dispatch(setTool(t.tool))}
+              onClick={() => {
+                dispatch(setTool(t.tool));
+                if ([TOOLS.DRAW, TOOLS.RECT, TOOLS.CIRCLE, TOOLS.TRIANGLE, TOOLS.STICKY, TOOLS.TEXT].includes(t.tool)) {
+                  // Optional: if user clicks twice on a drawing tool or wants style
+                }
+              }}
             />
           ))}
           <ToolButton icon={ImagePlus} label="Add image" onClick={() => fileRef.current?.click()} />
@@ -72,6 +75,18 @@ export default function Toolbar() {
 
       {styleOpen && (
         <div className={styles.stylePanel}>
+          <div className={styles.panelHeader}>
+            <span className={styles.panelTitle}>Style & Formatting</span>
+            <button
+              type="button"
+              className={styles.closeBtn}
+              onClick={() => setStyleOpen(false)}
+              title="Close styles"
+              aria-label="Close styles"
+            >
+              ×
+            </button>
+          </div>
           <ColorPicker />
           <BrushControls />
         </div>

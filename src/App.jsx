@@ -18,6 +18,7 @@ import TopBar from './components/TopBar';
 import Toolbar from './components/Toolbar/Toolbar';
 import Sidebar from './components/Sidebar/Sidebar';
 import PageControls from './components/PageControls/PageControls';
+import RoomReactions from './components/Reactions/RoomReactions';
 import styles from './App.module.css';
 
 // Fabric.js is ~500 KB — the single biggest dependency, and it's only needed on a
@@ -80,6 +81,7 @@ function Board({ roomId }) {
           <Suspense fallback={<div className={styles.canvasLoading} aria-busy="true" />}>
             <Canvas />
           </Suspense>
+          <RoomReactions />
           <PageControls />
         </div>
         <Sidebar />

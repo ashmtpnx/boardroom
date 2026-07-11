@@ -2,9 +2,9 @@ import { createSlice } from '@reduxjs/toolkit';
 import { uid } from '../../utils/ids';
 
 const initialState = {
-  // Open by default on desktop; collapsed on phones/tablets so the canvas isn't
-  // covered on first load (the drawer overlays the board on small screens).
-  sidebarOpen: typeof window === 'undefined' ? true : window.innerWidth > 900,
+  // Collapsed on initial load across all devices so the board/canvas gets
+  // full edge-to-edge space. Users can open Group Chat or People via the right rail tabs.
+  sidebarOpen: false,
   activeTab: 'chat', // chat | people
   toasts: [], // { id, text }
 };

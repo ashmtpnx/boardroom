@@ -57,8 +57,86 @@
   background: var(--glass-bg-faint);
   border: 1px solid var(--glass-border);
   box-shadow: var(--glass-highlight);
-  padding: 5px 11px;
+  padding: 5px 12px;
   border-radius: 999px;
+  white-space: nowrap;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.15s ease;
+  position: relative;
+}
+.room:hover {
+  background: var(--surface-2);
+  color: var(--text);
+  border-color: var(--accent);
+}
+
+.copiedBadge {
+  background: #10b981;
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 1px 6px;
+  border-radius: 999px;
+  animation: fadeIn 0.15s ease;
+}
+
+.avatarsStack {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 10px;
+  background: var(--glass-bg-faint);
+  border: 1px solid var(--glass-border);
+  border-radius: 999px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  user-select: none;
+}
+.avatarsStack:hover {
+  background: var(--surface-2);
+  border-color: var(--accent);
+  transform: translateY(-1px);
+}
+
+.avatarGroup {
+  display: flex;
+  align-items: center;
+}
+
+.avatarItem {
+  margin-left: -6px;
+  border: 2px solid var(--surface);
+  border-radius: 50%;
+  transition: transform 0.15s;
+}
+.avatarItem:first-child {
+  margin-left: 0;
+}
+.avatarsStack:hover .avatarItem {
+  transform: scale(1.08);
+}
+
+.avatarMore {
+  margin-left: -6px;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--accent);
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  display: grid;
+  place-items: center;
+  border: 2px solid var(--surface);
+}
+
+.onlineCount {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text);
   white-space: nowrap;
 }
 

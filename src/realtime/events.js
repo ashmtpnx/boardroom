@@ -25,6 +25,9 @@ export const EVENTS = {
   FRIEND_REQUEST: 'friend:request', // "I'd like to add you"
   FRIEND_ACCEPT: 'friend:accept', // "I accepted your request"
   FRIEND_DECLINE: 'friend:decline', // "I declined your request"
+  // Board / Room live interactions
+  ROOM_TYPING: 'room:typing',
+  ROOM_REACTION: 'room:reaction',
   // Presence (payload: user object)
   PRESENCE_JOIN: 'presence:join', // "I just arrived"
   PRESENCE_SYNC: 'presence:sync', // "here's who I am" (reply to a join)

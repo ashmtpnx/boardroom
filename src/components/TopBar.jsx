@@ -1,19 +1,23 @@
 import { useState } from 'react';
-import { useSelector } from 'react-redux';
-import { Share2, Download, ZoomIn, ZoomOut, LogOut, MessageCircle } from 'lucide-react';
+import { useDispatch, useSelector } from 'react-redux';
+import { Share2, Download, ZoomIn, ZoomOut, LogOut, MessageCircle, Users } from 'lucide-react';
 import { getCanvasApi } from '../features/canvas/canvasApi';
 import { exportBoardPdf, exportChatPdf } from '../utils/exportPdf';
 import { goHome, goToAccount, goToMessages } from '../utils/nav';
+import { setActiveTab } from '../features/ui/uiSlice';
 import Avatar from './Avatar';
 import NotificationBell from './Notifications/NotificationBell';
 import styles from './TopBar.module.css';
 
 export default function TopBar() {
+  const dispatch = useDispatch();
   const user = useSelector((s) => s.session.currentUser);
   const roomId = useSelector((s) => s.session.roomId);
   const zoom = useSelector((s) => s.canvas.zoom);
   const messages = useSelector((s) => s.chat.messages);
+  const people = useSelector((s) => s.people.users || []);
   const [copied, setCopied] = useState(false);
+  const [roomCopied, setRoomCopied] = useState(false);
 
   const share = async () => {
     try {
@@ -25,10 +29,29 @@ export default function TopBar() {
     }
   };
 
+  const copyRoomId = async () => {
+    if (!roomId) return;
+    try {
+      await navigator.clipboard.writeText(roomId);
+      setRoomCopied(true);
+      setTimeout(() => setRoomCopied(false), 1500);
+    } catch {
+      window.prompt('Copy room code:', roomId);
+    }
+  };
+
   const onBoardPdf = () => {
     const c = getCanvasApi()?.getCanvas();
     if (c) exportBoardPdf(c);
   };
+
+  const openPeople = () => {
+    dispatch(setActiveTab('people'));
+  };
+
+  // Show up to 4 avatars inside the topbar stack
+  const displayAvatars = people.slice(0, 4);
+  const extraCount = Math.max(0, people.length - 4);
 
   return (
     <header className={styles.bar}>
@@ -36,9 +59,34 @@ export default function TopBar() {
         <img src="/board.svg" className={styles.brandMark} alt="" />
         <span className={styles.brandText}>BOARDROOM</span>
       </button>
-      <span className={styles.room} title="Share this room code with collaborators">
-        Room · {roomId || '…'}
-      </span>
+
+      <button
+        type="button"
+        className={styles.room}
+        onClick={copyRoomId}
+        title={roomCopied ? 'Room ID copied!' : 'Click to copy Room Code'}
+      >
+        Room · <strong>{roomId || '…'}</strong>
+        {roomCopied && <span className={styles.copiedBadge}>Copied!</span>}
+      </button>
+
+      {people.length > 0 && (
+        <div className={styles.avatarsStack} onClick={openPeople} title="Click to view online members" role="button" tabIndex={0}>
+          <div className={styles.avatarGroup}>
+            {displayAvatars.map((p, idx) => (
+              <div key={p.id || idx} className={styles.avatarItem} style={{ zIndex: 10 - idx }}>
+                <Avatar user={p} size={24} />
+              </div>
+            ))}
+            {extraCount > 0 && (
+              <div className={styles.avatarMore} style={{ zIndex: 1 }}>
+                +{extraCount}
+              </div>
+            )}
+          </div>
+          <span className={styles.onlineCount}>{people.length} online</span>
+        </div>
+      )}
 
       <div className={styles.zoom}>
         <button className={styles.zoomBtn} onClick={() => getCanvasApi()?.zoomBy(0.9)} aria-label="Zoom out">

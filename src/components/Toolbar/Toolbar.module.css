@@ -72,8 +72,8 @@
 
 /* ---- style fly-out ---- */
 .stylePanel {
-  width: 232px;
-  padding: 16px;
+  width: 240px;
+  padding: 14px;
   background: var(--glass-bg-strong);
   -webkit-backdrop-filter: var(--glass-blur-strong);
   backdrop-filter: var(--glass-blur-strong);
@@ -82,7 +82,45 @@
   box-shadow: var(--glass-shadow), var(--glass-highlight);
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 14px;
+  max-height: 100%;
+  overflow-y: auto;
+  scrollbar-width: none;
+}
+.stylePanel::-webkit-scrollbar {
+  display: none;
+}
+
+.panelHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--border);
+}
+.panelTitle {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text);
+  letter-spacing: -0.01em;
+}
+.closeBtn {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: none;
+  background: transparent;
+  color: var(--text-2);
+  display: grid;
+  place-items: center;
+  font-size: 16px;
+  line-height: 1;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.closeBtn:hover {
+  background: var(--surface-2);
+  color: var(--text);
 }
 
 .section {

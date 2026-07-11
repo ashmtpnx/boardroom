@@ -1,0 +1,65 @@
+.container {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 50;
+  overflow: hidden;
+}
+
+.floater {
+  position: absolute;
+  bottom: 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  animation: floatUp 3s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+}
+
+.emoji {
+  font-size: 38px;
+  filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.2));
+  transform-origin: center;
+  animation: pulseRotate 3s ease-in-out infinite alternate;
+}
+
+.fromBadge {
+  background: var(--glass-bg-strong, rgba(31, 41, 92, 0.85));
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 9999px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  white-space: nowrap;
+}
+
+@keyframes floatUp {
+  0% {
+    opacity: 0;
+    transform: translateY(30px) scale(0.5);
+  }
+  15% {
+    opacity: 1;
+    transform: translateY(0) scale(1.1);
+  }
+  80% {
+    opacity: 1;
+    transform: translateY(-260px) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-340px) scale(0.8);
+  }
+}
+
+@keyframes pulseRotate {
+  0% {
+    transform: rotate(-10deg) scale(0.95);
+  }
+  100% {
+    transform: rotate(10deg) scale(1.05);
+  }
+}

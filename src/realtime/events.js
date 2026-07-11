@@ -14,6 +14,10 @@ export const EVENTS = {
   // "Friend is typing" ping (payload: { userId, name }). Fired while composing;
   // the receiver shows an indicator that auto-expires if no ping follows.
   DM_TYPING: 'dm:typing',
+  // Lightweight notification routed through the recipient's inbox channel when a
+  // DM arrives on the server. This lets InboxProvider surface a bell notification
+  // even when the user isn't viewing the DM thread. Payload: { fromTag, name, text }.
+  DM_NOTIFY: 'dm:notify',
   // Friend-request handshake, delivered on a recipient's personal inbox channel
   // (see utils/inbox.js) rather than a board room. Payloads carry the sender's
   // public card { tag, name, color, photoURL } so the receiver can render it.

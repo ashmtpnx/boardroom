@@ -96,3 +96,14 @@ export function socialStats() {
     inboxQueues: inboxQueues.size,
   };
 }
+
+// Given a DM room id (dm-BR-AAAA-BBBB__BR-CCCC-DDDD) and the sender's account
+// tag, return the OTHER participant's tag. Returns null if the room isn't a DM
+// or the sender isn't part of it.
+export function extractRecipientTag(roomId, senderTag) {
+  if (!isDmRoom(roomId) || !senderTag) return null;
+  const body = roomId.slice(DM_PREFIX.length); // BR-AAAA-BBBB__BR-CCCC-DDDD
+  const tags = body.split('__');
+  if (tags.length !== 2) return null;
+  return tags[0] === senderTag ? tags[1] : tags[1] === senderTag ? tags[0] : null;
+}

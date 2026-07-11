@@ -89,6 +89,20 @@ export default function InboxProvider() {
         if (!p?.tag || ackIfQueued(p)) return;
         removeOutgoing(p.tag);
       }));
+
+      // A DM arrived on the server for me while I'm on another page — surface a
+      // notification so the bell badge lights up. The actual message is stored on
+      // the server; it'll be replayed when the user opens the thread.
+      offs.push(client.on(EVENTS.DM_NOTIFY, (p) => {
+        if (!p?.fromTag) return;
+        addNotification({
+          type: NOTIF.MESSAGE,
+          title: `New message from ${p.name || p.fromTag}`,
+          body: (p.text || '').slice(0, 100),
+          tag: p.fromTag,
+          dedupeKey: `msg:${p.fromTag}`,
+        });
+      }));
     })();
 
     return () => {

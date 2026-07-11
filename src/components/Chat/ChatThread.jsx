@@ -36,8 +36,19 @@ export default function ChatThread({ friendTag, active = true, onActivity }) {
   const endRef = useRef(null);
   const lastTypingSentRef = useRef(0); // throttle outgoing "typing" pings
   const typingClearRef = useRef(null); // timer that hides the peer's indicator
+  // Mutable values the realtime handler reads but must NOT re-subscribe on — kept
+  // in refs so the connect effect depends only on the conversation identity
+  // (tag/myTag). Without this, a resolved profile name or an unmemoized
+  // onActivity prop would tear down and rebuild the socket, dropping messages and
+  // making the chat feel laggy.
   const activeRef = useRef(active);
   activeRef.current = active;
+  const meRef = useRef(me);
+  meRef.current = me;
+  const friendNameRef = useRef(friend?.name);
+  friendNameRef.current = friend?.name;
+  const onActivityRef = useRef(onActivity);
+  onActivityRef.current = onActivity;
 
   // When the selected conversation changes, reload its stored thread and friend.
   useEffect(() => {
@@ -67,22 +78,56 @@ export default function ChatThread({ friendTag, active = true, onActivity }) {
     let cancelled = false;
     const offs = [];
 
+    // ---- Batch buffer for server replay ----
+    // The server replays the full DM history one event at a time on join. Instead
+    // of calling setMessages N times (causing N re-renders + scrollIntoView
+    // storms), we collect replayed messages and flush them in one setState call.
+    let replayBuffer = [];
+    let flushTimer = null;
+    const flushReplay = () => {
+      if (!replayBuffer.length) return;
+      const batch = replayBuffer;
+      replayBuffer = [];
+      // Merge the batch into the stored thread in one pass (appendMessage
+      // deduplicates by id, so already-local messages are skipped).
+      setMessages((prev) => {
+        let merged = prev;
+        for (const msg of batch) {
+          if (!merged.some((m) => m.id === msg.id)) {
+            merged = [...merged, msg];
+            appendMessage(tag, msg); // persist each new message
+          }
+        }
+        return merged;
+      });
+    };
+    const scheduleFlush = () => {
+      if (flushTimer) return;
+      flushTimer = setTimeout(() => { flushTimer = null; flushReplay(); }, 50);
+    };
+
     (async () => {
       const rt = await createRealtime();
       if (cancelled) { rt.disconnect?.(); return; }
-      rt.connect(roomId, me);
+      rt.connect(roomId, meRef.current);
       rtRef.current = rt;
 
       offs.push(rt.on(EVENTS.DM_MESSAGE, (msg) => {
         if (!msg?.id) return;
-        setMessages(appendMessage(tag, msg)); // persist + dedupe
+        // If we're still in the replay window, batch it; otherwise apply live.
+        if (flushTimer !== null) {
+          replayBuffer.push(msg);
+          scheduleFlush();
+        } else {
+          setMessages(appendMessage(tag, msg)); // persist + dedupe
+        }
         setPeerTyping(false); // a sent message means they stopped typing
-        onActivity?.();
+        onActivityRef.current?.();
         // Not looking at this thread (or tab hidden) → surface a notification.
         if (!activeRef.current || document.hidden) {
           addNotification({
             type: NOTIF.MESSAGE,
-            title: `New message from ${msg.name || friend?.name || tag}`,
+            title: `New message from ${msg.name || friendNameRef.current || tag}`,
             body: msg.text,
             tag,
             dedupeKey: `msg:${tag}`,
@@ -96,16 +141,26 @@ export default function ChatThread({ friendTag, active = true, onActivity }) {
         clearTimeout(typingClearRef.current);
         typingClearRef.current = setTimeout(() => setPeerTyping(false), 3500);
       }));
+
+      // Kick off the replay window — the first batch of messages from the server
+      // arrives right after connect. Schedule the first flush so the buffer
+      // collects them.
+      scheduleFlush();
     })();
 
     return () => {
       cancelled = true;
       offs.forEach((off) => off());
       clearTimeout(typingClearRef.current);
+      clearTimeout(flushTimer);
+      flushReplay(); // flush any remaining buffered messages
       rtRef.current?.disconnect();
       rtRef.current = null;
     };
-  }, [tag, myTag, me, friend?.name, onActivity]);
+    // Only reconnect when the conversation identity changes. `me`, `friend`,
+    // and `onActivity` are read via stable refs so they don't need to be deps.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tag, myTag]);
 
   useEffect(() => {
     endRef.current?.scrollIntoView({ behavior: 'smooth' });

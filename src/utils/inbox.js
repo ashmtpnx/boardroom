@@ -15,21 +15,32 @@ export function inboxRoomId(tag) {
   return t ? `inbox-${t}` : null;
 }
 
-// Fire-and-forget a single event at someone's inbox. Opens a short-lived
-// connection, emits, and closes it a beat later (giving the transport time to
-// flush). Best-effort: resolves regardless so the UI flow never blocks on it.
+// Send a single event to someone's inbox over a short-lived connection, and only
+// tear it down once the server confirms it received (and queued) the event.
+//
+// The previous version disconnected after a fixed 600ms, which lost the event
+// whenever the socket hadn't finished connecting yet — e.g. during Render's ~50s
+// cold start — so friend requests silently never arrived. Awaiting the server ack
+// instead makes delivery reliable regardless of connection latency.
 export async function sendToInbox(targetTag, event, payload, me = null) {
   const roomId = inboxRoomId(targetTag);
   if (!roomId) return false;
+  let rt = null;
   try {
-    const rt = await createRealtime();
+    rt = await createRealtime();
     rt.connect(roomId, me);
-    rt.emit(event, payload);
-    // Let the emit flush before tearing the channel down. socket.io needs the
-    // round-trip; BroadcastChannel is synchronous but a small delay is harmless.
-    setTimeout(() => rt.disconnect?.(), 600);
-    return true;
+    // Wait until the server has acked room:join — this guarantees
+    // socket.data.roomId is set before the rt event arrives, fixing the race
+    // that silently dropped friend requests.
+    await rt.whenReady();
+    // Wait for the relay to acknowledge receipt (or time out) before closing.
+    const res = await rt.emitAck(event, payload);
+    return !!res?.ok;
   } catch {
     return false;
+  } finally {
+    // A grace period lets socket.io flush the final ack frame cleanly.
+    if (rt) setTimeout(() => rt.disconnect?.(), 500);
   }
 }
+

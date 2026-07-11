@@ -32,10 +32,20 @@ export function createMockRealtime() {
       channel.postMessage({ event, payload, sender: senderId });
     },
 
+    // BroadcastChannel delivery is synchronous and local, so "acknowledged" is
+    // immediate. Mirrors the socket transport's emitAck so callers are uniform.
+    emitAck(event, payload) {
+      if (channel) channel.postMessage({ event, payload, sender: senderId });
+      return Promise.resolve({ ok: !!channel });
+    },
+
     // No server queue in the BroadcastChannel transport — events are delivered
     // live to open tabs only, so there's nothing to acknowledge. No-op for
     // interface parity with the socket transport.
     ack() {},
+
+    // BroadcastChannel is local and synchronous — always ready immediately.
+    whenReady() { return Promise.resolve(); },
 
     on(event, handler) {
       if (!handlers.has(event)) handlers.set(event, new Set());

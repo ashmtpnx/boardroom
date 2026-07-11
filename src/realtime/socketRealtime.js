@@ -11,6 +11,11 @@ export function createSocketRealtime() {
   const senderId = uid('peer');
   const handlers = new Map();
   let socket = null;
+  // Resolves once the server acks `room:join`, so callers can await readiness
+  // before emitting (fixes the race where `rt` arrived before the server had set
+  // `socket.data.roomId`).
+  let readyResolve = null;
+  let readyPromise = null;
 
   return {
     id: senderId,
@@ -28,7 +33,14 @@ export function createSocketRealtime() {
         reconnectionAttempts: Infinity,
         timeout: 60000,
       });
-      socket.emit('room:join', { roomId, user, senderId });
+
+      readyPromise = new Promise((resolve) => { readyResolve = resolve; });
+
+      // Wait for the server to acknowledge room:join before resolving readiness.
+      socket.emit('room:join', { roomId, user, senderId }, () => {
+        readyResolve?.();
+      });
+
       socket.on('rt', (env) => {
         if (!env || env.sender === senderId) return;
         const set = handlers.get(env.event);
@@ -38,6 +50,28 @@ export function createSocketRealtime() {
 
     emit(event, payload) {
       socket?.emit('rt', { event, payload, sender: senderId });
+    },
+
+    // Emit and resolve once the server confirms receipt (socket.io ack), or after
+    // `timeout` ms as a backstop. Unlike a blind emit + fixed-delay disconnect,
+    // this guarantees the event actually reached the relay before the caller tears
+    // the connection down — the fix for friend requests that never arrived because
+    // the socket closed mid-cold-start. Resolves { ok } either way (never rejects).
+    emitAck(event, payload, timeout = 15000) {
+      return new Promise((resolve) => {
+        if (!socket) return resolve({ ok: false });
+        let settled = false;
+        const finish = (result) => { if (!settled) { settled = true; resolve(result); } };
+        // socket.io buffers this emit until connected, then delivers with an ack.
+        socket.timeout(timeout).emit('rt', { event, payload, sender: senderId }, (err, res) => {
+          finish(err ? { ok: false } : (res || { ok: true }));
+        });
+      });
+    },
+
+    // Wait until the server has acked room:join. Safe to call multiple times.
+    whenReady() {
+      return readyPromise || Promise.resolve();
     },
 
     // Acknowledge queued inbox events by id so the relay stops re-delivering them.
@@ -55,6 +89,9 @@ export function createSocketRealtime() {
       socket?.disconnect();
       socket = null;
       handlers.clear();
+      readyPromise = null;
+      readyResolve = null;
     },
   };
 }
+

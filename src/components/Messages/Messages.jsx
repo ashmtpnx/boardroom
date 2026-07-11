@@ -1,12 +1,13 @@
 import { useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { ArrowLeft, UserPlus, MessageSquare, Search, X, Copy, Check, Loader } from 'lucide-react';
-import { getFriends, removeFriend } from '../../utils/friends';
+import { getFriends, removeFriend, FRIENDS_EVENT } from '../../utils/friends';
 import { accountId, normalizeAccountId } from '../../utils/accountId';
 import { lookupAccount } from '../../utils/directory';
 import { sendFriendRequest } from '../../utils/friendRequests';
 import { getOutgoing, REQUESTS_EVENT } from '../../utils/requests';
 import { listConversations } from '../../utils/dm';
+import { NOTIFICATIONS_EVENT } from '../../utils/notifications';
 import { goHome, goToFriendChat } from '../../utils/nav';
 import Avatar from '../Avatar';
 import NotificationBell from '../Notifications/NotificationBell';
@@ -52,14 +53,9 @@ export default function Messages() {
 
   useEffect(() => {
     refresh();
-    window.addEventListener('focus', refresh);
-    window.addEventListener('storage', refresh);
-    window.addEventListener(REQUESTS_EVENT, refresh);
-    return () => {
-      window.removeEventListener('focus', refresh);
-      window.removeEventListener('storage', refresh);
-      window.removeEventListener(REQUESTS_EVENT, refresh);
-    };
+    const events = ['focus', 'storage', REQUESTS_EVENT, FRIENDS_EVENT, NOTIFICATIONS_EVENT];
+    events.forEach((e) => window.addEventListener(e, refresh));
+    return () => events.forEach((e) => window.removeEventListener(e, refresh));
   }, []);
 
   const onAddFriend = async () => {

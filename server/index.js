@@ -11,7 +11,7 @@ import {
   roomStats,
 } from './rooms.js';
 import { registerUser, lookupUser, directoryStats } from './directory.js';
-import { normalizeAccountId } from './accountId.js';
+import { accountId, normalizeAccountId } from './accountId.js';
 import {
   isDmRoom,
   isInboxRoom,
@@ -21,6 +21,7 @@ import {
   getInboxQueue,
   ackInbox,
   socialStats,
+  extractRecipientTag,
 } from './social.js';
 
 const PORT = Number(process.env.PORT) || 3001;
@@ -72,8 +73,11 @@ const INBOX_EVENTS = new Set(['friend:request', 'friend:accept', 'friend:decline
 
 io.on('connection', (socket) => {
   // Client joins exactly one room (room id = URL hash on the frontend).
-  socket.on('room:join', ({ roomId, user, senderId }) => {
-    if (!roomId || !senderId) return;
+  socket.on('room:join', ({ roomId, user, senderId }, joinAck) => {
+    if (!roomId || !senderId) {
+      if (typeof joinAck === 'function') joinAck({ ok: false });
+      return;
+    }
     socket.data = { roomId, senderId, user: user || null };
     socket.join(roomId);
     addMember(roomId, senderId, user);
@@ -99,18 +103,44 @@ io.on('connection', (socket) => {
         socket.emit('rt', { event, payload: { ...payload, eventId }, sender: 'server' });
       }
     }
+
+    // Ack so the client knows the room is ready and it's safe to emit events.
+    if (typeof joinAck === 'function') joinAck({ ok: true });
   });
 
   // Generic relay: fold canvas state / persist social state, then forward to
-  // everyone else in the room.
-  socket.on('rt', (env) => {
+  // everyone else in the room. The optional `ack` callback (socket.io) lets a
+  // sender confirm the server received and stored the event before disconnecting
+  // — this is what makes a transient inbox send reliable regardless of latency.
+  socket.on('rt', (env, ack) => {
+    const done = () => { if (typeof ack === 'function') ack({ ok: true }); };
     const { roomId } = socket.data || {};
-    if (!roomId || !env || !env.event) return;
+    if (!roomId || !env || !env.event) { done(); return; }
 
     if (CANVAS_EVENTS.has(env.event)) {
       applyCanvasEvent(roomId, env.event, env.payload);
     } else if (env.event === DM_MESSAGE && isDmRoom(roomId)) {
       storeDm(roomId, env.payload); // durable thread for cross-device replay
+
+      // Fan out a lightweight notification to the RECIPIENT's inbox channel so
+      // InboxProvider (always connected) can surface a bell badge even when the
+      // user isn't viewing the DM thread. The sender's account tag is derived
+      // from their user id; extractRecipientTag gives us the other side.
+      const senderUser = socket.data?.user;
+      const senderTag = senderUser?.id ? accountId(senderUser.id) : null;
+      const recipientTag = senderTag ? extractRecipientTag(roomId, senderTag) : null;
+      if (recipientTag) {
+        const inboxRoom = `inbox-${recipientTag}`;
+        io.to(inboxRoom).emit('rt', {
+          event: 'dm:notify',
+          payload: {
+            fromTag: senderTag,
+            name: env.payload?.name || senderUser?.name || senderTag,
+            text: (env.payload?.text || '').slice(0, 120),
+          },
+          sender: 'server',
+        });
+      }
     } else if (INBOX_EVENTS.has(env.event) && isInboxRoom(roomId)) {
       // Queue for offline delivery and stamp the relayed copy with its id so an
       // online recipient can ack immediately (and won't get it again on rejoin).
@@ -119,10 +149,12 @@ io.on('connection', (socket) => {
         ...env,
         payload: { ...env.payload, eventId },
       });
+      done();
       return;
     }
 
     socket.to(roomId).emit('rt', env);
+    done();
   });
 
   // Recipient acknowledges inbox events it has processed, so they're not

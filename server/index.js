@@ -136,6 +136,8 @@ io.on('connection', (socket) => {
           payload: {
             fromTag: senderTag,
             name: env.payload?.name || senderUser?.name || senderTag,
+            photoURL: env.payload?.photoURL || senderUser?.photoURL || null,
+            color: env.payload?.color || senderUser?.color || null,
             text: (env.payload?.text || '').slice(0, 120),
           },
           sender: 'server',

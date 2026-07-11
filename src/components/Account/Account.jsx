@@ -8,7 +8,6 @@ import { saveProfile, clearProfile, applyProfile } from '../../utils/profile';
 import { accountId } from '../../utils/accountId';
 import { fileToAvatarDataURL } from '../../utils/imageResize';
 import { goHome } from '../../utils/nav';
-import { USER_COLORS } from '../../utils/colors';
 import { googleEnabled, signInWithGoogle, signOut } from '../../auth/auth';
 import Avatar from '../Avatar';
 import styles from './Account.module.css';
@@ -44,8 +43,6 @@ export default function Account() {
     setTimeout(() => setSavedTick(false), 1600);
   };
 
-  const onColor = (color) => patchProfile({ color });
-
   const onPickPhoto = async (e) => {
     const file = e.target.files?.[0];
     e.target.value = '';
@@ -72,7 +69,7 @@ export default function Account() {
   };
 
   const onReset = () => {
-    if (!window.confirm('Reset your profile (name, picture, color) on this device?')) return;
+    if (!window.confirm('Reset your profile (name, picture) on this device?')) return;
     clearProfile(user.id);
     const base = { ...user, photoURL: null };
     dispatch(setUser(base));
@@ -161,20 +158,6 @@ export default function Account() {
                 {savedTick ? <><Check size={15} /> Saved</> : 'Save'}
               </button>
             </div>
-
-            <div className={styles.fieldLabel}>Avatar color</div>
-            <div className={styles.swatches}>
-              {USER_COLORS.map((c) => (
-                <button
-                  key={c}
-                  className={`${styles.swatch} ${user.color === c ? styles.swatchActive : ''}`}
-                  style={{ background: c }}
-                  onClick={() => onColor(c)}
-                  aria-label={`Use ${c}`}
-                />
-              ))}
-            </div>
-            <p className={styles.note}>Color is used for your initials when no picture is set, and your presence dot.</p>
           </section>
 
           {/* ---- account details ---- */}

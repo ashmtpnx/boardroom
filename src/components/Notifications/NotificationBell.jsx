@@ -10,6 +10,7 @@ import {
 } from '../../utils/notifications';
 import { getIncoming, REQUESTS_EVENT } from '../../utils/requests';
 import { acceptRequest, declineRequest } from '../../utils/friendRequests';
+import { getFriendByTag } from '../../utils/friends';
 import { goToFriendChat } from '../../utils/nav';
 import Avatar from '../Avatar';
 import styles from './NotificationBell.module.css';
@@ -162,6 +163,12 @@ export default function NotificationBell() {
             <div className={styles.section}>
               {incoming.length > 0 && <div className={styles.sectionLabel}>Earlier</div>}
               {feed.map((n) => {
+                const friend = n.tag ? getFriendByTag(n.tag) : null;
+                const userObj = (n.photoURL || n.color || friend) ? {
+                  name: friend?.name || n.name || n.title,
+                  color: friend?.color || n.color,
+                  photoURL: friend?.photoURL || n.photoURL,
+                } : null;
                 const Icon = n.type === NOTIF.MESSAGE ? MessageCircle : UserPlus;
                 const clickable = n.tag && (n.type === NOTIF.MESSAGE || n.type === NOTIF.REQUEST_ACCEPTED);
                 return (
@@ -171,7 +178,14 @@ export default function NotificationBell() {
                     onClick={() => onOpenNotif(n)}
                     role={clickable ? 'button' : undefined}
                   >
-                    <span className={styles.notifIcon}><Icon size={16} /></span>
+                    {userObj ? (
+                      <div className={styles.notifAvatarWrap}>
+                        <Avatar user={userObj} size={38} />
+                        <span className={styles.notifBadgeIcon}><Icon size={11} /></span>
+                      </div>
+                    ) : (
+                      <span className={styles.notifIcon}><Icon size={16} /></span>
+                    )}
                     <div className={styles.notifMeta}>
                       <span className={styles.notifTitle}>{n.title}</span>
                       {n.body && <span className={styles.notifBody}>{n.body}</span>}

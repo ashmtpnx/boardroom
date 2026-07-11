@@ -131,6 +131,9 @@ export default function ChatThread({ friendTag, active = true, onActivity }) {
             body: msg.text,
             tag,
             dedupeKey: `msg:${tag}`,
+            photoURL: msg.photoURL || null,
+            color: msg.color || null,
+            name: msg.name || friendNameRef.current || tag,
           });
         }
       }));

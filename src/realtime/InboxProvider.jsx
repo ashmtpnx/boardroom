@@ -64,6 +64,9 @@ export default function InboxProvider() {
           body: 'Tap to accept or decline.',
           tag: p.tag,
           dedupeKey: `req:${p.tag}`,
+          photoURL: p.photoURL || null,
+          color: p.color || null,
+          name: p.name || p.tag,
         });
       }));
 
@@ -81,6 +84,9 @@ export default function InboxProvider() {
           body: 'You can now message each other.',
           tag: p.tag,
           dedupeKey: `acc:${p.tag}`,
+          photoURL: p.photoURL || null,
+          color: p.color || null,
+          name: p.name || p.tag,
         });
       }));
 
@@ -101,6 +107,9 @@ export default function InboxProvider() {
           body: (p.text || '').slice(0, 100),
           tag: p.fromTag,
           dedupeKey: `msg:${p.fromTag}`,
+          photoURL: p.photoURL || null,
+          color: p.color || null,
+          name: p.name || p.fromTag,
         });
       }));
     })();

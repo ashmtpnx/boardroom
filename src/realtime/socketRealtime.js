@@ -28,6 +28,7 @@ export function createSocketRealtime() {
       // the connection survives the ~50s cold start (socket.io keeps retrying,
       // falling back to polling if the websocket handshake can't complete yet).
       socket = io(url, {
+        forceNew: true,
         transports: ['websocket', 'polling'],
         query: { roomId, senderId },
         reconnectionAttempts: Infinity,

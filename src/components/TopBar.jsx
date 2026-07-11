@@ -1,10 +1,11 @@
 import { useState } from 'react';
 import { useSelector } from 'react-redux';
-import { Share2, Download, ZoomIn, ZoomOut, LogOut } from 'lucide-react';
+import { Share2, Download, ZoomIn, ZoomOut, LogOut, MessageCircle } from 'lucide-react';
 import { getCanvasApi } from '../features/canvas/canvasApi';
 import { exportBoardPdf, exportChatPdf } from '../utils/exportPdf';
-import { goHome, goToAccount } from '../utils/nav';
+import { goHome, goToAccount, goToMessages } from '../utils/nav';
 import Avatar from './Avatar';
+import NotificationBell from './Notifications/NotificationBell';
 import styles from './TopBar.module.css';
 
 export default function TopBar() {
@@ -54,6 +55,12 @@ export default function TopBar() {
       <div className={styles.spacer} />
 
       <div className={styles.actions}>
+        {user && <NotificationBell />}
+        {user && (
+          <button className={styles.btn} onClick={goToMessages} title="Messages">
+            <MessageCircle size={16} /> <span className={styles.btnLabel}>Messages</span>
+          </button>
+        )}
         <button className={styles.btn} onClick={onBoardPdf} title="Export board to PDF">
           <Download size={16} /> <span className={styles.btnLabel}>Board PDF</span>
         </button>

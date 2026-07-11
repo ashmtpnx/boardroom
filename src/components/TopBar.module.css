@@ -183,6 +183,41 @@
   min-width: 4px;
 }
 
+.undoRedoGroup {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: var(--glass-bg-faint);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--glass-highlight);
+  border-radius: 999px;
+  padding: 2px;
+  flex-shrink: 0;
+}
+.undoRedoBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 999px;
+  border: none;
+  background: transparent;
+  color: var(--text);
+  transition: all 0.15s ease;
+  cursor: pointer;
+}
+.undoRedoBtn:hover:not(:disabled) {
+  background: var(--surface-2);
+  color: var(--accent);
+  transform: scale(1.05);
+}
+.undoRedoBtn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+  transform: none;
+}
+
 .actions {
   display: flex;
   align-items: center;

@@ -10,7 +10,7 @@ import {
   FabricImage,
   util,
 } from 'fabric';
-import { setTool, setZoom, setPages } from './canvasSlice';
+import { setTool, setZoom, setPages, setHistoryState } from './canvasSlice';
 import { TOOLS, BRUSHES } from './tools';
 import { createRect, createCircle, createTriangle, createText, createSticky } from './fabricFactories';
 import { setCanvasApi } from './canvasApi';
@@ -32,12 +32,22 @@ function readFileAsDataURL(file) {
   });
 }
 
+function pushHistory(entry, historyRef, dispatch) {
+  if (!historyRef || !historyRef.current) return;
+  historyRef.current.undo.push(entry);
+  if (historyRef.current.undo.length > 60) historyRef.current.undo.shift();
+  historyRef.current.redo = [];
+  dispatch(setHistoryState({ canUndo: true, canRedo: false }));
+}
+
 // Slice freehand paths or erase targeted elements directly at (x, y) with a clean radius
-function erasePortionAt(canvas, x, y, radius, styleRef, storeByPageRef, rtRef) {
+function erasePortionAt(canvas, x, y, radius, styleRef, storeByPageRef, rtRef, historyRef, dispatch, undoGuard) {
   if (!canvas) return;
   const curPage = styleRef.current.currentPageId || 'page-1';
   const objects = canvas.getObjects().slice();
   let modifiedAny = false;
+  const removedJsons = [];
+  const addedJsons = [];
 
   objects.forEach((o) => {
     if (!o.id || o.__suppressSync || o.isEditing) return;
@@ -95,6 +105,9 @@ function erasePortionAt(canvas, x, y, radius, styleRef, storeByPageRef, rtRef) {
 
       if (hitAnySegment) {
         modifiedAny = true;
+        o.__sliceErasing = true;
+        const oldJson = o.toObject(['id', 'pageId']);
+        removedJsons.push(oldJson);
         if (o.id) storeByPageRef.current.delete(o.id);
         canvas.remove(o); // triggers object:removed -> emits OBJECT_REMOVE
 
@@ -112,8 +125,10 @@ function erasePortionAt(canvas, x, y, radius, styleRef, storeByPageRef, rtRef) {
             selectable: true,
             evented: true,
           });
+          newPath.__sliceErasing = true;
           canvas.add(newPath);
           const json = newPath.toObject(['id', 'pageId']);
+          addedJsons.push(json);
           storeByPageRef.current.set(newId, json);
           rtRef.current?.emit(EVENTS.OBJECT_ADD, { json });
         });
@@ -124,6 +139,8 @@ function erasePortionAt(canvas, x, y, radius, styleRef, storeByPageRef, rtRef) {
       const minRadiusSq = Math.min(br.width, br.height) ** 2 / 5;
       if (centerDistSq <= Math.max(radius * radius, minRadiusSq)) {
         modifiedAny = true;
+        o.__sliceErasing = true;
+        removedJsons.push(o.toObject(['id', 'pageId']));
         if (o.id) storeByPageRef.current.delete(o.id);
         canvas.remove(o);
       }
@@ -131,6 +148,9 @@ function erasePortionAt(canvas, x, y, radius, styleRef, storeByPageRef, rtRef) {
   });
 
   if (modifiedAny) {
+    if (historyRef && dispatch && !undoGuard?.current && (removedJsons.length > 0 || addedJsons.length > 0)) {
+      pushHistory({ type: 'ERASE_PORTION', removed: removedJsons, added: addedJsons }, historyRef, dispatch);
+    }
     canvas.requestRenderAll();
   }
 }
@@ -146,22 +166,25 @@ export function useFabricCanvas({ canvasElRef, containerRef }) {
   const stickyColor = useSelector((s) => s.canvas.stickyColor);
   const brushType = useSelector((s) => s.canvas.brushType);
   const lineWidth = useSelector((s) => s.canvas.lineWidth);
+  const eraserWidth = useSelector((s) => s.canvas.eraserWidth || 32);
   const currentPageId = useSelector((s) => s.canvas.currentPageId || 'page-1');
   const connected = useSelector((s) => s.session.status === 'connected');
 
   const fcRef = useRef(null);
-  const styleRef = useRef({ tool, strokeColor, fillColor, stickyColor, brushType, lineWidth, currentPageId });
+  const styleRef = useRef({ tool, strokeColor, fillColor, stickyColor, brushType, lineWidth, eraserWidth, currentPageId });
   const storeByPageRef = useRef(new Map()); // id -> json
   const rtRef = useRef(null);
   const applyingRemote = useRef(false); // guard so applying a remote change doesn't re-broadcast
   const draftRef = useRef(null); // in-progress shape being drag-drawn
   const panRef = useRef({ active: false, lastX: 0, lastY: 0, space: false });
   const eraserRef = useRef({ active: false });
+  const historyRef = useRef({ undo: [], redo: [] });
+  const undoGuard = useRef(false);
 
   // Keep latest tool/style readable inside the stable event handlers.
   useEffect(() => {
-    styleRef.current = { tool, strokeColor, fillColor, stickyColor, brushType, lineWidth, currentPageId };
-  }, [tool, strokeColor, fillColor, stickyColor, brushType, lineWidth, currentPageId]);
+    styleRef.current = { tool, strokeColor, fillColor, stickyColor, brushType, lineWidth, eraserWidth, currentPageId };
+  }, [tool, strokeColor, fillColor, stickyColor, brushType, lineWidth, eraserWidth, currentPageId]);
 
   // ---------------------------------------------------------------- init (once)
   useEffect(() => {
@@ -209,6 +232,9 @@ export function useFabricCanvas({ canvasElRef, containerRef }) {
       const json = obj.toObject(['id', 'pageId']);
       storeByPageRef.current.set(json.id, json);
       rtRef.current?.emit(EVENTS.OBJECT_ADD, { json });
+      if (!undoGuard.current && !obj.__sliceErasing) {
+        pushHistory({ type: 'ADD', json }, historyRef, dispatch);
+      }
     });
     canvas.on('object:modified', (e) => {
       const obj = e.target;
@@ -218,12 +244,19 @@ export function useFabricCanvas({ canvasElRef, containerRef }) {
       const json = obj.toObject(['id', 'pageId']);
       storeByPageRef.current.set(json.id, json);
       rtRef.current?.emit(EVENTS.OBJECT_MODIFY, { json });
+      if (!undoGuard.current && obj.__beforeModifyJson) {
+        pushHistory({ type: 'MODIFY', before: obj.__beforeModifyJson, after: json }, historyRef, dispatch);
+        delete obj.__beforeModifyJson;
+      }
     });
     canvas.on('object:removed', (e) => {
       const obj = e.target;
       if (!obj || applyingRemote.current) return;
       if (obj.id) storeByPageRef.current.delete(obj.id);
       rtRef.current?.emit(EVENTS.OBJECT_REMOVE, { id: obj.id });
+      if (!undoGuard.current && !obj.__suppressSync && !obj.__sliceErasing) {
+        pushHistory({ type: 'REMOVE', json: obj.toObject(['id', 'pageId']) }, historyRef, dispatch);
+      }
     });
     // Stream in-progress gestures so peers see a shape move/resize/rotate live,
     // instead of it jumping only when the mouse is released. Throttled to bound
@@ -253,7 +286,7 @@ export function useFabricCanvas({ canvasElRef, containerRef }) {
 
     // ---- pointer: shapes / sticky / text / eraser / pan ----
     canvas.on('mouse:down', (opt) => {
-      const { tool: t, strokeColor: sc, fillColor: fc, stickyColor: stc, lineWidth: lw } = styleRef.current;
+      const { tool: t, strokeColor: sc, fillColor: fc, stickyColor: stc, lineWidth: lw, eraserWidth: ew } = styleRef.current;
 
       if (t === TOOLS.PAN || panRef.current.space) {
         panRef.current.active = true;
@@ -264,10 +297,14 @@ export function useFabricCanvas({ canvasElRef, containerRef }) {
         return;
       }
 
+      if (t === TOOLS.SELECT && opt.target && !opt.target.__suppressSync) {
+        opt.target.__beforeModifyJson = opt.target.toObject(['id', 'pageId']);
+      }
+
       if (t === TOOLS.ERASER) {
         eraserRef.current.active = true;
         const p = scenePoint(opt.e);
-        erasePortionAt(canvas, p.x, p.y, Math.max(18, lw * 3), styleRef, storeByPageRef, rtRef);
+        erasePortionAt(canvas, p.x, p.y, Math.max(12, ew / 2), styleRef, storeByPageRef, rtRef, historyRef, dispatch, undoGuard);
         return;
       }
 
@@ -299,8 +336,8 @@ export function useFabricCanvas({ canvasElRef, containerRef }) {
     canvas.on('mouse:move', (opt) => {
       if (styleRef.current.tool === TOOLS.ERASER && eraserRef.current.active) {
         const p = scenePoint(opt.e);
-        const { lineWidth: lw } = styleRef.current;
-        erasePortionAt(canvas, p.x, p.y, Math.max(18, lw * 3), styleRef, storeByPageRef, rtRef);
+        const { eraserWidth: ew } = styleRef.current;
+        erasePortionAt(canvas, p.x, p.y, Math.max(12, ew / 2), styleRef, storeByPageRef, rtRef, historyRef, dispatch, undoGuard);
         return;
       }
       if (panRef.current.active) {
@@ -370,20 +407,170 @@ export function useFabricCanvas({ canvasElRef, containerRef }) {
       dispatch(setZoom(zoom));
     });
 
-    // ---- keyboard: delete selection / hold-space to pan ----
+    const undo = () => {
+      const h = historyRef.current;
+      if (!h || h.undo.length === 0) return;
+      const entry = h.undo.pop();
+      h.redo.push(entry);
+      dispatch(setHistoryState({ canUndo: h.undo.length > 0, canRedo: h.redo.length > 0 }));
+
+      const c = fcRef.current;
+      const rt = rtRef.current;
+      if (!c) return;
+      undoGuard.current = true;
+      applyingRemote.current = true;
+
+      try {
+        const findById = (id) => c.getObjects().find((o) => o.id === id);
+
+        if (entry.type === 'ADD') {
+          const target = findById(entry.json.id);
+          if (target) {
+            storeByPageRef.current.delete(entry.json.id);
+            c.remove(target);
+            rt?.emit(EVENTS.OBJECT_REMOVE, { id: entry.json.id });
+          }
+        } else if (entry.type === 'REMOVE') {
+          util.enlivenObjects([entry.json]).then(([obj]) => {
+            if (!obj) return;
+            c.add(obj);
+            const json = obj.toObject(['id', 'pageId']);
+            storeByPageRef.current.set(entry.json.id, json);
+            rt?.emit(EVENTS.OBJECT_ADD, { json });
+            c.requestRenderAll();
+          });
+        } else if (entry.type === 'MODIFY') {
+          const target = findById(entry.before.id);
+          if (target) {
+            target.set(entry.before);
+            target.setCoords();
+            storeByPageRef.current.set(entry.before.id, entry.before);
+            rt?.emit(EVENTS.OBJECT_MODIFY, { json: entry.before });
+            c.requestRenderAll();
+          }
+        } else if (entry.type === 'ERASE_PORTION') {
+          entry.added.forEach((json) => {
+            const target = findById(json.id);
+            if (target) {
+              storeByPageRef.current.delete(json.id);
+              c.remove(target);
+              rt?.emit(EVENTS.OBJECT_REMOVE, { id: json.id });
+            }
+          });
+          util.enlivenObjects(entry.removed).then((objs) => {
+            objs.forEach((obj) => {
+              if (!obj) return;
+              c.add(obj);
+              const json = obj.toObject(['id', 'pageId']);
+              storeByPageRef.current.set(json.id, json);
+              rt?.emit(EVENTS.OBJECT_ADD, { json });
+            });
+            c.requestRenderAll();
+          });
+        }
+      } finally {
+        undoGuard.current = false;
+        applyingRemote.current = false;
+        c.requestRenderAll();
+      }
+    };
+
+    const redo = () => {
+      const h = historyRef.current;
+      if (!h || h.redo.length === 0) return;
+      const entry = h.redo.pop();
+      h.undo.push(entry);
+      dispatch(setHistoryState({ canUndo: h.undo.length > 0, canRedo: h.redo.length > 0 }));
+
+      const c = fcRef.current;
+      const rt = rtRef.current;
+      if (!c) return;
+      undoGuard.current = true;
+      applyingRemote.current = true;
+
+      try {
+        const findById = (id) => c.getObjects().find((o) => o.id === id);
+
+        if (entry.type === 'ADD') {
+          util.enlivenObjects([entry.json]).then(([obj]) => {
+            if (!obj) return;
+            c.add(obj);
+            const json = obj.toObject(['id', 'pageId']);
+            storeByPageRef.current.set(entry.json.id, json);
+            rt?.emit(EVENTS.OBJECT_ADD, { json });
+            c.requestRenderAll();
+          });
+        } else if (entry.type === 'REMOVE') {
+          const target = findById(entry.json.id);
+          if (target) {
+            storeByPageRef.current.delete(entry.json.id);
+            c.remove(target);
+            rt?.emit(EVENTS.OBJECT_REMOVE, { id: entry.json.id });
+          }
+        } else if (entry.type === 'MODIFY') {
+          const target = findById(entry.after.id);
+          if (target) {
+            target.set(entry.after);
+            target.setCoords();
+            storeByPageRef.current.set(entry.after.id, entry.after);
+            rt?.emit(EVENTS.OBJECT_MODIFY, { json: entry.after });
+            c.requestRenderAll();
+          }
+        } else if (entry.type === 'ERASE_PORTION') {
+          entry.removed.forEach((json) => {
+            const target = findById(json.id);
+            if (target) {
+              storeByPageRef.current.delete(json.id);
+              c.remove(target);
+              rt?.emit(EVENTS.OBJECT_REMOVE, { id: json.id });
+            }
+          });
+          util.enlivenObjects(entry.added).then((objs) => {
+            objs.forEach((obj) => {
+              if (!obj) return;
+              c.add(obj);
+              const json = obj.toObject(['id', 'pageId']);
+              storeByPageRef.current.set(json.id, json);
+              rt?.emit(EVENTS.OBJECT_ADD, { json });
+            });
+            c.requestRenderAll();
+          });
+        }
+      } finally {
+        undoGuard.current = false;
+        applyingRemote.current = false;
+        c.requestRenderAll();
+      }
+    };
+
+    // ---- keyboard: delete selection / hold-space to pan / undo & redo ----
     const onKeyDown = (e) => {
       const c = fcRef.current;
       if (!c) return;
       const tag = (e.target && e.target.tagName) || '';
       const typing = tag === 'INPUT' || tag === 'TEXTAREA' || c.getActiveObject()?.isEditing;
-      if (e.code === 'Space' && !typing) {
+      if (typing) return;
+
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z') {
+        e.preventDefault();
+        if (e.shiftKey) redo();
+        else undo();
+        return;
+      }
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'y') {
+        e.preventDefault();
+        redo();
+        return;
+      }
+
+      if (e.code === 'Space') {
         e.preventDefault();
         panRef.current.space = true;
         c.defaultCursor = 'grab';
         c.setCursor('grab');
         return;
       }
-      if ((e.key === 'Delete' || e.key === 'Backspace') && !typing) {
+      if (e.key === 'Delete' || e.key === 'Backspace') {
         const active = c.getActiveObject();
         if (!active) return;
         e.preventDefault();
@@ -454,7 +641,7 @@ export function useFabricCanvas({ canvasElRef, containerRef }) {
       dispatch(setZoom(1));
     };
 
-    setCanvasApi({ getCanvas: () => fcRef.current, addImageFile, clearCanvas, zoomBy, resetView });
+    setCanvasApi({ getCanvas: () => fcRef.current, addImageFile, clearCanvas, zoomBy, resetView, undo, redo });
 
     return () => {
       ro.disconnect();

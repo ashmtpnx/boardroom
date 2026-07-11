@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { Share2, Download, ZoomIn, ZoomOut, LogOut, MessageCircle, Users } from 'lucide-react';
+import { Share2, Download, ZoomIn, ZoomOut, LogOut, MessageCircle, Users, Undo2, Redo2 } from 'lucide-react';
 import { getCanvasApi } from '../features/canvas/canvasApi';
 import { exportBoardPdf, exportChatPdf } from '../utils/exportPdf';
 import { goHome, goToAccount, goToMessages } from '../utils/nav';
@@ -14,6 +14,8 @@ export default function TopBar() {
   const user = useSelector((s) => s.session.currentUser);
   const roomId = useSelector((s) => s.session.roomId);
   const zoom = useSelector((s) => s.canvas.zoom);
+  const canUndo = useSelector((s) => s.canvas.canUndo);
+  const canRedo = useSelector((s) => s.canvas.canRedo);
   const messages = useSelector((s) => s.chat.messages);
   const people = useSelector((s) => s.people.users || []);
   const [copied, setCopied] = useState(false);
@@ -101,6 +103,27 @@ export default function TopBar() {
       </div>
 
       <div className={styles.spacer} />
+
+      <div className={styles.undoRedoGroup}>
+        <button
+          type="button"
+          className={styles.undoRedoBtn}
+          onClick={() => getCanvasApi()?.undo?.()}
+          disabled={!canUndo}
+          title="Undo (Ctrl+Z)"
+        >
+          <Undo2 size={16} />
+        </button>
+        <button
+          type="button"
+          className={styles.undoRedoBtn}
+          onClick={() => getCanvasApi()?.redo?.()}
+          disabled={!canRedo}
+          title="Redo (Ctrl+Y)"
+        >
+          <Redo2 size={16} />
+        </button>
+      </div>
 
       <div className={styles.actions}>
         {user && <NotificationBell />}

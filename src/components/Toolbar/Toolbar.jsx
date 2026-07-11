@@ -7,6 +7,7 @@ import {
 import ToolButton from './ToolButton';
 import ColorPicker from './ColorPicker';
 import BrushControls from './BrushControls';
+import EraserControls from './EraserControls';
 import { setTool } from '../../features/canvas/canvasSlice';
 import { TOOLS } from '../../features/canvas/tools';
 import { getCanvasApi } from '../../features/canvas/canvasApi';
@@ -21,7 +22,7 @@ const TOOL_LIST = [
   { tool: TOOLS.STICKY, icon: StickyNote, label: 'Sticky note' },
   { tool: TOOLS.TEXT, icon: Type, label: 'Text' },
   { tool: TOOLS.PAN, icon: Hand, label: 'Pan (or hold Space)' },
-  { tool: TOOLS.ERASER, icon: Eraser, label: 'Eraser (click to delete)' },
+  { tool: TOOLS.ERASER, icon: Eraser, label: 'Eraser (click to delete or slice)' },
 ];
 
 export default function Toolbar() {
@@ -56,8 +57,10 @@ export default function Toolbar() {
               active={activeTool === t.tool}
               onClick={() => {
                 dispatch(setTool(t.tool));
-                if ([TOOLS.DRAW, TOOLS.RECT, TOOLS.CIRCLE, TOOLS.TRIANGLE, TOOLS.STICKY, TOOLS.TEXT].includes(t.tool)) {
-                  // Optional: if user clicks twice on a drawing tool or wants style
+                if (t.tool === TOOLS.ERASER) {
+                  setStyleOpen(true);
+                } else if ([TOOLS.DRAW, TOOLS.RECT, TOOLS.CIRCLE, TOOLS.TRIANGLE, TOOLS.STICKY, TOOLS.TEXT].includes(t.tool)) {
+                  if (activeTool === t.tool) setStyleOpen((v) => !v);
                 }
               }}
             />
@@ -73,22 +76,33 @@ export default function Toolbar() {
         <input ref={fileRef} type="file" accept="image/*" hidden onChange={onImagePick} />
       </div>
 
-      {styleOpen && (
+      {(styleOpen || activeTool === TOOLS.ERASER) && (
         <div className={styles.stylePanel}>
           <div className={styles.panelHeader}>
-            <span className={styles.panelTitle}>Style & Formatting</span>
+            <span className={styles.panelTitle}>
+              {activeTool === TOOLS.ERASER ? 'Eraser Controls' : 'Style & Formatting'}
+            </span>
             <button
               type="button"
               className={styles.closeBtn}
-              onClick={() => setStyleOpen(false)}
-              title="Close styles"
-              aria-label="Close styles"
+              onClick={() => {
+                setStyleOpen(false);
+                if (activeTool === TOOLS.ERASER) dispatch(setTool(TOOLS.SELECT));
+              }}
+              title="Close panel"
+              aria-label="Close panel"
             >
               ×
             </button>
           </div>
-          <ColorPicker />
-          <BrushControls />
+          {activeTool === TOOLS.ERASER ? (
+            <EraserControls />
+          ) : (
+            <>
+              <ColorPicker />
+              <BrushControls />
+            </>
+          )}
         </div>
       )}
     </div>

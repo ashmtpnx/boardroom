@@ -3,6 +3,7 @@ import { useSelector, useDispatch } from 'react-redux';
 import {
   Canvas,
   Point,
+  Path,
   PencilBrush,
   SprayBrush,
   CircleBrush,
@@ -31,6 +32,109 @@ function readFileAsDataURL(file) {
   });
 }
 
+// Slice freehand paths or erase targeted elements directly at (x, y) with a clean radius
+function erasePortionAt(canvas, x, y, radius, styleRef, storeByPageRef, rtRef) {
+  if (!canvas) return;
+  const curPage = styleRef.current.currentPageId || 'page-1';
+  const objects = canvas.getObjects().slice();
+  let modifiedAny = false;
+
+  objects.forEach((o) => {
+    if (!o.id || o.__suppressSync || o.isEditing) return;
+
+    const br = o.getBoundingRect();
+    if (
+      x + radius < br.left ||
+      x - radius > br.left + br.width ||
+      y + radius < br.top ||
+      y - radius > br.top + br.height
+    ) {
+      return;
+    }
+
+    // 1. If it's a drawing path (fabric.Path), slice the segments precisely where cursor touches
+    if (o.type === 'path' && Array.isArray(o.path)) {
+      const survivingPaths = [];
+      let currentSub = [];
+      const matrix = o.calcTransformMatrix();
+      const pathOffX = o.pathOffset?.x || 0;
+      const pathOffY = o.pathOffset?.y || 0;
+      let hitAnySegment = false;
+
+      o.path.forEach((seg, idx) => {
+        if (!seg || seg.length < 3) {
+          if (currentSub.length > 0) currentSub.push(seg);
+          return;
+        }
+        const sx = seg[seg.length - 2];
+        const sy = seg[seg.length - 1];
+        if (typeof sx !== 'number' || typeof sy !== 'number') return;
+
+        const pt = new Point(sx - pathOffX, sy - pathOffY);
+        const wPt = util.transformPoint(pt, matrix);
+        const distSq = (wPt.x - x) * (wPt.x - x) + (wPt.y - y) * (wPt.y - y);
+
+        if (distSq <= radius * radius) {
+          hitAnySegment = true;
+          if (currentSub.length >= 2) {
+            survivingPaths.push(currentSub);
+          }
+          currentSub = [];
+        } else {
+          if (currentSub.length === 0 && idx > 0) {
+            currentSub.push(['M', sx, sy]);
+          } else {
+            currentSub.push(seg);
+          }
+        }
+      });
+
+      if (currentSub.length >= 2) {
+        survivingPaths.push(currentSub);
+      }
+
+      if (hitAnySegment) {
+        modifiedAny = true;
+        if (o.id) storeByPageRef.current.delete(o.id);
+        canvas.remove(o); // triggers object:removed -> emits OBJECT_REMOVE
+
+        survivingPaths.forEach((sub) => {
+          if (!sub || sub.length < 2) return;
+          const newId = uid('path');
+          const newPath = new Path(sub, {
+            id: newId,
+            stroke: o.stroke,
+            strokeWidth: o.strokeWidth,
+            fill: o.fill || null,
+            strokeLineCap: o.strokeLineCap || 'round',
+            strokeLineJoin: o.strokeLineJoin || 'round',
+            pageId: curPage,
+            selectable: true,
+            evented: true,
+          });
+          canvas.add(newPath);
+          const json = newPath.toObject(['id', 'pageId']);
+          storeByPageRef.current.set(newId, json);
+          rtRef.current?.emit(EVENTS.OBJECT_ADD, { json });
+        });
+      }
+    } else {
+      // 2. For non-path shapes, only erase if cursor rubs near center
+      const centerDistSq = (br.left + br.width / 2 - x) ** 2 + (br.top + br.height / 2 - y) ** 2;
+      const minRadiusSq = Math.min(br.width, br.height) ** 2 / 5;
+      if (centerDistSq <= Math.max(radius * radius, minRadiusSq)) {
+        modifiedAny = true;
+        if (o.id) storeByPageRef.current.delete(o.id);
+        canvas.remove(o);
+      }
+    }
+  });
+
+  if (modifiedAny) {
+    canvas.requestRenderAll();
+  }
+}
+
 // Owns the imperative Fabric canvas instance and wires it to Redux tool state and
 // the realtime sync layer. Event handlers are attached once and read the latest
 // tool/style values from refs, so we never re-bind listeners on every change.
@@ -52,6 +156,7 @@ export function useFabricCanvas({ canvasElRef, containerRef }) {
   const applyingRemote = useRef(false); // guard so applying a remote change doesn't re-broadcast
   const draftRef = useRef(null); // in-progress shape being drag-drawn
   const panRef = useRef({ active: false, lastX: 0, lastY: 0, space: false });
+  const eraserRef = useRef({ active: false });
 
   // Keep latest tool/style readable inside the stable event handlers.
   useEffect(() => {
@@ -160,10 +265,9 @@ export function useFabricCanvas({ canvasElRef, containerRef }) {
       }
 
       if (t === TOOLS.ERASER) {
-        if (opt.target) {
-          canvas.remove(opt.target);
-          canvas.requestRenderAll();
-        }
+        eraserRef.current.active = true;
+        const p = scenePoint(opt.e);
+        erasePortionAt(canvas, p.x, p.y, Math.max(18, lw * 3), styleRef, storeByPageRef, rtRef);
         return;
       }
 
@@ -193,6 +297,12 @@ export function useFabricCanvas({ canvasElRef, containerRef }) {
     });
 
     canvas.on('mouse:move', (opt) => {
+      if (styleRef.current.tool === TOOLS.ERASER && eraserRef.current.active) {
+        const p = scenePoint(opt.e);
+        const { lineWidth: lw } = styleRef.current;
+        erasePortionAt(canvas, p.x, p.y, Math.max(18, lw * 3), styleRef, storeByPageRef, rtRef);
+        return;
+      }
       if (panRef.current.active) {
         const vpt = canvas.viewportTransform;
         vpt[4] += opt.e.clientX - panRef.current.lastX;
@@ -219,6 +329,10 @@ export function useFabricCanvas({ canvasElRef, containerRef }) {
     });
 
     canvas.on('mouse:up', () => {
+      if (eraserRef.current.active) {
+        eraserRef.current.active = false;
+        return;
+      }
       if (panRef.current.active) {
         panRef.current.active = false;
         canvas.selection = styleRef.current.tool === TOOLS.SELECT;
@@ -415,13 +529,12 @@ export function useFabricCanvas({ canvasElRef, containerRef }) {
     }
 
     canvas.selection = tool === TOOLS.SELECT;
-    // In creation tools, ignore existing objects so clicks always start a new one.
-    canvas.skipTargetFind = ![TOOLS.SELECT, TOOLS.ERASER].includes(tool);
+    canvas.skipTargetFind = tool !== TOOLS.SELECT;
     canvas.defaultCursor =
       tool === TOOLS.PAN
         ? 'grab'
         : tool === TOOLS.ERASER
-          ? 'not-allowed'
+          ? 'crosshair'
           : SHAPE_TOOLS.includes(tool) || tool === TOOLS.STICKY || tool === TOOLS.TEXT
             ? 'crosshair'
             : 'default';

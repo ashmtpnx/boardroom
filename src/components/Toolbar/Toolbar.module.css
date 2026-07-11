@@ -2,17 +2,17 @@
   position: absolute;
   left: 16px;
   left: max(16px, env(safe-area-inset-left));
-  top: 50%;
-  transform: translateY(-50%);
+  top: 16px;
+  bottom: 16px;
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   gap: 10px;
-  z-index: 4;
-  /* Never taller than the stage: the palette scrolls if the viewport is short. */
-  max-height: calc(100% - 24px);
+  z-index: 20;
+  pointer-events: none;
 }
 
 .palette {
+  pointer-events: auto;
   display: flex;
   flex-direction: column;
   gap: 6px;
@@ -72,6 +72,7 @@
 
 /* ---- style fly-out ---- */
 .stylePanel {
+  pointer-events: auto;
   width: 240px;
   padding: 14px;
   background: var(--glass-bg-strong);
@@ -228,8 +229,10 @@
   .wrap {
     left: 8px;
     left: max(8px, env(safe-area-inset-left));
+    top: 8px;
+    bottom: 8px;
     gap: 8px;
-    max-height: calc(100% - 16px);
+    align-items: center;
   }
   .tool {
     width: 38px;

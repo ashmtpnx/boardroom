@@ -39,8 +39,8 @@ export async function sendToInbox(targetTag, event, payload, me = null) {
   } catch {
     return false;
   } finally {
-    // A grace period lets socket.io flush the final ack frame cleanly.
-    if (rt) setTimeout(() => rt.disconnect?.(), 500);
+    // A grace period lets socket.io flush the final ack frame and any network buffers cleanly.
+    if (rt) setTimeout(() => rt.disconnect?.(), 1500);
   }
 }
 

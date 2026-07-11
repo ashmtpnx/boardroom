@@ -36,10 +36,15 @@ export function createSocketRealtime() {
 
       readyPromise = new Promise((resolve) => { readyResolve = resolve; });
 
-      // Wait for the server to acknowledge room:join before resolving readiness.
-      socket.emit('room:join', { roomId, user, senderId }, () => {
-        readyResolve?.();
-      });
+      const joinRoom = () => {
+        socket?.emit('room:join', { roomId, user, senderId }, () => {
+          readyResolve?.();
+        });
+      };
+
+      socket.on('connect', joinRoom);
+      // Also trigger immediately in case of rapid buffering / synchronous ready
+      joinRoom();
 
       socket.on('rt', (env) => {
         if (!env || env.sender === senderId) return;
@@ -53,19 +58,26 @@ export function createSocketRealtime() {
     },
 
     // Emit and resolve once the server confirms receipt (socket.io ack), or after
-    // `timeout` ms as a backstop. Unlike a blind emit + fixed-delay disconnect,
-    // this guarantees the event actually reached the relay before the caller tears
-    // the connection down — the fix for friend requests that never arrived because
-    // the socket closed mid-cold-start. Resolves { ok } either way (never rejects).
+    // `timeout` ms as a backstop. Guarantees event delivery even across cold starts.
     emitAck(event, payload, timeout = 15000) {
       return new Promise((resolve) => {
         if (!socket) return resolve({ ok: false });
         let settled = false;
         const finish = (result) => { if (!settled) { settled = true; resolve(result); } };
-        // socket.io buffers this emit until connected, then delivers with an ack.
-        socket.timeout(timeout).emit('rt', { event, payload, sender: senderId }, (err, res) => {
-          finish(err ? { ok: false } : (res || { ok: true }));
-        });
+
+        const doEmit = () => {
+          if (!socket) return finish({ ok: false });
+          socket.timeout(timeout).emit('rt', { event, payload, sender: senderId }, (err, res) => {
+            finish(err ? { ok: false } : (res || { ok: true }));
+          });
+        };
+
+        if (socket.connected) {
+          doEmit();
+        } else {
+          socket.once('connect', doEmit);
+          setTimeout(() => finish({ ok: false }), timeout);
+        }
       });
     },
 

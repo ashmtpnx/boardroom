@@ -3,6 +3,7 @@ import { useSelector } from 'react-redux';
 import { getRealtimeClient } from '../../realtime/client';
 import { EVENTS } from '../../realtime/events';
 import { uid } from '../../utils/ids';
+import { incrementStat } from '../../utils/badges';
 import styles from './RoomReactions.module.css';
 
 export default function RoomReactions() {
@@ -30,6 +31,7 @@ export default function RoomReactions() {
       const payload = e?.detail;
       if (!payload || !payload.emoji) return;
       addReaction(payload.emoji, payload.from);
+      incrementStat('reactionsSent', 1);
     };
 
     window.addEventListener('room:reaction:local', onLocalReaction);

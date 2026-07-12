@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { Send, Smile } from 'lucide-react';
 import { sendMessage } from './chatSlice';
+import { incrementStat } from '../../utils/badges';
 import { getRealtimeClient } from '../../realtime/client';
 import { EVENTS } from '../../realtime/events';
 import { uid } from '../../utils/ids';
@@ -83,6 +84,7 @@ export default function ChatPanel() {
         ts: Date.now(),
       }),
     );
+    incrementStat('messagesSent', 1);
     setText('');
   };
 

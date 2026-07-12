@@ -18,6 +18,7 @@ import { getRealtimeClient } from '../../realtime/client';
 import { EVENTS } from '../../realtime/events';
 import { uid } from '../../utils/ids';
 import { throttleTrailing } from '../../utils/throttle';
+import { incrementStat } from '../../utils/badges';
 
 const SHAPE_TOOLS = [TOOLS.RECT, TOOLS.CIRCLE, TOOLS.TRIANGLE];
 const ZOOM_MIN = 0.2;
@@ -234,6 +235,8 @@ export function useFabricCanvas({ canvasElRef, containerRef }) {
       rtRef.current?.emit(EVENTS.OBJECT_ADD, { json });
       if (!undoGuard.current && !obj.__sliceErasing) {
         pushHistory({ type: 'ADD', json }, historyRef, dispatch);
+        if (obj.type === 'sticky') incrementStat('notesCreated', 1);
+        if (obj.type === 'path') incrementStat('freehandUsed', 1);
       }
     });
     canvas.on('object:modified', (e) => {

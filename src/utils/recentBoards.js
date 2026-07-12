@@ -1,3 +1,5 @@
+import { incrementStat } from './badges';
+
 // Remembers boards the user has opened, so the home page can offer quick re-entry.
 // Stored in localStorage as a most-recent-first list of { code, ts, name? }.
 const KEY = 'boardroom:recent';
@@ -15,9 +17,13 @@ export function getRecentBoards() {
 export function rememberBoard(code, name) {
   if (!code) return;
   const list = getRecentBoards().filter((b) => b.code !== code);
+  const isNewVisit = !getRecentBoards().some((b) => b.code === code);
   list.unshift({ code, ts: Date.now(), name: name || undefined });
   try {
     localStorage.setItem(KEY, JSON.stringify(list.slice(0, MAX)));
+    if (isNewVisit) {
+      incrementStat('boardsVisited', 1);
+    }
   } catch {
     /* storage full / unavailable — non-critical */
   }

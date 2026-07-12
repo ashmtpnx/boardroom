@@ -97,6 +97,7 @@ export default function Account() {
     const updated = { ...user, ...patch };
     dispatch(setUser(updated));
     publishLocal(updated);
+    window.dispatchEvent(new CustomEvent('boardroom:badges-changed'));
   };
 
   const onSaveSettings = () => {

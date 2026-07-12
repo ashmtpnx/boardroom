@@ -1,4 +1,5 @@
 import { jsPDF } from 'jspdf';
+import { incrementStat } from './badges';
 
 // Export the current board to a PDF.
 //
@@ -26,10 +27,12 @@ export function exportBoardPdf(fabricCanvas, filename = 'boardroom-board.pdf') {
 
   pdf.addImage(dataUrl, 'PNG', x, y, imgW, imgH);
   pdf.save(filename);
+  incrementStat('exportsDone', 1);
 }
 
 // Export the chat transcript as a selectable, auto-paginated text PDF.
 export function exportChatPdf(messages = [], { room } = {}, filename = 'boardroom-chat.pdf') {
+  incrementStat('exportsDone', 1);
   const pdf = new jsPDF({ unit: 'pt', format: 'a4' });
   const margin = 48;
   const pageW = pdf.internal.pageSize.getWidth();

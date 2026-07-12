@@ -50,7 +50,6 @@ function Board({ roomId }) {
     let cancelled = false;
 
     dispatch(setRoomId(roomId));
-    rememberBoard(roomId);
 
     let initialName = undefined;
     let initialPassword = undefined;
@@ -66,6 +65,8 @@ function Board({ roomId }) {
       // ignore
     }
 
+    rememberBoard(roomId, initialName);
+
     (async () => {
       const rt = await createRealtime();
       if (cancelled) return;
@@ -80,6 +81,8 @@ function Board({ roomId }) {
           if (!cancelled) {
             dispatch(setRoomSettings(settings));
             dispatch(realtimeConnected());
+            // Re-remember with the server-resolved room name
+            if (settings?.name) rememberBoard(roomId, settings.name);
           }
         },
       });

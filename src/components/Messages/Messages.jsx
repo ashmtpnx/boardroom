@@ -186,7 +186,7 @@ export default function Messages() {
             <ul className={styles.pendingList}>
               {pending.map((r) => (
                 <li key={r.toTag} className={styles.pendingRow}>
-                  <Avatar user={{ name: r.name, color: r.color, photoURL: r.photoURL }} size={34} />
+                  <Avatar user={{ id: r.toTag, account: r.toTag, name: r.name, color: r.color, photoURL: r.photoURL }} size={34} />
                   <span className={styles.pendingName}>{r.name || r.toTag}</span>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginLeft: 'auto' }}>
                     <span className={styles.pendingState}><Loader size={13} className={styles.spin} /> Requested</span>
@@ -242,7 +242,7 @@ export default function Messages() {
                     onClick={() => goToFriendChat(r.tag)}
                     title={`Message ${r.friend.name}`}
                   >
-                    <Avatar user={r.friend} size={52} />
+                    <Avatar user={{ ...r.friend, id: r.friend.id || r.tag, account: r.tag }} size={52} />
                     <div className={styles.meta}>
                       <div className={styles.metaTop}>
                         <span className={styles.name}>{r.friend.name}</span>

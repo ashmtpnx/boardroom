@@ -4,8 +4,8 @@ import {
   ArrowLeft, Camera, Trash2, Check, ShieldCheck, LogOut, Mail, Copy,
   Award, Users, UserPlus, UserCheck, Sparkles, Layers, Shapes,
   StickyNote, Pencil, Smile, MessageSquare, KeyRound, Clock, Zap,
-  Search, ExternalLink, Pin, Lock, Settings, Share2, Heart,
-  TrendingUp, Briefcase, Type, Sliders,
+  Search, ExternalLink, Pin, Lock, Settings, Share2, Briefcase, Type,
+  Sliders, ArrowRight, CheckCircle2,
 } from 'lucide-react';
 import { setUser } from '../../features/session/sessionSlice';
 import { saveProfile, clearProfile, applyProfile } from '../../utils/profile';
@@ -30,7 +30,7 @@ import styles from './Account.module.css';
 const ICON_MAP = {
   Sparkles, Camera, Type, Layers, Shapes, UserPlus, Users, Award,
   StickyNote, Pencil, Smile, MessageSquare, Clock, Zap, KeyRound,
-  Lock, Check, Pin,
+  Lock, Check, Pin, CheckCircle2,
 };
 
 function BadgeIcon({ name, size = 20 }) {
@@ -179,7 +179,6 @@ export default function Account() {
       setSearchResult({ error: 'That is your own Account ID!' });
       return;
     }
-    // Check if they exist in suggested or followers or local directory
     const foundSuggest = suggestedList.find((s) => s.account === clean)
       || followersList.find((f) => f.account === clean)
       || followingList.find((f) => f.account === clean);
@@ -188,14 +187,13 @@ export default function Account() {
       setSearchResult({ profile: foundSuggest });
       return;
     }
-    // Create a rich profile card for any valid input tag so users can follow them immediately
     setSearchResult({
       profile: {
         account: clean,
         name: `Collaborator ${clean.split('-').slice(1).join('-') || clean}`,
         role: 'Real-time Whiteboard Collaborator',
         bio: 'Active member of the Boardroom collaborative canvas community.',
-        color: '#6366f1',
+        color: '#2563eb',
         badgesCount: 9,
         topBadges: ['first_board', 'sticky_fan', 'reactor'],
       },
@@ -224,179 +222,194 @@ export default function Account() {
 
   return (
     <div className={styles.page}>
-      {/* Ambient background glows */}
-      <div className={styles.ambientOrb1} aria-hidden="true" />
-      <div className={styles.ambientOrb2} aria-hidden="true" />
-
-      {/* Header */}
+      {/* Top Header */}
       <header className={styles.header}>
-        <button className={styles.backBtn} onClick={goHome}>
-          <ArrowLeft size={18} /> Home
-        </button>
-        <div className={styles.brand} onClick={goHome}>
-          <img src="/board.svg" className={styles.brandMark} alt="" />
-          <span>BOARDROOM</span>
+        <div className={styles.headerLeft}>
+          <button className={styles.backBtn} onClick={goHome}>
+            <ArrowLeft size={16} /> Home
+          </button>
+          <div className={styles.headerDivider} />
+          <div className={styles.brand} onClick={goHome}>
+            <img src="/board.svg" className={styles.brandMark} alt="" />
+            <span>BOARDROOM</span>
+          </div>
         </div>
         <div className={styles.headerRight}>
           <button className={styles.navMsgBtn} onClick={goToMessages} title="Direct Messages">
-            <MessageSquare size={18} />
+            <MessageSquare size={16} />
             <span>Messages</span>
           </button>
         </div>
       </header>
 
-      <main className={styles.main}>
-        {/* ---- Profile Banner / Header Card ---- */}
-        <section className={styles.profileBannerCard}>
-          <div className={styles.bannerBackground}>
-            <div className={styles.bannerGrid} />
+      <main className={styles.mainContainer}>
+        {/* ---- Profile Header Card ---- */}
+        <section className={styles.headerCard}>
+          <div className={styles.coverBanner}>
+            <div className={styles.coverPattern} />
           </div>
-          <div className={styles.profileHeaderContent}>
-            <div className={styles.avatarContainer}>
-              <Avatar user={user} size={112} />
-              <button
-                className={styles.avatarEditOverlay}
-                onClick={() => fileRef.current?.click()}
-                title="Change profile picture"
-              >
-                <Camera size={20} />
-              </button>
-              <input ref={fileRef} type="file" accept="image/*" hidden onChange={onPickPhoto} />
+
+          <div className={styles.headerBody}>
+            {/* Avatar overlapping cover */}
+            <div className={styles.avatarRow}>
+              <div className={styles.avatarBox}>
+                <Avatar user={user} size={116} />
+                <button
+                  className={styles.avatarEditBtn}
+                  onClick={() => fileRef.current?.click()}
+                  title="Change profile photo"
+                >
+                  <Camera size={18} />
+                </button>
+                <input ref={fileRef} type="file" accept="image/*" hidden onChange={onPickPhoto} />
+              </div>
+
+              <div className={styles.profileActionBtns}>
+                <button className={styles.btnSecondary} onClick={() => setActiveTab('settings')}>
+                  <Settings size={15} /> Edit Profile
+                </button>
+                <button className={styles.btnPrimary} onClick={onCopyMyId}>
+                  <Share2 size={15} /> Share Profile
+                </button>
+              </div>
             </div>
 
-            <div className={styles.profileMeta}>
-              <div className={styles.nameRowHeader}>
-                <h1 className={styles.displayName}>{user.name || 'User'}</h1>
-                <span className={styles.verifiedBadge} title="Boardroom Verified Collaborator">
-                  <Sparkles size={14} /> Verified
-                </span>
-                <span className={styles.roleTag}>{role || 'Canvas Creator'}</span>
+            {/* Profile Meta Info on crisp white surface */}
+            <div className={styles.metaRow}>
+              <div className={styles.metaTitleGroup}>
+                <div className={styles.nameBadgeGroup}>
+                  <h1 className={styles.displayNameText}>{user.name || 'User'}</h1>
+                  <span className={styles.verifiedPill}>
+                    <Sparkles size={13} /> Verified Collaborator
+                  </span>
+                </div>
+                <p className={styles.roleText}>{role || 'Full-Stack Developer & Whiteboard Creator'}</p>
               </div>
 
-              <div className={styles.tagRowHeader}>
-                <span className={styles.accountTagBadge}>#{myTag}</span>
-                <button className={styles.copyIdBtn} onClick={onCopyMyId} title="Copy Account ID">
-                  {copiedId === 'self' ? <Check size={14} /> : <Copy size={14} />}
-                  <span>{copiedId === 'self' ? 'Copied ID' : 'Copy ID'}</span>
+              <div className={styles.tagGroup}>
+                <span className={styles.accountTagMono}>#{myTag}</span>
+                <button className={styles.copyTagLink} onClick={onCopyMyId} title="Copy Account ID">
+                  {copiedId === 'self' ? <Check size={14} className={styles.iconGreen} /> : <Copy size={14} />}
+                  <span>{copiedId === 'self' ? 'Copied to clipboard' : 'Copy ID'}</span>
                 </button>
               </div>
 
-              <p className={styles.userBioText}>{bio}</p>
+              <p className={styles.bioText}>{bio}</p>
 
-              {/* Quick Stat Bar */}
-              <div className={styles.statsBar}>
-                <button className={styles.statChip} onClick={() => { setActiveTab('social'); setSocialSubTab('followers'); }}>
-                  <span className={styles.statNum}>{followersList.length}</span>
-                  <span className={styles.statLabel}>Followers</span>
+              {/* Quick Counter Row */}
+              <div className={styles.countersRow}>
+                <button
+                  className={styles.counterItem}
+                  onClick={() => { setActiveTab('social'); setSocialSubTab('followers'); }}
+                >
+                  <span className={styles.counterValue}>{followersList.length}</span>
+                  <span className={styles.counterLabel}>Followers</span>
                 </button>
-                <div className={styles.statDivider} />
-                <button className={styles.statChip} onClick={() => { setActiveTab('social'); setSocialSubTab('following'); }}>
-                  <span className={styles.statNum}>{followingList.length}</span>
-                  <span className={styles.statLabel}>Following</span>
+                <div className={styles.counterSep} />
+                <button
+                  className={styles.counterItem}
+                  onClick={() => { setActiveTab('social'); setSocialSubTab('following'); }}
+                >
+                  <span className={styles.counterValue}>{followingList.length}</span>
+                  <span className={styles.counterLabel}>Following</span>
                 </button>
-                <div className={styles.statDivider} />
-                <button className={styles.statChip} onClick={() => setActiveTab('badges')}>
-                  <span className={styles.statNum}>{unlockedBadges.length}</span>
-                  <span className={styles.statLabel}>Badges</span>
+                <div className={styles.counterSep} />
+                <button
+                  className={styles.counterItem}
+                  onClick={() => setActiveTab('badges')}
+                >
+                  <span className={styles.counterValue}>{unlockedBadges.length}</span>
+                  <span className={styles.counterLabel}>Badges Earned</span>
                 </button>
-                <div className={styles.statDivider} />
-                <div className={styles.statChip}>
-                  <span className={styles.statNum}>{userStats.boardsVisited || 1}</span>
-                  <span className={styles.statLabel}>Canvas Visits</span>
+                <div className={styles.counterSep} />
+                <div className={styles.counterItem}>
+                  <span className={styles.counterValue}>{userStats.boardsVisited || 1}</span>
+                  <span className={styles.counterLabel}>Canvas Visits</span>
                 </div>
               </div>
             </div>
 
-            <div className={styles.profileHeaderActions}>
-              <button className={styles.editProfileBtn} onClick={() => setActiveTab('settings')}>
-                <Settings size={16} /> Edit Profile
+            {/* Sub-Navigation Tabs inside the Card Footer */}
+            <nav className={styles.tabsNav}>
+              <button
+                className={`${styles.tabBtn} ${activeTab === 'overview' ? styles.tabBtnActive : ''}`}
+                onClick={() => setActiveTab('overview')}
+              >
+                <Zap size={16} /> Overview
               </button>
-              <button className={styles.shareProfileBtn} onClick={onCopyMyId}>
-                <Share2 size={16} /> Share Profile
+              <button
+                className={`${styles.tabBtn} ${activeTab === 'badges' ? styles.tabBtnActive : ''}`}
+                onClick={() => setActiveTab('badges')}
+              >
+                <Award size={16} /> Badges & Achievements
+                <span className={styles.tabCounterPill}>{unlockedBadges.length}/{ALL_BADGES.length}</span>
               </button>
-            </div>
+              <button
+                className={`${styles.tabBtn} ${activeTab === 'social' ? styles.tabBtnActive : ''}`}
+                onClick={() => setActiveTab('social')}
+              >
+                <Users size={16} /> Following & Followers
+                <span className={styles.tabCounterPill}>{followingList.length + followersList.length}</span>
+              </button>
+              <button
+                className={`${styles.tabBtn} ${activeTab === 'settings' ? styles.tabBtnActive : ''}`}
+                onClick={() => setActiveTab('settings')}
+              >
+                <Sliders size={16} /> Settings
+              </button>
+            </nav>
           </div>
-
-          {/* Navigation Tabs Bar */}
-          <nav className={styles.profileNavTabs}>
-            <button
-              className={`${styles.navTab} ${activeTab === 'overview' ? styles.navTabActive : ''}`}
-              onClick={() => setActiveTab('overview')}
-            >
-              <Zap size={16} /> Overview
-            </button>
-            <button
-              className={`${styles.navTab} ${activeTab === 'badges' ? styles.navTabActive : ''}`}
-              onClick={() => setActiveTab('badges')}
-            >
-              <Award size={16} /> Badges & Rewards
-              <span className={styles.tabBadgeCount}>{unlockedBadges.length}/{ALL_BADGES.length}</span>
-            </button>
-            <button
-              className={`${styles.navTab} ${activeTab === 'social' ? styles.navTabActive : ''}`}
-              onClick={() => setActiveTab('social')}
-            >
-              <Users size={16} /> Following & Followers
-              <span className={styles.tabBadgeCount}>{followingList.length + followersList.length}</span>
-            </button>
-            <button
-              className={`${styles.navTab} ${activeTab === 'settings' ? styles.navTabActive : ''}`}
-              onClick={() => setActiveTab('settings')}
-            >
-              <Sliders size={16} /> Settings
-            </button>
-          </nav>
         </section>
 
-        {error && activeTab === 'settings' && <div className={styles.errorBanner}>{error}</div>}
+        {error && activeTab === 'settings' && <div className={styles.errorAlert}>{error}</div>}
 
         {/* =========================================================
             TAB 1: OVERVIEW
            ========================================================= */}
         {activeTab === 'overview' && (
-          <div className={styles.overviewGrid}>
-            {/* Left Col: Pinned Badges & Achievements */}
-            <div className={styles.overviewColLeft}>
-              <section className={styles.sectionCard}>
-                <div className={styles.sectionHeader}>
-                  <div className={styles.sectionTitleWrap}>
-                    <Pin size={18} className={styles.pinIcon} />
-                    <h2 className={styles.sectionTitle}>Pinned Achievements</h2>
+          <div className={styles.overviewLayout}>
+            {/* Left Column: Pinned Badges & Bio Details */}
+            <div className={styles.mainCol}>
+              <section className={styles.contentCard}>
+                <div className={styles.cardHeaderRow}>
+                  <div className={styles.cardTitleGroup}>
+                    <Pin size={18} className={styles.titleIconAmber} />
+                    <h2 className={styles.cardHeading}>Pinned Achievements</h2>
                   </div>
-                  <button className={styles.linkActionBtn} onClick={() => setActiveTab('badges')}>
+                  <button className={styles.textLinkBtn} onClick={() => setActiveTab('badges')}>
                     Customize pinned <ExternalLink size={13} />
                   </button>
                 </div>
 
-                <div className={styles.pinnedBadgesGrid}>
+                <div className={styles.pinnedGrid}>
                   {pinnedBadges.map((badge) => {
                     const tier = BADGE_TIERS[badge.tier] || BADGE_TIERS.common;
                     return (
                       <div
                         key={badge.id}
-                        className={styles.pinnedBadgeCard}
-                        style={{ '--tier-border': tier.border, '--tier-bg': tier.bg }}
+                        className={styles.pinnedItemCard}
+                        style={{ '--tier-accent': tier.color }}
                       >
-                        <div className={styles.badgeIconCircle} style={{ color: tier.color, background: tier.bg }}>
-                          <BadgeIcon name={badge.icon} size={24} />
+                        <div className={styles.pinnedIconBox} style={{ color: tier.color, background: tier.bg }}>
+                          <BadgeIcon name={badge.icon} size={22} />
                         </div>
-                        <div className={styles.badgeInfo}>
-                          <div className={styles.badgeNameRow}>
-                            <span className={styles.badgeName}>{badge.name}</span>
-                            <span className={styles.badgeTierPill} style={{ color: tier.color, border: `1px solid ${tier.border}` }}>
+                        <div className={styles.pinnedTextBox}>
+                          <div className={styles.pinnedTitleRow}>
+                            <span className={styles.pinnedName}>{badge.name}</span>
+                            <span className={styles.tierTag} style={{ color: tier.color, border: `1px solid ${tier.border}` }}>
                               {tier.label}
                             </span>
                           </div>
-                          <p className={styles.badgeDesc}>{badge.desc}</p>
+                          <p className={styles.pinnedDescText}>{badge.desc}</p>
                         </div>
                       </div>
                     );
                   })}
                   {pinnedBadges.length === 0 && (
-                    <div className={styles.emptyPinned}>
-                      <Award size={32} className={styles.emptyIcon} />
-                      <p>No pinned badges yet. Go to Badges tab to pin your top achievements!</p>
-                      <button className={styles.primaryBtn} onClick={() => setActiveTab('badges')}>
+                    <div className={styles.emptyPinnedBox}>
+                      <Award size={36} className={styles.emptyIconGrey} />
+                      <p>You haven't pinned any achievements yet. Feature your top badges on your profile!</p>
+                      <button className={styles.btnPrimarySmall} onClick={() => setActiveTab('badges')}>
                         Browse Badges
                       </button>
                     </div>
@@ -404,65 +417,65 @@ export default function Account() {
                 </div>
               </section>
 
-              {/* Bio & Collaborative Expertise */}
-              <section className={styles.sectionCard}>
-                <div className={styles.sectionHeader}>
-                  <h2 className={styles.sectionTitle}>Collaborative Bio & Expertise</h2>
-                  <button className={styles.linkActionBtn} onClick={() => setActiveTab('settings')}>
-                    Edit <Pencil size={13} />
+              {/* Bio & Whiteboard Expertise */}
+              <section className={styles.contentCard}>
+                <div className={styles.cardHeaderRow}>
+                  <h2 className={styles.cardHeading}>Collaborative Bio & Expertise</h2>
+                  <button className={styles.textLinkBtn} onClick={() => setActiveTab('settings')}>
+                    Edit Bio <Pencil size={13} />
                   </button>
                 </div>
-                <p className={styles.fullBioText}>{bio}</p>
-                <div className={styles.expertiseTags}>
-                  <span className={styles.tagItem}>Infinite Canvas</span>
-                  <span className={styles.tagItem}>Real-Time WebSockets</span>
-                  <span className={styles.tagItem}>Sticky Notes & Architecture</span>
-                  <span className={styles.tagItem}>Freehand Sketching</span>
-                  <span className={styles.tagItem}>PDF/PNG Export</span>
+                <p className={styles.bioExpandedText}>{bio}</p>
+                <div className={styles.expertisePillsRow}>
+                  <span className={styles.expertisePill}>Infinite Canvas</span>
+                  <span className={styles.expertisePill}>Real-Time WebSockets</span>
+                  <span className={styles.expertisePill}>Sticky Notes & Architecture</span>
+                  <span className={styles.expertisePill}>Freehand Sketching</span>
+                  <span className={styles.expertisePill}>PDF & PNG Export</span>
                 </div>
               </section>
             </div>
 
-            {/* Right Col: Network Summary & Quick Actions */}
-            <div className={styles.overviewColRight}>
-              <section className={styles.sectionCard}>
-                <div className={styles.sectionHeader}>
-                  <h2 className={styles.sectionTitle}>Network Summary</h2>
-                  <button className={styles.linkActionBtn} onClick={() => setActiveTab('social')}>
+            {/* Right Column: Network Overview & Navigation */}
+            <div className={styles.sideCol}>
+              <section className={styles.contentCard}>
+                <div className={styles.cardHeaderRow}>
+                  <h2 className={styles.cardHeading}>Network Summary</h2>
+                  <button className={styles.textLinkBtn} onClick={() => setActiveTab('social')}>
                     View all <ExternalLink size={13} />
                   </button>
                 </div>
 
-                <div className={styles.networkStatsBox}>
-                  <div className={styles.netStatItem} onClick={() => { setActiveTab('social'); setSocialSubTab('followers'); }}>
-                    <Users size={20} className={styles.netIcon} />
-                    <div>
-                      <div className={styles.netNum}>{followersList.length}</div>
-                      <div className={styles.netLabel}>Followers</div>
+                <div className={styles.networkStatsGrid}>
+                  <div className={styles.netBox} onClick={() => { setActiveTab('social'); setSocialSubTab('followers'); }}>
+                    <Users size={18} className={styles.netBoxIcon} />
+                    <div className={styles.netBoxContent}>
+                      <span className={styles.netBoxNum}>{followersList.length}</span>
+                      <span className={styles.netBoxLabel}>Followers</span>
                     </div>
                   </div>
-                  <div className={styles.netStatItem} onClick={() => { setActiveTab('social'); setSocialSubTab('following'); }}>
-                    <UserCheck size={20} className={styles.netIcon} />
-                    <div>
-                      <div className={styles.netNum}>{followingList.length}</div>
-                      <div className={styles.netLabel}>Following</div>
+                  <div className={styles.netBox} onClick={() => { setActiveTab('social'); setSocialSubTab('following'); }}>
+                    <UserCheck size={18} className={styles.netBoxIcon} />
+                    <div className={styles.netBoxContent}>
+                      <span className={styles.netBoxNum}>{followingList.length}</span>
+                      <span className={styles.netBoxLabel}>Following</span>
                     </div>
                   </div>
                 </div>
 
-                <div className={styles.miniFollowList}>
-                  <span className={styles.miniHeaderTitle}>Top Collaborators Following You</span>
+                <div className={styles.sidebarSectionTitle}>Top Followers</div>
+                <div className={styles.miniList}>
                   {followersList.slice(0, 3).map((f) => (
-                    <div key={f.account} className={styles.miniFollowRow}>
-                      <div className={styles.miniAvatar} style={{ background: f.color }}>
+                    <div key={f.account} className={styles.miniRow}>
+                      <div className={styles.miniAvatarCircle} style={{ background: f.color || '#2563eb' }}>
                         {f.photoURL ? <img src={f.photoURL} alt="" /> : f.name.charAt(0)}
                       </div>
-                      <div className={styles.miniInfo}>
-                        <div className={styles.miniName}>{f.name}</div>
-                        <div className={styles.miniRole}>{f.role || 'Collaborator'}</div>
+                      <div className={styles.miniMeta}>
+                        <div className={styles.miniNameText}>{f.name}</div>
+                        <div className={styles.miniRoleText}>{f.role || 'Collaborator'}</div>
                       </div>
                       <button
-                        className={isFollowing(f.account) ? styles.btnFollowingSmall : styles.btnFollowSmall}
+                        className={isFollowing(f.account) ? styles.btnFollowingMini : styles.btnFollowMini}
                         onClick={() => handleToggleFollow(f)}
                       >
                         {isFollowing(f.account) ? 'Following' : 'Follow'}
@@ -472,24 +485,24 @@ export default function Account() {
                 </div>
               </section>
 
-              <section className={styles.sectionCard}>
-                <h2 className={styles.sectionTitle}>Quick Navigation</h2>
-                <div className={styles.quickNavList}>
-                  <button className={styles.quickNavCard} onClick={goToMessages}>
-                    <MessageSquare size={20} className={styles.quickIcon} />
-                    <div className={styles.quickText}>
-                      <div className={styles.quickTitle}>Direct Messages</div>
-                      <div className={styles.quickSubtitle}>Chat live with your network</div>
+              <section className={styles.contentCard}>
+                <h2 className={styles.cardHeading}>Quick Navigation</h2>
+                <div className={styles.navMenuCol}>
+                  <button className={styles.navMenuItem} onClick={goToMessages}>
+                    <MessageSquare size={18} className={styles.navMenuIcon} />
+                    <div className={styles.navMenuText}>
+                      <div className={styles.navMenuTitle}>Direct Messages</div>
+                      <div className={styles.navMenuSub}>Chat live with teammates</div>
                     </div>
-                    <ArrowLeft size={16} className={styles.quickArrow} style={{ transform: 'rotate(180deg)' }} />
+                    <ArrowRight size={16} className={styles.navMenuArrow} />
                   </button>
-                  <button className={styles.quickNavCard} onClick={() => goToRoom('main-room')}>
-                    <Layers size={20} className={styles.quickIcon} />
-                    <div className={styles.quickText}>
-                      <div className={styles.quickTitle}>Main Team Room</div>
-                      <div className={styles.quickSubtitle}>Jump back into collaboration</div>
+                  <button className={styles.navMenuItem} onClick={() => goToRoom('main-room')}>
+                    <Layers size={18} className={styles.navMenuIcon} />
+                    <div className={styles.navMenuText}>
+                      <div className={styles.navMenuTitle}>Main Team Room</div>
+                      <div className={styles.navMenuSub}>Jump into collaboration</div>
                     </div>
-                    <ArrowLeft size={16} className={styles.quickArrow} style={{ transform: 'rotate(180deg)' }} />
+                    <ArrowRight size={16} className={styles.navMenuArrow} />
                   </button>
                 </div>
               </section>
@@ -501,15 +514,15 @@ export default function Account() {
             TAB 2: BADGES & REWARDS
            ========================================================= */}
         {activeTab === 'badges' && (
-          <section className={styles.sectionCardFull}>
-            <div className={styles.badgeTabHeader}>
+          <section className={styles.contentCardFull}>
+            <div className={styles.badgeTopBar}>
               <div>
-                <h2 className={styles.sectionTitle}>Badges & Achievements</h2>
-                <p className={styles.sectionSubText}>
-                  Earn badges by collaborating across canvases, following creators, and mastering whiteboard tools.
+                <h2 className={styles.cardHeading}>Badges & Achievements</h2>
+                <p className={styles.subHeadingText}>
+                  Unlock badges by exploring canvas rooms, collaborating across teams, and mastering visual design tools.
                 </p>
               </div>
-              <div className={styles.badgeFilterBar}>
+              <div className={styles.filterTabsBar}>
                 <button
                   className={`${styles.filterBtn} ${badgeFilter === 'all' ? styles.filterBtnActive : ''}`}
                   onClick={() => setBadgeFilter('all')}
@@ -531,7 +544,7 @@ export default function Account() {
               </div>
             </div>
 
-            <div className={styles.badgesFullGrid}>
+            <div className={styles.badgesGrid}>
               {filteredBadges.map((badge) => {
                 const tier = BADGE_TIERS[badge.tier] || BADGE_TIERS.common;
                 const progress = getBadgeProgress(badge, user, socialContext);
@@ -540,48 +553,48 @@ export default function Account() {
                 return (
                   <div
                     key={badge.id}
-                    className={`${styles.badgeCard} ${progress.unlocked ? styles.badgeCardUnlocked : styles.badgeCardLocked}`}
-                    style={progress.unlocked ? { '--tier-border': tier.border, '--tier-bg': tier.bg } : {}}
+                    className={`${styles.badgeItemCard} ${progress.unlocked ? styles.badgeUnlocked : styles.badgeLocked}`}
+                    style={progress.unlocked ? { '--tier-accent': tier.color } : {}}
                   >
-                    <div className={styles.badgeCardTop}>
+                    <div className={styles.badgeItemTop}>
                       <div
-                        className={styles.badgeCardIconBox}
+                        className={styles.badgeIconCircle}
                         style={progress.unlocked ? { color: tier.color, background: tier.bg } : {}}
                       >
-                        {progress.unlocked ? <BadgeIcon name={badge.icon} size={28} /> : <Lock size={24} className={styles.lockIcon} />}
+                        {progress.unlocked ? <BadgeIcon name={badge.icon} size={26} /> : <Lock size={22} className={styles.lockIconGrey} />}
                       </div>
-                      <div className={styles.badgeCardHeader}>
-                        <div className={styles.badgeCardTitleRow}>
-                          <span className={styles.badgeCardTitle}>{badge.name}</span>
-                          <span className={styles.badgeTierPill} style={progress.unlocked ? { color: tier.color, border: `1px solid ${tier.border}` } : {}}>
+                      <div className={styles.badgeItemHeader}>
+                        <div className={styles.badgeItemTitleRow}>
+                          <span className={styles.badgeItemName}>{badge.name}</span>
+                          <span className={styles.tierTag} style={progress.unlocked ? { color: tier.color, border: `1px solid ${tier.border}` } : {}}>
                             {tier.label}
                           </span>
                         </div>
-                        <p className={styles.badgeCardDesc}>{badge.desc}</p>
+                        <p className={styles.badgeItemDesc}>{badge.desc}</p>
                       </div>
                     </div>
 
-                    <div className={styles.badgeCardBottom}>
+                    <div className={styles.badgeItemBottom}>
                       {progress.unlocked ? (
-                        <div className={styles.unlockedFooterRow}>
-                          <span className={styles.unlockedDate}>
-                            <Check size={14} className={styles.unlockedCheck} /> Unlocked
+                        <div className={styles.unlockedFooter}>
+                          <span className={styles.unlockedStatusText}>
+                            <CheckCircle2 size={15} /> Unlocked Achievement
                           </span>
                           <button
-                            className={`${styles.pinToggleBtn} ${isPinned ? styles.pinToggleBtnActive : ''}`}
+                            className={`${styles.btnPinToggle} ${isPinned ? styles.btnPinToggleActive : ''}`}
                             onClick={() => togglePinBadge(user?.id, badge.id)}
-                            title={isPinned ? 'Unpin from profile' : 'Pin to profile top'}
+                            title={isPinned ? 'Unpin from profile' : 'Pin to profile'}
                           >
                             <Pin size={13} /> {isPinned ? 'Pinned' : 'Pin to Profile'}
                           </button>
                         </div>
                       ) : (
-                        <div className={styles.progressSection}>
+                        <div className={styles.progressContainer}>
                           <div className={styles.progressLabelRow}>
                             <span>{badge.reqLabel || badge.desc}</span>
-                            <span className={styles.progressPercent}>{progress.current} / {progress.max}</span>
+                            <span className={styles.progressNum}>{progress.current} / {progress.max}</span>
                           </div>
-                          <div className={styles.progressBarBg}>
+                          <div className={styles.progressBarTrack}>
                             <div className={styles.progressBarFill} style={{ width: `${progress.percent}%` }} />
                           </div>
                         </div>
@@ -598,23 +611,23 @@ export default function Account() {
             TAB 3: FOLLOWING & FOLLOWERS SOCIAL GRAPH
            ========================================================= */}
         {activeTab === 'social' && (
-          <section className={styles.sectionCardFull}>
-            <div className={styles.socialHeader}>
-              <div className={styles.socialNavSub}>
+          <section className={styles.contentCardFull}>
+            <div className={styles.socialTopBar}>
+              <div className={styles.socialSubTabs}>
                 <button
-                  className={`${styles.subTabBtn} ${socialSubTab === 'following' ? styles.subTabBtnActive : ''}`}
+                  className={`${styles.socialSubBtn} ${socialSubTab === 'following' ? styles.socialSubBtnActive : ''}`}
                   onClick={() => setSocialSubTab('following')}
                 >
                   <UserCheck size={16} /> Following ({followingList.length})
                 </button>
                 <button
-                  className={`${styles.subTabBtn} ${socialSubTab === 'followers' ? styles.subTabBtnActive : ''}`}
+                  className={`${styles.socialSubBtn} ${socialSubTab === 'followers' ? styles.socialSubBtnActive : ''}`}
                   onClick={() => setSocialSubTab('followers')}
                 >
                   <Users size={16} /> Followers ({followersList.length})
                 </button>
                 <button
-                  className={`${styles.subTabBtn} ${socialSubTab === 'explore' ? styles.subTabBtnActive : ''}`}
+                  className={`${styles.socialSubBtn} ${socialSubTab === 'explore' ? styles.socialSubBtnActive : ''}`}
                   onClick={() => { setSocialSubTab('explore'); setSearchResult(null); }}
                 >
                   <UserPlus size={16} /> Explore & Add Collaborators
@@ -624,57 +637,56 @@ export default function Account() {
 
             {/* Sub-Tab 1: Following */}
             {socialSubTab === 'following' && (
-              <div className={styles.socialListContainer}>
+              <div className={styles.socialTabContainer}>
                 {followingList.length === 0 ? (
-                  <div className={styles.emptySocialState}>
-                    <Users size={40} className={styles.emptyIcon} />
+                  <div className={styles.emptyStateBox}>
+                    <Users size={44} className={styles.emptyIconGrey} />
                     <h3>You aren't following anyone yet</h3>
-                    <p>Follow fellow developers and whiteboard creators to quickly jump into chat and see their updates.</p>
-                    <button className={styles.primaryBtn} onClick={() => setSocialSubTab('explore')}>
+                    <p>Connect with teammates and creators to quickly message them and follow their collaborative updates.</p>
+                    <button className={styles.btnPrimary} onClick={() => setSocialSubTab('explore')}>
                       Explore Creators
                     </button>
                   </div>
                 ) : (
-                  <div className={styles.socialGrid}>
+                  <div className={styles.collaboratorGrid}>
                     {followingList.map((f) => (
-                      <div key={f.account} className={styles.collaboratorCard}>
-                        <div className={styles.collabHeader}>
-                          <div className={styles.collabAvatar} style={{ background: f.color || '#3b82f6' }}>
+                      <div key={f.account} className={styles.collabCard}>
+                        <div className={styles.collabTop}>
+                          <div className={styles.collabAvatarCircle} style={{ background: f.color || '#2563eb' }}>
                             {f.photoURL ? <img src={f.photoURL} alt="" /> : f.name.charAt(0)}
                           </div>
-                          <div className={styles.collabMeta}>
+                          <div className={styles.collabInfo}>
                             <div className={styles.collabNameRow}>
-                              <span className={styles.collabName}>{f.name}</span>
-                              <span className={styles.collabAccount}>#{f.account}</span>
+                              <span className={styles.collabNameText}>{f.name}</span>
+                              <span className={styles.collabTagText}>#{f.account}</span>
                             </div>
-                            <span className={styles.collabRole}>{f.role || 'Whiteboard Collaborator'}</span>
+                            <span className={styles.collabRoleText}>{f.role || 'Whiteboard Collaborator'}</span>
                           </div>
                         </div>
-                        <p className={styles.collabBio}>{f.bio || 'Collaborative canvas creator on Boardroom.'}</p>
-                        <div className={styles.collabBadgesRow}>
-                          <span className={styles.badgesCountTag}>
-                            <Award size={13} /> {f.badgesCount || 8} badges
+                        <p className={styles.collabBioText}>{f.bio || 'Collaborative canvas creator on Boardroom.'}</p>
+                        <div className={styles.collabFooterBar}>
+                          <span className={styles.badgeCountChip}>
+                            <Award size={14} /> {f.badgesCount || 8} Badges
                           </span>
-                          <div className={styles.badgeIconsRow}>
+                          <div className={styles.badgeMiniGroup}>
                             {(f.topBadges || ['first_board', 'sticky_fan']).slice(0, 3).map((bid) => {
                               const bObj = ALL_BADGES.find((ab) => ab.id === bid) || ALL_BADGES[3];
                               const tier = BADGE_TIERS[bObj.tier] || BADGE_TIERS.common;
                               return (
-                                <span key={bid} className={styles.collabMiniBadge} style={{ color: tier.color, background: tier.bg }} title={bObj.name}>
-                                  <BadgeIcon name={bObj.icon} size={13} />
+                                <span key={bid} className={styles.miniIconBadge} style={{ color: tier.color, background: tier.bg }} title={bObj.name}>
+                                  <BadgeIcon name={bObj.icon} size={14} />
                                 </span>
                               );
                             })}
                           </div>
                         </div>
-                        <div className={styles.collabActions}>
-                          <button className={styles.chatActionBtn} onClick={() => goToFriendChat(f.account)} title="Direct Message">
-                            <MessageSquare size={14} /> Message
+                        <div className={styles.collabCardActions}>
+                          <button className={styles.btnSecondaryFull} onClick={() => goToFriendChat(f.account)}>
+                            <MessageSquare size={15} /> Message
                           </button>
                           <button
-                            className={styles.unfollowActionBtn}
+                            className={styles.btnUnfollowFull}
                             onClick={() => handleToggleFollow(f)}
-                            title="Unfollow user"
                           >
                             Following
                           </button>
@@ -688,43 +700,43 @@ export default function Account() {
 
             {/* Sub-Tab 2: Followers */}
             {socialSubTab === 'followers' && (
-              <div className={styles.socialListContainer}>
+              <div className={styles.socialTabContainer}>
                 {followersList.length === 0 ? (
-                  <div className={styles.emptySocialState}>
-                    <Award size={40} className={styles.emptyIcon} />
+                  <div className={styles.emptyStateBox}>
+                    <Award size={44} className={styles.emptyIconGrey} />
                     <h3>No followers yet</h3>
-                    <p>Share your account ID #{myTag} or collaborate in public rooms to build your follower network!</p>
+                    <p>Share your account ID #{myTag} or collaborate across team canvases to grow your network!</p>
                   </div>
                 ) : (
-                  <div className={styles.socialGrid}>
+                  <div className={styles.collaboratorGrid}>
                     {followersList.map((f) => {
                       const amFollowing = isFollowing(f.account);
                       return (
-                        <div key={f.account} className={styles.collaboratorCard}>
-                          <div className={styles.collabHeader}>
-                            <div className={styles.collabAvatar} style={{ background: f.color || '#8b5cf6' }}>
+                        <div key={f.account} className={styles.collabCard}>
+                          <div className={styles.collabTop}>
+                            <div className={styles.collabAvatarCircle} style={{ background: f.color || '#7c3aed' }}>
                               {f.photoURL ? <img src={f.photoURL} alt="" /> : f.name.charAt(0)}
                             </div>
-                            <div className={styles.collabMeta}>
+                            <div className={styles.collabInfo}>
                               <div className={styles.collabNameRow}>
-                                <span className={styles.collabName}>{f.name}</span>
-                                <span className={styles.collabAccount}>#{f.account}</span>
+                                <span className={styles.collabNameText}>{f.name}</span>
+                                <span className={styles.collabTagText}>#{f.account}</span>
                               </div>
-                              <span className={styles.collabRole}>{f.role || 'Whiteboard Collaborator'}</span>
+                              <span className={styles.collabRoleText}>{f.role || 'Whiteboard Collaborator'}</span>
                             </div>
                           </div>
-                          <p className={styles.collabBio}>{f.bio || 'Active participant on Boardroom canvas.'}</p>
-                          <div className={styles.collabBadgesRow}>
-                            <span className={styles.badgesCountTag}>
-                              <Award size={13} /> {f.badgesCount || 10} badges
+                          <p className={styles.collabBioText}>{f.bio || 'Active participant on Boardroom canvas rooms.'}</p>
+                          <div className={styles.collabFooterBar}>
+                            <span className={styles.badgeCountChip}>
+                              <Award size={14} /> {f.badgesCount || 10} Badges
                             </span>
                           </div>
-                          <div className={styles.collabActions}>
-                            <button className={styles.chatActionBtn} onClick={() => goToFriendChat(f.account)} title="Direct Message">
-                              <MessageSquare size={14} /> Message
+                          <div className={styles.collabCardActions}>
+                            <button className={styles.btnSecondaryFull} onClick={() => goToFriendChat(f.account)}>
+                              <MessageSquare size={15} /> Message
                             </button>
                             <button
-                              className={amFollowing ? styles.unfollowActionBtn : styles.followBackBtn}
+                              className={amFollowing ? styles.btnUnfollowFull : styles.btnPrimaryFull}
                               onClick={() => handleToggleFollow(f)}
                             >
                               {amFollowing ? 'Following' : 'Follow Back'}
@@ -738,56 +750,56 @@ export default function Account() {
               </div>
             )}
 
-            {/* Sub-Tab 3: Explore & Add */}
+            {/* Sub-Tab 3: Explore & Look Up */}
             {socialSubTab === 'explore' && (
-              <div className={styles.exploreContainer}>
+              <div className={styles.exploreLayout}>
                 {/* Search Bar */}
-                <form className={styles.exploreSearchForm} onSubmit={handleSearchAccount}>
-                  <div className={styles.searchInputWrap}>
-                    <Search size={18} className={styles.searchIconInput} />
+                <form className={styles.searchFormBox} onSubmit={handleSearchAccount}>
+                  <div className={styles.searchInputGroup}>
+                    <Search size={18} className={styles.searchIconLeft} />
                     <input
-                      className={styles.exploreSearchInput}
+                      className={styles.searchInputField}
                       placeholder="Enter exact Account ID to follow (e.g., BR-4K7P-2QX9)..."
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
                     />
                     {searchQuery && (
-                      <button type="button" className={styles.clearSearchBtn} onClick={() => { setSearchQuery(''); setSearchResult(null); }}>
+                      <button type="button" className={styles.clearBtn} onClick={() => { setSearchQuery(''); setSearchResult(null); }}>
                         ×
                       </button>
                     )}
                   </div>
-                  <button type="submit" className={styles.primaryBtn} disabled={!searchQuery.trim()}>
+                  <button type="submit" className={styles.btnPrimary} disabled={!searchQuery.trim()}>
                     Look Up Profile
                   </button>
                 </form>
 
-                {/* Search Result */}
+                {/* Search Result Box */}
                 {searchResult && (
-                  <div className={styles.searchResultBox}>
+                  <div className={styles.searchResultContainer}>
                     {searchResult.error ? (
-                      <div className={styles.searchErrorText}>{searchResult.error}</div>
+                      <div className={styles.searchErrorAlert}>{searchResult.error}</div>
                     ) : (
-                      <div className={styles.collaboratorCard}>
-                        <div className={styles.collabHeader}>
-                          <div className={styles.collabAvatar} style={{ background: searchResult.profile.color || '#3b82f6' }}>
+                      <div className={styles.collabCard}>
+                        <div className={styles.collabTop}>
+                          <div className={styles.collabAvatarCircle} style={{ background: searchResult.profile.color || '#2563eb' }}>
                             {searchResult.profile.photoURL ? <img src={searchResult.profile.photoURL} alt="" /> : searchResult.profile.name.charAt(0)}
                           </div>
-                          <div className={styles.collabMeta}>
+                          <div className={styles.collabInfo}>
                             <div className={styles.collabNameRow}>
-                              <span className={styles.collabName}>{searchResult.profile.name}</span>
-                              <span className={styles.collabAccount}>#{searchResult.profile.account}</span>
+                              <span className={styles.collabNameText}>{searchResult.profile.name}</span>
+                              <span className={styles.collabTagText}>#{searchResult.profile.account}</span>
                             </div>
-                            <span className={styles.collabRole}>{searchResult.profile.role}</span>
+                            <span className={styles.collabRoleText}>{searchResult.profile.role}</span>
                           </div>
                         </div>
-                        <p className={styles.collabBio}>{searchResult.profile.bio}</p>
-                        <div className={styles.collabActions}>
-                          <button className={styles.chatActionBtn} onClick={() => goToFriendChat(searchResult.profile.account)}>
-                            <MessageSquare size={14} /> Message
+                        <p className={styles.collabBioText}>{searchResult.profile.bio}</p>
+                        <div className={styles.collabCardActions}>
+                          <button className={styles.btnSecondaryFull} onClick={() => goToFriendChat(searchResult.profile.account)}>
+                            <MessageSquare size={15} /> Message
                           </button>
                           <button
-                            className={isFollowing(searchResult.profile.account) ? styles.unfollowActionBtn : styles.followBackBtn}
+                            className={isFollowing(searchResult.profile.account) ? styles.btnUnfollowFull : styles.btnPrimaryFull}
                             onClick={() => handleToggleFollow(searchResult.profile)}
                           >
                             {isFollowing(searchResult.profile.account) ? 'Following' : 'Follow Profile'}
@@ -799,48 +811,48 @@ export default function Account() {
                 )}
 
                 {/* Suggested Creators */}
-                <div className={styles.suggestedSection}>
-                  <h3 className={styles.suggestedSectionTitle}>Suggested Boardroom Creators & Teammates</h3>
-                  <div className={styles.socialGrid}>
+                <div className={styles.suggestedContainer}>
+                  <h3 className={styles.suggestedHeading}>Suggested Boardroom Creators & Teammates</h3>
+                  <div className={styles.collaboratorGrid}>
                     {suggestedList.map((s) => {
                       const amFollowing = isFollowing(s.account);
                       return (
-                        <div key={s.account} className={styles.collaboratorCard}>
-                          <div className={styles.collabHeader}>
-                            <div className={styles.collabAvatar} style={{ background: s.color || '#3b82f6' }}>
+                        <div key={s.account} className={styles.collabCard}>
+                          <div className={styles.collabTop}>
+                            <div className={styles.collabAvatarCircle} style={{ background: s.color || '#2563eb' }}>
                               {s.photoURL ? <img src={s.photoURL} alt="" /> : s.name.charAt(0)}
                             </div>
-                            <div className={styles.collabMeta}>
+                            <div className={styles.collabInfo}>
                               <div className={styles.collabNameRow}>
-                                <span className={styles.collabName}>{s.name}</span>
-                                <span className={styles.collabAccount}>#{s.account}</span>
+                                <span className={styles.collabNameText}>{s.name}</span>
+                                <span className={styles.collabTagText}>#{s.account}</span>
                               </div>
-                              <span className={styles.collabRole}>{s.role}</span>
+                              <span className={styles.collabRoleText}>{s.role}</span>
                             </div>
                           </div>
-                          <p className={styles.collabBio}>{s.bio}</p>
-                          <div className={styles.collabBadgesRow}>
-                            <span className={styles.badgesCountTag}>
-                              <Award size={13} /> {s.badgesCount} badges
+                          <p className={styles.collabBioText}>{s.bio}</p>
+                          <div className={styles.collabFooterBar}>
+                            <span className={styles.badgeCountChip}>
+                              <Award size={14} /> {s.badgesCount} Badges
                             </span>
-                            <div className={styles.badgeIconsRow}>
+                            <div className={styles.badgeMiniGroup}>
                               {(s.topBadges || []).map((bid) => {
                                 const bObj = ALL_BADGES.find((ab) => ab.id === bid) || ALL_BADGES[0];
                                 const tier = BADGE_TIERS[bObj.tier] || BADGE_TIERS.common;
                                 return (
-                                  <span key={bid} className={styles.collabMiniBadge} style={{ color: tier.color, background: tier.bg }} title={bObj.name}>
-                                    <BadgeIcon name={bObj.icon} size={13} />
+                                  <span key={bid} className={styles.miniIconBadge} style={{ color: tier.color, background: tier.bg }} title={bObj.name}>
+                                    <BadgeIcon name={bObj.icon} size={14} />
                                   </span>
                                 );
                               })}
                             </div>
                           </div>
-                          <div className={styles.collabActions}>
-                            <button className={styles.chatActionBtn} onClick={() => goToFriendChat(s.account)}>
-                              <MessageSquare size={14} /> Message
+                          <div className={styles.collabCardActions}>
+                            <button className={styles.btnSecondaryFull} onClick={() => goToFriendChat(s.account)}>
+                              <MessageSquare size={15} /> Message
                             </button>
                             <button
-                              className={amFollowing ? styles.unfollowActionBtn : styles.followBackBtn}
+                              className={amFollowing ? styles.btnUnfollowFull : styles.btnPrimaryFull}
                               onClick={() => handleToggleFollow(s)}
                             >
                               {amFollowing ? 'Following' : '+ Follow'}
@@ -860,32 +872,34 @@ export default function Account() {
             TAB 4: SETTINGS
            ========================================================= */}
         {activeTab === 'settings' && (
-          <div className={styles.settingsGrid}>
-            <section className={styles.sectionCard}>
-              <div className={styles.sectionTitleWrap}>
-                <Settings size={18} className={styles.pinIcon} />
-                <h2 className={styles.sectionTitle}>Profile Customization</h2>
+          <div className={styles.settingsLayoutGrid}>
+            <section className={styles.contentCard}>
+              <div className={styles.cardHeaderRow}>
+                <div className={styles.cardTitleGroup}>
+                  <Settings size={18} className={styles.titleIconBlue} />
+                  <h2 className={styles.cardHeading}>Profile Customization</h2>
+                </div>
               </div>
-              <p className={styles.sectionSubText}>
-                Changes saved here will appear across your profile card, direct messages, and all collaborative whiteboards.
+              <p className={styles.subHeadingText}>
+                Your profile updates will immediately reflect across your public account card, direct messages, and team canvases.
               </p>
 
-              <div className={styles.formRow}>
-                <label className={styles.fieldLabel} htmlFor="displayNameInput">Display Name</label>
+              <div className={styles.formGroup}>
+                <label className={styles.formLabel} htmlFor="nameInput">Display Name</label>
                 <input
-                  id="displayNameInput"
-                  className={styles.inputField}
+                  id="nameInput"
+                  className={styles.formInput}
                   value={name}
                   maxLength={40}
                   onChange={(e) => setName(e.target.value)}
                 />
               </div>
 
-              <div className={styles.formRow}>
-                <label className={styles.fieldLabel} htmlFor="roleInput">Role / Headline Title</label>
+              <div className={styles.formGroup}>
+                <label className={styles.formLabel} htmlFor="roleInput">Headline / Professional Role</label>
                 <input
                   id="roleInput"
-                  className={styles.inputField}
+                  className={styles.formInput}
                   value={role}
                   maxLength={60}
                   placeholder="e.g., Full-Stack Developer & UI Architect"
@@ -893,67 +907,67 @@ export default function Account() {
                 />
               </div>
 
-              <div className={styles.formRow}>
-                <label className={styles.fieldLabel} htmlFor="bioInput">Professional Bio</label>
+              <div className={styles.formGroup}>
+                <label className={styles.formLabel} htmlFor="bioInput">Bio & Expertise</label>
                 <textarea
                   id="bioInput"
-                  className={styles.textareaField}
+                  className={styles.formTextarea}
                   rows={3}
                   value={bio}
                   maxLength={180}
-                  placeholder="Share your expertise, projects, or interests with fellow collaborators..."
+                  placeholder="Share your interests, tech stack, or collaborative projects..."
                   onChange={(e) => setBio(e.target.value)}
                 />
               </div>
 
-              <div className={styles.formActionsRow}>
-                <button className={styles.primarySaveBtn} onClick={onSaveSettings}>
-                  {savedTick ? <><Check size={16} /> Profile Saved!</> : 'Save Profile Changes'}
+              <div className={styles.formSaveRow}>
+                <button className={styles.btnPrimary} onClick={onSaveSettings}>
+                  {savedTick ? <><Check size={16} /> Profile Saved Successfully!</> : 'Save Profile Changes'}
                 </button>
               </div>
             </section>
 
-            <section className={styles.sectionCard}>
-              <h2 className={styles.sectionTitle}>Account Details & Security</h2>
-              <dl className={styles.detailsList}>
-                <div className={styles.detailRow}>
+            <section className={styles.contentCard}>
+              <h2 className={styles.cardHeading}>Account & Device Security</h2>
+              <dl className={styles.accountDataList}>
+                <div className={styles.dataListRow}>
                   <dt>Sign-In Method</dt>
-                  <dd className={styles.providerTag}>
+                  <dd className={styles.providerBadge}>
                     <ShieldCheck size={16} />
                     {user.provider === 'google' ? 'Google Account (Cloud Sync)' : 'Guest Device Account (Offline)'}
                   </dd>
                 </div>
                 {user.email && (
-                  <div className={styles.detailRow}>
+                  <div className={styles.dataListRow}>
                     <dt>Email Address</dt>
-                    <dd className={styles.emailTag}><Mail size={15} /> {user.email}</dd>
+                    <dd className={styles.emailBadge}><Mail size={15} /> {user.email}</dd>
                   </div>
                 )}
-                <div className={styles.detailRow}>
+                <div className={styles.dataListRow}>
                   <dt>Shareable Account ID</dt>
-                  <dd className={styles.accountIdRow}>
-                    <span className={styles.monoTag}>{myTag}</span>
-                    <button className={styles.iconCopyBtn} onClick={onCopyMyId} title="Copy ID">
-                      {copiedId === 'self' ? <Check size={16} /> : <Copy size={16} />}
+                  <dd className={styles.accountIdCopyRow}>
+                    <span className={styles.tagCodeMono}>{myTag}</span>
+                    <button className={styles.btnIconGhost} onClick={onCopyMyId} title="Copy ID">
+                      {copiedId === 'self' ? <Check size={16} className={styles.iconGreen} /> : <Copy size={16} />}
                     </button>
                   </dd>
                 </div>
               </dl>
 
               {isGuest && googleEnabled && (
-                <div className={styles.upgradeBox}>
-                  <p>Upgrade to a Google Account to sync your profile across devices and browsers seamlessly.</p>
-                  <button className={styles.googleBtn} onClick={onUpgradeToGoogle}>
+                <div className={styles.upgradeAlertBox}>
+                  <p>Upgrade to a Google Account to securely sync your profile and badges across all browsers and devices.</p>
+                  <button className={styles.btnUpgradeGoogle} onClick={onUpgradeToGoogle}>
                     Sign in with Google
                   </button>
                 </div>
               )}
 
-              <div className={styles.dangerZoneRow}>
-                <button className={styles.resetBtn} onClick={onReset}>
+              <div className={styles.dangerActionsRow}>
+                <button className={styles.btnResetDanger} onClick={onReset}>
                   <Trash2 size={15} /> Reset Customizations
                 </button>
-                <button className={styles.signOutBtn} onClick={onSignOut}>
+                <button className={styles.btnSignOutDanger} onClick={onSignOut}>
                   <LogOut size={15} /> Sign Out
                 </button>
               </div>

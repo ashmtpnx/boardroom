@@ -24,6 +24,7 @@ import {
   SOCIAL_EVENT,
 } from '../../utils/socialFollow';
 import Avatar from '../Avatar';
+import { viewUserProfile } from '../../utils/profileView';
 import styles from './Account.module.css';
 
 // Dynamic icon resolver for badges
@@ -33,7 +34,7 @@ const ICON_MAP = {
   Lock, Check, Pin, CheckCircle2,
 };
 
-function BadgeIcon({ name, size = 20 }) {
+export function BadgeIcon({ name, size = 20 }) {
   const IconComp = ICON_MAP[name] || Award;
   return <IconComp size={size} />;
 }
@@ -652,10 +653,13 @@ export default function Account() {
                   <div className={styles.collaboratorGrid}>
                     {followingList.map((f) => (
                       <div key={f.account} className={styles.collabCard}>
-                        <div className={styles.collabTop}>
-                          <div className={styles.collabAvatarCircle} style={{ background: f.color || '#2563eb' }}>
-                            {f.photoURL ? <img src={f.photoURL} alt="" /> : f.name.charAt(0)}
-                          </div>
+                        <div
+                          className={styles.collabTop}
+                          onClick={() => viewUserProfile(f)}
+                          style={{ cursor: 'pointer' }}
+                          title={`Click to view ${f.name}'s profile`}
+                        >
+                          <Avatar user={f} size={46} />
                           <div className={styles.collabInfo}>
                             <div className={styles.collabNameRow}>
                               <span className={styles.collabNameText}>{f.name}</span>
@@ -714,10 +718,13 @@ export default function Account() {
                       const amFollowing = isFollowing(f.account);
                       return (
                         <div key={f.account} className={styles.collabCard}>
-                          <div className={styles.collabTop}>
-                            <div className={styles.collabAvatarCircle} style={{ background: f.color || '#7c3aed' }}>
-                              {f.photoURL ? <img src={f.photoURL} alt="" /> : f.name.charAt(0)}
-                            </div>
+                          <div
+                            className={styles.collabTop}
+                            onClick={() => viewUserProfile(f)}
+                            style={{ cursor: 'pointer' }}
+                            title={`Click to view ${f.name}'s profile`}
+                          >
+                            <Avatar user={f} size={46} />
                             <div className={styles.collabInfo}>
                               <div className={styles.collabNameRow}>
                                 <span className={styles.collabNameText}>{f.name}</span>
@@ -782,10 +789,13 @@ export default function Account() {
                       <div className={styles.searchErrorAlert}>{searchResult.error}</div>
                     ) : (
                       <div className={styles.collabCard}>
-                        <div className={styles.collabTop}>
-                          <div className={styles.collabAvatarCircle} style={{ background: searchResult.profile.color || '#2563eb' }}>
-                            {searchResult.profile.photoURL ? <img src={searchResult.profile.photoURL} alt="" /> : searchResult.profile.name.charAt(0)}
-                          </div>
+                        <div
+                          className={styles.collabTop}
+                          onClick={() => viewUserProfile(searchResult.profile)}
+                          style={{ cursor: 'pointer' }}
+                          title={`Click to view ${searchResult.profile.name}'s profile`}
+                        >
+                          <Avatar user={searchResult.profile} size={46} />
                           <div className={styles.collabInfo}>
                             <div className={styles.collabNameRow}>
                               <span className={styles.collabNameText}>{searchResult.profile.name}</span>
@@ -819,10 +829,13 @@ export default function Account() {
                       const amFollowing = isFollowing(s.account);
                       return (
                         <div key={s.account} className={styles.collabCard}>
-                          <div className={styles.collabTop}>
-                            <div className={styles.collabAvatarCircle} style={{ background: s.color || '#2563eb' }}>
-                              {s.photoURL ? <img src={s.photoURL} alt="" /> : s.name.charAt(0)}
-                            </div>
+                          <div
+                            className={styles.collabTop}
+                            onClick={() => viewUserProfile(s)}
+                            style={{ cursor: 'pointer' }}
+                            title={`Click to view ${s.name}'s profile`}
+                          >
+                            <Avatar user={s} size={46} />
                             <div className={styles.collabInfo}>
                               <div className={styles.collabNameRow}>
                                 <span className={styles.collabNameText}>{s.name}</span>

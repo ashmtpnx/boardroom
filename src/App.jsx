@@ -20,6 +20,8 @@ import Sidebar from './components/Sidebar/Sidebar';
 import PageControls from './components/PageControls/PageControls';
 import RoomReactions from './components/Reactions/RoomReactions';
 import RoomLockScreen from './components/RoomLockScreen/RoomLockScreen';
+import UserProfileModal from './components/Account/UserProfileModal';
+import { VIEW_PROFILE_EVENT } from './utils/profileView';
 import styles from './App.module.css';
 
 // Fabric.js is ~500 KB — the single biggest dependency, and it's only needed on a
@@ -142,6 +144,7 @@ function Root() {
   const user = useSelector((s) => s.session.currentUser);
   const [route, setRoute] = useState(getRoute);
   const [restoring, setRestoring] = useState(true);
+  const [viewingProfile, setViewingProfile] = useState(null);
 
   // Try to restore an existing session (Google or guest) without prompting.
   useEffect(() => {
@@ -154,6 +157,15 @@ function Root() {
     })();
     return () => { cancelled = true; };
   }, [dispatch]);
+
+  // Listen for global profile view triggers when avatars or cards are clicked
+  useEffect(() => {
+    const onViewProfile = (e) => {
+      if (e.detail?.user) setViewingProfile(e.detail.user);
+    };
+    window.addEventListener(VIEW_PROFILE_EVENT, onViewProfile);
+    return () => window.removeEventListener(VIEW_PROFILE_EVENT, onViewProfile);
+  }, []);
 
   // Publish our public card to the directory whenever our identity/profile
   // changes, so friends can resolve our account ID to a real profile.
@@ -196,6 +208,7 @@ function Root() {
     <>
       <InboxProvider />
       {screen}
+      <UserProfileModal user={viewingProfile} onClose={() => setViewingProfile(null)} />
     </>
   );
 }

@@ -1,5 +1,6 @@
 import { useSelector } from 'react-redux';
 import Avatar from '../../components/Avatar';
+import { viewUserProfile } from '../../utils/profileView';
 import styles from './PeoplePanel.module.css';
 
 export default function PeoplePanel() {
@@ -12,7 +13,13 @@ export default function PeoplePanel() {
       <div className={styles.count}>{users.length} in this room</div>
       <ul className={styles.list}>
         {sorted.map((u) => (
-          <li key={u.id} className={styles.person}>
+          <li
+            key={u.id}
+            className={styles.person}
+            onClick={() => !u.isSelf && viewUserProfile(u)}
+            style={{ cursor: u.isSelf ? 'default' : 'pointer' }}
+            title={u.isSelf ? 'You' : `Click to view ${u.name}'s profile`}
+          >
             <Avatar user={u} size={36} />
             <div className={styles.info}>
               <div className={styles.name}>

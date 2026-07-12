@@ -9,3 +9,13 @@
   flex-shrink: 0;
   user-select: none;
 }
+
+.clickable {
+  cursor: pointer;
+  transition: transform 0.16s ease, box-shadow 0.16s ease;
+}
+
+.clickable:hover {
+  transform: scale(1.06);
+  box-shadow: 0 0 0 2.5px rgba(59, 130, 246, 0.65), 0 4px 14px rgba(0, 0, 0, 0.25);
+}

@@ -6,7 +6,18 @@ export default function ChatMessage({ message, mine }) {
 
   return (
     <div className={`${styles.msg} ${mine ? styles.msgMine : ''}`}>
-      <Avatar user={{ name: message.name, color: message.color, photoURL: message.photoURL }} size={30} className={styles.avatar} />
+      <Avatar
+        user={{
+          id: message.fromTag || message.id || message.name,
+          account: message.fromTag || message.id || message.name,
+          name: message.name,
+          color: message.color,
+          photoURL: message.photoURL,
+        }}
+        size={30}
+        clickable={!mine}
+        className={styles.avatar}
+      />
       <div className={styles.bubbleWrap}>
         <div className={styles.meta}>
           <span className={styles.name}>{mine ? 'You' : message.name}</span>

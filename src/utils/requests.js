@@ -74,7 +74,15 @@ export function removeIncoming(tag) {
 // ---- outgoing (requests I've sent) ----
 
 export function getOutgoing() {
-  return read(OUT_KEY);
+  const list = read(OUT_KEY);
+  const cleaned = list.filter((r) => {
+    const t = r.toTag || '';
+    return !t.startsWith('BR-ALEX') && !t.startsWith('BR-SARA') && !t.startsWith('BR-MARK') && !t.startsWith('BR-ELEN') && !t.startsWith('BR-DEVIN');
+  });
+  if (cleaned.length !== list.length) {
+    try { localStorage.setItem(OUT_KEY, JSON.stringify(cleaned)); } catch {}
+  }
+  return cleaned;
 }
 
 export function hasOutgoing(tag) {

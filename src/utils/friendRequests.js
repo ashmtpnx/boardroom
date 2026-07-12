@@ -22,6 +22,7 @@ import {
 } from './requests';
 import { addFriend, getFriends } from './friends';
 import { removeNotificationsByTag } from './notifications';
+import { SUGGESTED_CREATORS, followAccount, addFollower } from './socialFollow';
 
 // My public card, used as the payload for anything I send out.
 function myCard(me) {
@@ -45,6 +46,24 @@ export async function sendFriendRequest(me, targetTag, name) {
   if (getFriends().some((f) => f.account === target)) {
     return { ok: false, error: 'You’re already connected.', alreadyFriend: true };
   }
+
+  // Check if target is a community/suggested account or AI collaborator
+  const suggested = SUGGESTED_CREATORS.find((s) => s.account === target);
+  if (suggested || target.startsWith('BR-ALEX') || target.startsWith('BR-SARA') || target.startsWith('BR-MARK') || target.startsWith('BR-ELEN') || target.startsWith('BR-DEVIN')) {
+    const targetName = suggested?.name || (name || '').trim() || target;
+    addFriend({ name: targetName, account: target, color: suggested?.color, photoURL: suggested?.photoURL });
+    try {
+      if (suggested) {
+        followAccount(suggested);
+        addFollower(suggested);
+      }
+    } catch {
+      /* ignore */
+    }
+    clearRequestsWith(target);
+    return { ok: true, autoAccepted: true, error: null };
+  }
+
   if (hasOutgoing(target)) {
     return { ok: false, error: 'Request already sent — waiting for them to accept.' };
   }

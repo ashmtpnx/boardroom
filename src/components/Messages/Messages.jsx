@@ -5,7 +5,7 @@ import { getFriends, removeFriend, FRIENDS_EVENT } from '../../utils/friends';
 import { accountId, normalizeAccountId } from '../../utils/accountId';
 import { lookupAccount } from '../../utils/directory';
 import { sendFriendRequest } from '../../utils/friendRequests';
-import { getOutgoing, REQUESTS_EVENT } from '../../utils/requests';
+import { getOutgoing, removeOutgoing, REQUESTS_EVENT } from '../../utils/requests';
 import { listConversations } from '../../utils/dm';
 import { NOTIFICATIONS_EVENT } from '../../utils/notifications';
 import { goHome, goToFriendChat } from '../../utils/nav';
@@ -188,7 +188,17 @@ export default function Messages() {
                 <li key={r.toTag} className={styles.pendingRow}>
                   <Avatar user={{ name: r.name, color: r.color, photoURL: r.photoURL }} size={34} />
                   <span className={styles.pendingName}>{r.name || r.toTag}</span>
-                  <span className={styles.pendingState}><Loader size={13} className={styles.spin} /> Requested</span>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginLeft: 'auto' }}>
+                    <span className={styles.pendingState}><Loader size={13} className={styles.spin} /> Requested</span>
+                    <button
+                      type="button"
+                      onClick={(e) => { e.stopPropagation(); removeOutgoing(r.toTag); refresh(); }}
+                      style={{ background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer', display: 'flex', alignItems: 'center', padding: '4px' }}
+                      title="Cancel request"
+                    >
+                      <X size={15} />
+                    </button>
+                  </div>
                 </li>
               ))}
             </ul>

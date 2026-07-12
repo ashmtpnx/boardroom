@@ -26,21 +26,20 @@ export async function sendToInbox(targetTag, event, payload, me = null) {
   const roomId = inboxRoomId(targetTag);
   if (!roomId) return false;
   let rt = null;
+  const timeoutPromise = new Promise((resolve) => setTimeout(() => resolve(false), 2500));
   try {
     rt = await createRealtime();
     rt.connect(roomId, me);
-    // Wait until the server has acked room:join — this guarantees
-    // socket.data.roomId is set before the rt event arrives, fixing the race
-    // that silently dropped friend requests.
-    await rt.whenReady();
+    // Wait until the server has acked room:join or time out after 2.5s to prevent waiting glitches
+    await Promise.race([rt.whenReady(), timeoutPromise]);
     // Wait for the relay to acknowledge receipt (or time out) before closing.
-    const res = await rt.emitAck(event, payload);
-    return !!res?.ok;
+    const res = await Promise.race([rt.emitAck(event, payload, 2500), timeoutPromise]);
+    return !!(res && res.ok);
   } catch {
     return false;
   } finally {
     // A grace period lets socket.io flush the final ack frame and any network buffers cleanly.
-    if (rt) setTimeout(() => rt.disconnect?.(), 1500);
+    if (rt) setTimeout(() => rt.disconnect?.(), 1000);
   }
 }
 

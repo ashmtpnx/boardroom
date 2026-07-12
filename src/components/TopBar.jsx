@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { Share2, Download, ZoomIn, ZoomOut, LogOut, MessageCircle, Users, Undo2, Redo2, ShieldCheck, Lock } from 'lucide-react';
+import { Share2, Download, ZoomIn, ZoomOut, LogOut, MessageCircle, Users, Undo2, Redo2, ShieldCheck, Lock, Code2 } from 'lucide-react';
 import { getCanvasApi } from '../features/canvas/canvasApi';
 import { exportBoardPdf, exportChatPdf } from '../utils/exportPdf';
 import { goHome, goToAccount, goToMessages } from '../utils/nav';
@@ -146,6 +146,14 @@ export default function TopBar() {
             <MessageCircle size={16} /> <span className={styles.btnLabel}>Messages</span>
           </button>
         )}
+        <button
+          className={styles.btn}
+          onClick={() => dispatch(setActiveTab('code'))}
+          title="Open Collaborative Code Compiler & IDE"
+          style={{ borderColor: 'rgba(96, 165, 250, 0.4)', color: '#60a5fa' }}
+        >
+          <Code2 size={16} /> <span className={styles.btnLabel}>Code IDE</span>
+        </button>
         <button className={styles.btn} onClick={onBoardPdf} title="Export board to PDF">
           <Download size={16} /> <span className={styles.btnLabel}>Board PDF</span>
         </button>

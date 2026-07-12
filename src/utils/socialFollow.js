@@ -61,23 +61,20 @@ export const SUGGESTED_CREATORS = [
   },
 ];
 
-const DEFAULT_FOLLOWING = [
-  SUGGESTED_CREATORS[0],
-  SUGGESTED_CREATORS[1],
-];
-
-const DEFAULT_FOLLOWERS = [
-  SUGGESTED_CREATORS[0],
-  SUGGESTED_CREATORS[1],
-  SUGGESTED_CREATORS[2],
-  SUGGESTED_CREATORS[3],
-];
+const DEFAULT_FOLLOWING = [];
+const DEFAULT_FOLLOWERS = [];
 
 export function getFollowing() {
   try {
     const raw = JSON.parse(localStorage.getItem(FOLLOWING_KEY));
-    if (Array.isArray(raw)) return raw;
-    localStorage.setItem(FOLLOWING_KEY, JSON.stringify(DEFAULT_FOLLOWING));
+    if (Array.isArray(raw)) {
+      // Clean up old dummy mock data from previous sessions if present
+      if (raw.length === 2 && raw[0]?.account === 'BR-ALEX-CHEN' && raw[1]?.account === 'BR-SARA-JNK8' && !raw[0]?.followedAt) {
+        localStorage.removeItem(FOLLOWING_KEY);
+        return [];
+      }
+      return raw;
+    }
     return DEFAULT_FOLLOWING;
   } catch {
     return DEFAULT_FOLLOWING;
@@ -87,8 +84,14 @@ export function getFollowing() {
 export function getFollowers() {
   try {
     const raw = JSON.parse(localStorage.getItem(FOLLOWERS_KEY));
-    if (Array.isArray(raw)) return raw;
-    localStorage.setItem(FOLLOWERS_KEY, JSON.stringify(DEFAULT_FOLLOWERS));
+    if (Array.isArray(raw)) {
+      // Clean up old dummy mock data from previous sessions if present
+      if (raw.length === 4 && raw[0]?.account === 'BR-ALEX-CHEN' && raw[2]?.account === 'BR-MARK-VN99' && !raw[0]?.followedAt) {
+        localStorage.removeItem(FOLLOWERS_KEY);
+        return [];
+      }
+      return raw;
+    }
     return DEFAULT_FOLLOWERS;
   } catch {
     return DEFAULT_FOLLOWERS;
@@ -155,6 +158,52 @@ export function toggleFollow(target) {
   } else {
     return followAccount(target);
   }
+}
+
+export function addFollower(target) {
+  if (!target) return getFollowers();
+  const account = normalizeAccountId(target.account || target) || String(target.account || target).trim().toUpperCase();
+  if (!account) return getFollowers();
+
+  const list = getFollowers();
+  if (list.some((f) => f.account === account)) return list;
+
+  const suggested = SUGGESTED_CREATORS.find((s) => s.account === account);
+  const newEntry = {
+    id: `fol_${Date.now()}`,
+    account,
+    name: target.name || suggested?.name || `Collaborator ${account}`,
+    role: target.role || target.title || suggested?.role || 'Collaborative Whiteboard Creator',
+    bio: target.bio || suggested?.bio || 'Active collaborator on Boardroom.',
+    color: target.color || suggested?.color || pickColor(account),
+    photoURL: target.photoURL !== undefined ? target.photoURL : (suggested?.photoURL || null),
+    badgesCount: target.badgesCount || suggested?.badgesCount || 8,
+    topBadges: target.topBadges || suggested?.topBadges || ['first_board', 'sticky_fan', 'reactor'],
+    followedAt: Date.now(),
+  };
+
+  const next = [newEntry, ...list];
+  try {
+    localStorage.setItem(FOLLOWERS_KEY, JSON.stringify(next));
+    window.dispatchEvent(new CustomEvent(SOCIAL_EVENT));
+  } catch {
+    /* ignore */
+  }
+  return next;
+}
+
+export function removeFollower(accountInput) {
+  const account = normalizeAccountId(accountInput || '') || String(accountInput || '').trim().toUpperCase();
+  if (!account) return getFollowers();
+
+  const next = getFollowers().filter((f) => f.account !== account);
+  try {
+    localStorage.setItem(FOLLOWERS_KEY, JSON.stringify(next));
+    window.dispatchEvent(new CustomEvent(SOCIAL_EVENT));
+  } catch {
+    /* ignore */
+  }
+  return next;
 }
 
 export function getSuggestedCollaborators() {

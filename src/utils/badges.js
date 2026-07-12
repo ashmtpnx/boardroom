@@ -1,6 +1,8 @@
 // Comprehensive GitHub-style Badges & Rewards system for Boardroom profiles.
 // Tracks user achievements across creation, collaboration, social network, and mastery.
 
+import { getRecentBoards } from './recentBoards';
+
 const STATS_KEY = 'boardroom:user_stats';
 const PINNED_KEY = 'boardroom:pinned_badges';
 
@@ -186,11 +188,23 @@ export const ALL_BADGES = [
 ];
 
 export function getUserStats() {
+  const realBoardsCount = getRecentBoards().length;
   try {
     const raw = JSON.parse(localStorage.getItem(STATS_KEY));
-    return raw && typeof raw === 'object' ? raw : { boardsVisited: 2, notesCreated: 3, reactionsSent: 4, messagesSent: 2 };
+    // Clean up old dummy mock numbers from previous sessions if they match exactly
+    if (raw && typeof raw === 'object') {
+      if (raw.boardsVisited === 2 && raw.notesCreated === 3 && raw.reactionsSent === 4 && raw.messagesSent === 2 && !raw.freehandUsed && !raw.exportsDone) {
+        localStorage.removeItem(STATS_KEY);
+        return { boardsVisited: realBoardsCount, notesCreated: 0, reactionsSent: 0, messagesSent: 0, freehandUsed: 0, exportsDone: 0, secureRooms: 0 };
+      }
+      return {
+        ...raw,
+        boardsVisited: Math.max(raw.boardsVisited || 0, realBoardsCount),
+      };
+    }
+    return { boardsVisited: realBoardsCount, notesCreated: 0, reactionsSent: 0, messagesSent: 0, freehandUsed: 0, exportsDone: 0, secureRooms: 0 };
   } catch {
-    return { boardsVisited: 2, notesCreated: 3, reactionsSent: 4, messagesSent: 2 };
+    return { boardsVisited: realBoardsCount, notesCreated: 0, reactionsSent: 0, messagesSent: 0, freehandUsed: 0, exportsDone: 0, secureRooms: 0 };
   }
 }
 

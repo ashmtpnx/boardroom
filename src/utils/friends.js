@@ -3,6 +3,7 @@
 import { uid } from './ids';
 import { pickColor } from './colors';
 import { normalizeAccountId } from './accountId';
+import { followAccount, addFollower } from './socialFollow';
 
 const KEY = 'boardroom:friends';
 
@@ -58,6 +59,12 @@ export function addFriend({ name, color, photoURL = null, account = null }) {
     color: color || pickColor(normAccount || clean),
     photoURL,
   };
+  try {
+    followAccount(friend);
+    addFollower(friend);
+  } catch {
+    /* ignore */
+  }
   return persist([...getFriends(), friend]);
 }
 
@@ -71,9 +78,16 @@ export function addFriendByAccountId(input, name) {
     return { ok: false, list, error: 'That friend is already in your list.' };
   }
   const label = (name || '').trim() || account;
+  const newFriend = { id: uid('friend'), account, name: label, color: pickColor(account), photoURL: null };
+  try {
+    followAccount(newFriend);
+    addFollower(newFriend);
+  } catch {
+    /* ignore */
+  }
   const next = persist([
     ...list,
-    { id: uid('friend'), account, name: label, color: pickColor(account), photoURL: null },
+    newFriend,
   ]);
   return { ok: true, list: next, error: null };
 }

@@ -14,6 +14,7 @@ export default function ChatPanel() {
   const dispatch = useDispatch();
   const messages = useSelector((s) => s.chat.messages);
   const me = useSelector((s) => s.session.currentUser);
+  const status = useSelector((s) => s.session.status);
   const [text, setText] = useState('');
   const [typingName, setTypingName] = useState(null);
   const typingTimerRef = useRef(null);
@@ -42,7 +43,7 @@ export default function ChatPanel() {
       if (unsub) unsub();
       if (typingTimerRef.current) clearTimeout(typingTimerRef.current);
     };
-  }, [me]);
+  }, [me, status]);
 
   const onInputChange = (e) => {
     const val = e.target.value;
@@ -60,6 +61,11 @@ export default function ChatPanel() {
     if (!me) return;
     const rt = getRealtimeClient();
     rt?.emit(EVENTS.ROOM_REACTION, { emoji, from: me.name });
+    window.dispatchEvent(
+      new CustomEvent('room:reaction:local', {
+        detail: { emoji, from: me.name },
+      }),
+    );
   };
 
   const submit = (e) => {

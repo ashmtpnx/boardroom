@@ -28,6 +28,8 @@ export const EVENTS = {
   // Board / Room live interactions
   ROOM_TYPING: 'room:typing',
   ROOM_REACTION: 'room:reaction',
+  ROOM_SETTINGS: 'room:settings',
+  ROOM_SETTINGS_UPDATE: 'room:settings:update',
   // Presence (payload: user object)
   PRESENCE_JOIN: 'presence:join', // "I just arrived"
   PRESENCE_SYNC: 'presence:sync', // "here's who I am" (reply to a join)

@@ -1,18 +1,20 @@
 import { useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { Share2, Download, ZoomIn, ZoomOut, LogOut, MessageCircle, Users, Undo2, Redo2 } from 'lucide-react';
+import { Share2, Download, ZoomIn, ZoomOut, LogOut, MessageCircle, Users, Undo2, Redo2, ShieldCheck, Lock } from 'lucide-react';
 import { getCanvasApi } from '../features/canvas/canvasApi';
 import { exportBoardPdf, exportChatPdf } from '../utils/exportPdf';
 import { goHome, goToAccount, goToMessages } from '../utils/nav';
 import { setActiveTab } from '../features/ui/uiSlice';
 import Avatar from './Avatar';
 import NotificationBell from './Notifications/NotificationBell';
+import RoomSettingsModal from './RoomSettingsModal/RoomSettingsModal';
 import styles from './TopBar.module.css';
 
 export default function TopBar() {
   const dispatch = useDispatch();
   const user = useSelector((s) => s.session.currentUser);
   const roomId = useSelector((s) => s.session.roomId);
+  const roomSettings = useSelector((s) => s.session.roomSettings);
   const zoom = useSelector((s) => s.canvas.zoom);
   const canUndo = useSelector((s) => s.canvas.canUndo);
   const canRedo = useSelector((s) => s.canvas.canRedo);
@@ -20,6 +22,7 @@ export default function TopBar() {
   const people = useSelector((s) => s.people.users || []);
   const [copied, setCopied] = useState(false);
   const [roomCopied, setRoomCopied] = useState(false);
+  const [showSettingsModal, setShowSettingsModal] = useState(false);
 
   const share = async () => {
     try {
@@ -65,10 +68,21 @@ export default function TopBar() {
       <button
         type="button"
         className={styles.room}
-        onClick={copyRoomId}
-        title={roomCopied ? 'Room ID copied!' : 'Click to copy Room Code'}
+        onClick={() => setShowSettingsModal(true)}
+        title="Click to manage Room Name & Admin Entrance Security"
       >
-        Room · <strong>{roomId || '…'}</strong>
+        <span className={styles.roomLabel}>Room ·</span>
+        <strong>{roomSettings?.name || roomId || '…'}</strong>
+        {roomSettings?.hasPassword ? <Lock size={14} className={styles.secIcon} /> : <ShieldCheck size={14} className={styles.secIcon} />}
+      </button>
+
+      <button
+        type="button"
+        className={styles.copyCodeBtn}
+        onClick={copyRoomId}
+        title={roomCopied ? 'Code copied!' : 'Copy room code'}
+      >
+        #{roomId || '…'}
         {roomCopied && <span className={styles.copiedBadge}>Copied!</span>}
       </button>
 
@@ -154,6 +168,8 @@ export default function TopBar() {
           </button>
         )}
       </div>
+
+      {showSettingsModal && <RoomSettingsModal onClose={() => setShowSettingsModal(false)} />}
     </header>
   );
 }

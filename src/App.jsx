@@ -4,7 +4,7 @@ import { store } from './app/store';
 import { restoreSession } from './auth/auth';
 import { createRealtime } from './realtime/RealtimeProvider';
 import { setRealtimeClient } from './realtime/client';
-import { setUser, setRoomId, realtimeConnected, leaving } from './features/session/sessionSlice';
+import { setUser, setRoomId, setRoomSettings, setPasswordRequired, realtimeConnected, leaving } from './features/session/sessionSlice';
 import { rememberBoard } from './utils/recentBoards';
 import { applyProfile } from './utils/profile';
 import { registerSelf } from './utils/directory';
@@ -19,6 +19,7 @@ import Toolbar from './components/Toolbar/Toolbar';
 import Sidebar from './components/Sidebar/Sidebar';
 import PageControls from './components/PageControls/PageControls';
 import RoomReactions from './components/Reactions/RoomReactions';
+import RoomLockScreen from './components/RoomLockScreen/RoomLockScreen';
 import styles from './App.module.css';
 
 // Fabric.js is ~500 KB — the single biggest dependency, and it's only needed on a
@@ -40,6 +41,9 @@ function getRoute() {
 function Board({ roomId }) {
   const dispatch = useDispatch();
   const user = useSelector((s) => s.session.currentUser);
+  const passwordRequired = useSelector((s) => s.session.passwordRequired);
+  const passwordError = useSelector((s) => s.session.passwordError);
+  const roomSettings = useSelector((s) => s.session.roomSettings);
 
   useEffect(() => {
     let cleanup = () => {};
@@ -48,10 +52,38 @@ function Board({ roomId }) {
     dispatch(setRoomId(roomId));
     rememberBoard(roomId);
 
+    let initialName = undefined;
+    let initialPassword = undefined;
+    try {
+      const stored = sessionStorage.getItem(`room_init_${roomId}`);
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        initialName = parsed.name;
+        initialPassword = parsed.password;
+        sessionStorage.removeItem(`room_init_${roomId}`);
+      }
+    } catch (err) {
+      // ignore
+    }
+
     (async () => {
       const rt = await createRealtime();
       if (cancelled) return;
-      rt.connect(roomId, user);
+      
+      rt.connect(roomId, user, {
+        initialName,
+        initialPassword,
+        onPasswordRequired: (info) => {
+          if (!cancelled) dispatch(setPasswordRequired(info));
+        },
+        onSettings: (settings) => {
+          if (!cancelled) {
+            dispatch(setRoomSettings(settings));
+            dispatch(realtimeConnected());
+          }
+        },
+      });
+
       setRealtimeClient(rt);
       dispatch(realtimeConnected());
 
@@ -71,6 +103,17 @@ function Board({ roomId }) {
     // user is resolved before any Board mounts (see Root), so it's stable here.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [roomId, dispatch]);
+
+  if (passwordRequired) {
+    return (
+      <RoomLockScreen
+        roomId={roomId}
+        roomName={roomSettings?.name}
+        adminName={roomSettings?.adminName}
+        error={passwordError}
+      />
+    );
+  }
 
   return (
     <div className={styles.app}>

@@ -33,9 +33,12 @@ const app = express();
 app.use(cors({ origin: origins }));
 app.use(express.json({ limit: '256kb' })); // photoURL data-URLs can be largish
 
+// Room settings & security (roomId -> { name, password, adminId, adminName })
+const roomSettings = new Map();
+
 // Lightweight health/stats endpoint — handy for uptime checks and debugging.
 app.get('/health', (_req, res) => {
-  res.json({ ok: true, ...roomStats(), ...directoryStats(), ...socialStats(), uptime: process.uptime() });
+  res.json({ ok: true, ...roomStats(), ...directoryStats(), ...socialStats(), protectedRooms: roomSettings.size, uptime: process.uptime() });
 });
 
 // ---- public user directory (powers "add friend by account ID") ----
@@ -74,14 +77,54 @@ const INBOX_EVENTS = new Set(['friend:request', 'friend:accept', 'friend:decline
 
 io.on('connection', (socket) => {
   // Client joins exactly one room (room id = URL hash on the frontend).
-  socket.on('room:join', ({ roomId, user, senderId }, joinAck) => {
+  socket.on('room:join', ({ roomId, user, senderId, password, initialName, initialPassword }, joinAck) => {
     if (!roomId || !senderId) {
       if (typeof joinAck === 'function') joinAck({ ok: false });
       return;
     }
+
+    let settings = roomSettings.get(roomId);
+    if (!settings) {
+      // First person joining or creating the room becomes Room Admin
+      settings = {
+        name: initialName || roomId,
+        password: initialPassword || '',
+        adminId: senderId,
+        adminName: user?.name || 'Admin',
+      };
+      roomSettings.set(roomId, settings);
+    } else if (initialName && settings.adminId === senderId) {
+      settings.name = initialName;
+      if (initialPassword !== undefined) settings.password = initialPassword;
+    }
+
+    // Check password if required and caller is not the admin
+    if (settings.password && settings.password.trim() !== '' && senderId !== settings.adminId) {
+      if (password !== settings.password) {
+        if (typeof joinAck === 'function') {
+          joinAck({
+            ok: false,
+            error: 'PASSWORD_REQUIRED',
+            roomName: settings.name || roomId,
+            adminName: settings.adminName || 'Room Admin',
+          });
+        }
+        return; // Reject entrance — do not join socket room or send snapshot
+      }
+    }
+
     socket.data = { roomId, senderId, user: user || null };
     socket.join(roomId);
     addMember(roomId, senderId, user);
+
+    // Send room settings to the joining socket
+    const settingsPayload = {
+      name: settings.name,
+      hasPassword: !!(settings.password && settings.password.trim() !== ''),
+      adminId: settings.adminId,
+      adminName: settings.adminName,
+    };
+    socket.emit('rt', { event: 'room:settings', payload: settingsPayload, sender: 'server' });
 
     // Replay the current board so a late joiner sees everything already drawn.
     // Sent only to this socket; sender="server" so it isn't echo-filtered.
@@ -108,7 +151,32 @@ io.on('connection', (socket) => {
     }
 
     // Ack so the client knows the room is ready and it's safe to emit events.
-    if (typeof joinAck === 'function') joinAck({ ok: true });
+    if (typeof joinAck === 'function') joinAck({ ok: true, settings: settingsPayload });
+  });
+
+  // Admin updates room name or entrance password
+  socket.on('room:settings:update', ({ name, password }, ack) => {
+    const { roomId, senderId } = socket.data || {};
+    if (!roomId || !senderId) {
+      if (typeof ack === 'function') ack({ ok: false });
+      return;
+    }
+    const settings = roomSettings.get(roomId);
+    if (!settings || settings.adminId !== senderId) {
+      if (typeof ack === 'function') ack({ ok: false, error: 'NOT_ADMIN' });
+      return;
+    }
+    if (name !== undefined) settings.name = String(name).trim() || roomId;
+    if (password !== undefined) settings.password = String(password);
+
+    const settingsPayload = {
+      name: settings.name,
+      hasPassword: !!(settings.password && settings.password.trim() !== ''),
+      adminId: settings.adminId,
+      adminName: settings.adminName,
+    };
+    io.to(roomId).emit('rt', { event: 'room:settings', payload: settingsPayload, sender: 'server' });
+    if (typeof ack === 'function') ack({ ok: true, settings: settingsPayload });
   });
 
   // Generic relay: fold canvas state / persist social state, then forward to

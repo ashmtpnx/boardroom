@@ -18,13 +18,32 @@ export function createMockRealtime() {
   return {
     id: senderId,
 
-    connect(roomId) {
+    connect(roomId, user, options = {}) {
       channel = new BroadcastChannel(`boardroom:${roomId}`);
       channel.onmessage = (e) => {
         const data = e.data || {};
         if (data.sender === senderId) return; // ignore our own echoes
         deliver(data.event, data.payload, { sender: data.sender });
       };
+      if (options.initialName || options.initialPassword) {
+        options.onSettings?.({
+          name: options.initialName || roomId,
+          hasPassword: !!options.initialPassword,
+          adminId: senderId,
+          adminName: user?.name || 'Admin',
+        });
+      }
+    },
+
+    updateRoomSettings({ name, password }) {
+      if (channel) {
+        channel.postMessage({
+          event: 'room:settings',
+          payload: { name, hasPassword: !!password },
+          sender: senderId,
+        });
+      }
+      return Promise.resolve({ ok: true });
     },
 
     emit(event, payload) {

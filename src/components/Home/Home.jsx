@@ -6,6 +6,7 @@ import { getRecentBoards, forgetBoard } from '../../utils/recentBoards';
 import Avatar from '../Avatar';
 import BoardPreview from './BoardPreview';
 import NotificationBell from '../Notifications/NotificationBell';
+import CreateRoomModal from './CreateRoomModal';
 import styles from './Home.module.css';
 
 function relativeTime(ts) {
@@ -29,6 +30,7 @@ export default function Home() {
   const user = useSelector((s) => s.session.currentUser);
   const [code, setCode] = useState('');
   const [recent, setRecent] = useState(() => getRecentBoards());
+  const [showCreateModal, setShowCreateModal] = useState(false);
 
   const clean = normalizeCode(code);
 
@@ -75,7 +77,7 @@ export default function Home() {
           </p>
 
           <div className={styles.actions}>
-            <button className={styles.newBtn} onClick={startNewBoard}>
+            <button className={styles.newBtn} onClick={() => setShowCreateModal(true)}>
               <Plus size={20} /> New board
             </button>
 
@@ -158,6 +160,8 @@ export default function Home() {
       <footer className={styles.footer}>
         BOARDROOM · an infinite collaborative canvas · no audio/video, just ideas
       </footer>
+
+      {showCreateModal && <CreateRoomModal onClose={() => setShowCreateModal(false)} />}
     </div>
   );
 }

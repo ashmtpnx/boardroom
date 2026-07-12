@@ -52,12 +52,12 @@
 
 .room {
   flex-shrink: 0;
-  font-size: 12px;
-  color: var(--text-2);
-  background: var(--glass-bg-faint);
-  border: 1px solid var(--glass-border);
-  box-shadow: var(--glass-highlight);
-  padding: 5px 12px;
+  font-size: 13px;
+  color: #ffffff;
+  background: rgba(99, 102, 241, 0.15);
+  border: 1px solid rgba(168, 85, 247, 0.35);
+  box-shadow: 0 4px 12px -2px rgba(99, 102, 241, 0.25);
+  padding: 6px 14px;
   border-radius: 999px;
   white-space: nowrap;
   cursor: pointer;
@@ -66,11 +66,42 @@
   gap: 6px;
   transition: all 0.15s ease;
   position: relative;
+  font-weight: 600;
 }
 .room:hover {
-  background: var(--surface-2);
-  color: var(--text);
-  border-color: var(--accent);
+  background: rgba(168, 85, 247, 0.25);
+  border-color: #a855f7;
+  transform: translateY(-1px);
+}
+.roomLabel {
+  color: #c084fc;
+  font-size: 11px;
+  text-transform: uppercase;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+}
+.secIcon {
+  color: #a855f7;
+  margin-left: 2px;
+}
+.copyCodeBtn {
+  flex-shrink: 0;
+  font-size: 12px;
+  color: #94a3b8;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 5px 10px;
+  border-radius: 8px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: monospace;
+  transition: all 0.15s;
+}
+.copyCodeBtn:hover {
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.08);
 }
 
 .copiedBadge {

@@ -20,7 +20,7 @@ export function createSocketRealtime() {
   return {
     id: senderId,
 
-    connect(roomId, user) {
+    connect(roomId, user, options = {}) {
       const url = resolveRelayUrl(import.meta.env.VITE_SOCKET_URL);
       // Websocket-first for low-latency sync: on Render's free tier HTTP polling
       // adds a request/response round-trip to every event, which is the main
@@ -38,9 +38,30 @@ export function createSocketRealtime() {
       readyPromise = new Promise((resolve) => { readyResolve = resolve; });
 
       const joinRoom = () => {
-        socket?.emit('room:join', { roomId, user, senderId }, () => {
-          readyResolve?.();
-        });
+        socket?.emit(
+          'room:join',
+          {
+            roomId,
+            user,
+            senderId,
+            password: options.password,
+            initialName: options.initialName,
+            initialPassword: options.initialPassword,
+          },
+          (res) => {
+            if (res && res.ok === false && res.error === 'PASSWORD_REQUIRED') {
+              options.onPasswordRequired?.({
+                roomName: res.roomName || roomId,
+                adminName: res.adminName || 'Room Admin',
+              });
+              return;
+            }
+            if (res?.settings) {
+              options.onSettings?.(res.settings);
+            }
+            readyResolve?.();
+          }
+        );
       };
 
       socket.on('connect', joinRoom);
@@ -48,9 +69,22 @@ export function createSocketRealtime() {
       joinRoom();
 
       socket.on('rt', (env) => {
-        if (!env || env.sender === senderId) return;
+        if (!env) return;
+        if (env.event === 'room:settings') {
+          options.onSettings?.(env.payload);
+        }
+        if (env.sender === senderId && env.event !== 'room:settings') return;
         const set = handlers.get(env.event);
         if (set) set.forEach((fn) => fn(env.payload, { sender: env.sender }));
+      });
+    },
+
+    updateRoomSettings({ name, password }) {
+      return new Promise((resolve) => {
+        if (!socket) return resolve({ ok: false });
+        socket.emit('room:settings:update', { name, password }, (res) => {
+          resolve(res || { ok: false });
+        });
       });
     },
 

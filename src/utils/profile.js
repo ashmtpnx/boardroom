@@ -32,6 +32,9 @@ export function applyProfile(user) {
     ...(p.name ? { name: p.name } : {}),
     ...(p.color ? { color: p.color } : {}),
     ...(p.photoURL !== undefined ? { photoURL: p.photoURL } : {}),
+    ...(p.bio !== undefined ? { bio: p.bio } : {}),
+    ...(p.role !== undefined ? { role: p.role } : {}),
+    ...(p.banner !== undefined ? { banner: p.banner } : {}),
   };
 }
 

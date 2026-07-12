@@ -40,6 +40,9 @@ export function publishLocal(user) {
     name: String(user.name || 'User').slice(0, 60),
     color: user.color || null,
     photoURL: typeof user.photoURL === 'string' ? user.photoURL : null,
+    bio: typeof user.bio === 'string' ? user.bio.slice(0, 160) : 'Real-time collaborative whiteboard creator on Boardroom.',
+    role: typeof user.role === 'string' ? user.role.slice(0, 60) : 'Canvas Creator',
+    badgesCount: 12,
   };
   writeAll(all);
   return account;

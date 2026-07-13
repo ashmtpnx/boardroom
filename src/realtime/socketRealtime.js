@@ -141,6 +141,15 @@ export function createSocketRealtime() {
       return () => handlers.get(event)?.delete(handler);
     },
 
+    off(event, handler) {
+      if (handler) {
+        handlers.get(event)?.delete(handler);
+      } else {
+        handlers.delete(event);
+      }
+    },
+
+
     disconnect() {
       socket?.disconnect();
       socket = null;

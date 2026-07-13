@@ -14,11 +14,11 @@ export default function Canvas() {
 
   const [peerCursors, setPeerCursors] = useState({});
   const users = useSelector((s) => s.people?.users || []);
-
+  const connected = useSelector((s) => s.session.realtimeConnected);
 
   useEffect(() => {
     const rt = getRealtimeClient();
-    if (!rt) return undefined;
+    if (!rt || !connected) return undefined;
 
     const onPeerCursor = (payload, meta) => {
       if (!payload || typeof payload.x !== 'number' || typeof payload.y !== 'number') return;
@@ -51,7 +51,8 @@ export default function Canvas() {
       unsub && unsub();
       clearInterval(interval);
     };
-  }, []);
+  }, [connected]);
+
 
   // Drop local images directly onto the board (synced to peers via object:added).
   const onDrop = (e) => {

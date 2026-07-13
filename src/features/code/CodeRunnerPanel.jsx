@@ -311,6 +311,7 @@ export default function CodeRunnerPanel() {
   const roomId = useSelector((s) => s.session.roomId) || 'general';
   const currentUser = useSelector((s) => s.session.currentUser);
   const people = useSelector((s) => s.people?.users || []);
+  const connected = useSelector((s) => s.session.realtimeConnected);
   const [lang, setLang] = useState('javascript');
   const [theme, setTheme] = useState('VSCode');
   const [isModal, setIsModal] = useState(false);
@@ -330,9 +331,7 @@ export default function CodeRunnerPanel() {
   const handleLangChange = (newLang) => {
     setLang(newLang);
     const saved = localStorage.getItem(`boardroom:code_${roomId}_${newLang}`);
-    setCode(saved || TEMPLATES[newLang] || '// Write code here');
-    setOutput(newLang === 'html' ? 'Live HTML Preview Active below' : 'Ready to execute.');
-    setExecMeta(null);
+    setCode(saved || TEMPLATES[newLang] || '// Write code here...');
   };
 
   // Sync code change + broadcast typing ping & code sync across room
@@ -350,7 +349,7 @@ export default function CodeRunnerPanel() {
   // Listen for collaborative events (`CODE_UPDATE`, `CODE_TYPING`, `CODE_RUN_RESULT`)
   useEffect(() => {
     const rt = getRealtimeClient();
-    if (!rt) return;
+    if (!rt || !connected) return undefined;
 
     const onRemoteCode = (data) => {
       if (data && data.roomId === roomId && data.lang === lang && data.code !== code) {
@@ -378,16 +377,17 @@ export default function CodeRunnerPanel() {
       }
     };
 
-    rt.on?.(EVENTS.CODE_UPDATE, onRemoteCode);
-    rt.on?.(EVENTS.CODE_TYPING, onRemoteTyping);
-    rt.on?.(EVENTS.CODE_RUN_RESULT, onRemoteRunResult);
+    const u1 = rt.on(EVENTS.CODE_UPDATE, onRemoteCode);
+    const u2 = rt.on(EVENTS.CODE_TYPING, onRemoteTyping);
+    const u3 = rt.on(EVENTS.CODE_RUN_RESULT, onRemoteRunResult);
 
     return () => {
-      rt.off?.(EVENTS.CODE_UPDATE, onRemoteCode);
-      rt.off?.(EVENTS.CODE_TYPING, onRemoteTyping);
-      rt.off?.(EVENTS.CODE_RUN_RESULT, onRemoteRunResult);
+      if (u1) u1();
+      if (u2) u2();
+      if (u3) u3();
+      if (typingTimerRef.current) clearTimeout(typingTimerRef.current);
     };
-  }, [roomId, lang, code, currentUser]);
+  }, [roomId, lang, code, currentUser, connected]);
 
   // Execute Code Logic (100% working real runtime with full client-side accuracy engine fallback)
   const runCode = async () => {

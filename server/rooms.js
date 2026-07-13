@@ -76,7 +76,12 @@ export function getRoomPages(roomId) {
   return getRoom(roomId).pages;
 }
 
+export function getRoomMembers(roomId) {
+  return [...getRoom(roomId).members.values()].filter(Boolean);
+}
+
 export function addMember(roomId, senderId, user) {
+
   const room = getRoom(roomId);
   room.members.set(senderId, user || null);
   room.emptySince = null;

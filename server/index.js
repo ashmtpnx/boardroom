@@ -7,9 +7,11 @@ import {
   applyCanvasEvent,
   getBoardSnapshot,
   getRoomPages,
+  getRoomMembers,
   addMember,
   removeMember,
   roomStats,
+
 } from './rooms.js';
 import { registerUser, lookupUser, directoryStats } from './directory.js';
 import { accountId, normalizeAccountId } from './accountId.js';
@@ -118,9 +120,10 @@ io.on('connection', (socket) => {
       }
     }
 
-    socket.data = { roomId, senderId, user: user || null };
+    const cleanUser = user ? { ...user, id: user.id || senderId } : { id: senderId, name: 'Teammate', color: '#4285f4' };
+    socket.data = { roomId, senderId, user: cleanUser };
     socket.join(roomId);
-    addMember(roomId, senderId, user);
+    addMember(roomId, senderId, cleanUser);
 
     // Send room settings to the joining socket
     const settingsPayload = {
@@ -131,6 +134,11 @@ io.on('connection', (socket) => {
     };
     socket.emit('rt', { event: 'room:settings', payload: settingsPayload, sender: 'server' });
 
+    // Send existing room members roster so joining client knows everyone present
+    const currentMembers = getRoomMembers(roomId);
+    socket.emit('rt', { event: 'presence:list', payload: { users: currentMembers }, sender: 'server' });
+
+
     // Replay the current board as a single batched snapshot so late joiners and reconnecting
     // devices load instantly without flooding the event loop with individual object:add packets.
     const snapshot = getBoardSnapshot(roomId);
@@ -139,6 +147,10 @@ io.on('connection', (socket) => {
     }
     // Replay multi-page state
     socket.emit('rt', { event: 'page:list', payload: { pages: getRoomPages(roomId) }, sender: 'server' });
+
+    // Broadcast presence join right from server to make sure peers instantly see the newcomer
+    socket.to(roomId).emit('rt', { event: 'presence:join', payload: cleanUser, sender: senderId });
+
 
 
     // Replay a direct-message thread's full history — this is what makes a DM

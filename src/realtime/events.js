@@ -35,7 +35,9 @@ export const EVENTS = {
   ROOM_CURSOR: 'room:cursor',
 
   // Presence (payload: user object)
+  PRESENCE_LIST: 'presence:list', // authoritative roster of users currently in the room
   PRESENCE_JOIN: 'presence:join', // "I just arrived"
+
   PRESENCE_SYNC: 'presence:sync', // "here's who I am" (reply to a join)
   PRESENCE_LEAVE: 'presence:leave',
   // Code / Compiler live interactions

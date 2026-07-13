@@ -31,16 +31,30 @@ export const realtimeMiddleware = (storeApi) => (next) => (action) => {
 
       unsubs.push(rt.on(EVENTS.CHAT_MESSAGE, (msg) => storeApi.dispatch(messageReceived(msg))));
 
+      unsubs.push(rt.on(EVENTS.PRESENCE_LIST, (payload) => {
+        const list = payload?.users || [];
+        const me = storeApi.getState().session.currentUser;
+        list.forEach((u) => {
+          if (u && u.id) {
+            storeApi.dispatch(upsertUser({ ...u, isSelf: u.id === me?.id }));
+          }
+        });
+      }));
+
       unsubs.push(rt.on(EVENTS.PRESENCE_JOIN, (peer) => {
+        if (!peer || !peer.id) return;
         storeApi.dispatch(upsertUser({ ...peer, isSelf: false }));
         // Reply so the newcomer learns we're here too.
         const me = storeApi.getState().session.currentUser;
         if (me) rt.emit(EVENTS.PRESENCE_SYNC, me);
       }));
-      unsubs.push(rt.on(EVENTS.PRESENCE_SYNC, (peer) =>
-        storeApi.dispatch(upsertUser({ ...peer, isSelf: false }))));
-      unsubs.push(rt.on(EVENTS.PRESENCE_LEAVE, (peer) =>
-        storeApi.dispatch(removeUser(peer.id))));
+      unsubs.push(rt.on(EVENTS.PRESENCE_SYNC, (peer) => {
+        if (peer && peer.id) storeApi.dispatch(upsertUser({ ...peer, isSelf: false }));
+      }));
+      unsubs.push(rt.on(EVENTS.PRESENCE_LEAVE, (peer) => {
+        if (peer && peer.id) storeApi.dispatch(removeUser(peer.id));
+      }));
+
 
       // Announce ourselves to everyone already in the room.
       const me = storeApi.getState().session.currentUser;

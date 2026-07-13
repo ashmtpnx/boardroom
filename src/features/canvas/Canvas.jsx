@@ -13,7 +13,8 @@ export default function Canvas() {
   useFabricCanvas({ canvasElRef: elRef, containerRef });
 
   const [peerCursors, setPeerCursors] = useState({});
-  const users = useSelector((s) => s.room.users || []);
+  const users = useSelector((s) => s.people?.users || []);
+
 
   useEffect(() => {
     const rt = getRealtimeClient();
@@ -75,7 +76,8 @@ export default function Canvas() {
       <canvas ref={elRef} />
       <div className={styles.peerCursorOverlay}>
         {Object.entries(peerCursors).map(([senderId, pos]) => {
-          const user = users.find((u) => u.id === senderId) || { name: 'Teammate', color: '#4285f4' };
+          const user = (users || []).find((u) => u && u.id === senderId) || { name: 'Teammate', color: '#4285f4' };
+
           const screenX = pos.x * vpt[0] + vpt[4];
           const screenY = pos.y * vpt[3] + vpt[5];
           return (

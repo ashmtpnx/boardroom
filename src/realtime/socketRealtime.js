@@ -31,7 +31,10 @@ export function createSocketRealtime() {
         forceNew: true,
         transports: ['websocket', 'polling'],
         query: { roomId, senderId },
+        reconnection: true,
         reconnectionAttempts: Infinity,
+        reconnectionDelay: 1000,
+        reconnectionDelayMax: 5000,
         timeout: 60000,
       });
 
@@ -65,6 +68,11 @@ export function createSocketRealtime() {
       };
 
       socket.on('connect', joinRoom);
+      socket.on('disconnect', (reason) => {
+        if (reason === 'io server disconnect' || reason === 'transport close') {
+          setTimeout(() => socket?.connect(), 1000);
+        }
+      });
       // Also trigger immediately in case of rapid buffering / synchronous ready
       joinRoom();
 
@@ -78,6 +86,7 @@ export function createSocketRealtime() {
         if (set) set.forEach((fn) => fn(env.payload, { sender: env.sender }));
       });
     },
+
 
     updateRoomSettings({ name, password }) {
       return new Promise((resolve) => {

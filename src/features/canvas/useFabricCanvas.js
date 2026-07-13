@@ -776,6 +776,16 @@ export function useFabricCanvas({ canvasElRef, containerRef }) {
     const findById = (id) => canvas.getObjects().find((o) => o.id === id);
     const enliveningIds = new Set();
 
+    let renderAf = null;
+    const requestRenderDebounced = () => {
+      if (!renderAf && fcRef.current) {
+        renderAf = requestAnimationFrame(() => {
+          renderAf = null;
+          if (fcRef.current) fcRef.current.requestRenderAll();
+        });
+      }
+    };
+
     const applyModify = ({ json }) => {
       if (!json) return;
       storeByPageRef.current.set(json.id, json);
@@ -786,7 +796,7 @@ export function useFabricCanvas({ canvasElRef, containerRef }) {
         if (target) {
           applyingRemote.current = true;
           canvas.remove(target);
-          canvas.requestRenderAll();
+          requestRenderDebounced();
           applyingRemote.current = false;
         }
         return undefined;
@@ -799,7 +809,7 @@ export function useFabricCanvas({ canvasElRef, containerRef }) {
       target.set(json);
       if (typeof target.initDimensions === 'function') target.initDimensions();
       target.setCoords();
-      canvas.requestRenderAll();
+      requestRenderDebounced();
       applyingRemote.current = false;
       return undefined;
     };
@@ -828,10 +838,36 @@ export function useFabricCanvas({ canvasElRef, containerRef }) {
         obj.set('pageId', objPage);
         applyingRemote.current = true;
         canvas.add(obj);
-        canvas.requestRenderAll();
+        requestRenderDebounced();
         applyingRemote.current = false;
       } catch {
         enliveningIds.delete(json.id);
+      }
+    };
+
+    const applySnapshot = async ({ objects }) => {
+      if (!Array.isArray(objects) || !fcRef.current) return;
+      const curPage = styleRef.current.currentPageId || 'page-1';
+      objects.forEach((json) => {
+        if (json && json.id) storeByPageRef.current.set(json.id, json);
+      });
+      const toLoad = objects.filter((json) => (json.pageId || 'page-1') === curPage && !findById(json.id));
+      if (toLoad.length > 0) {
+        applyingRemote.current = true;
+        try {
+          const enlivened = await util.enlivenObjects(toLoad);
+          if (!fcRef.current) return;
+          enlivened.forEach((obj, idx) => {
+            if (obj && toLoad[idx] && !findById(toLoad[idx].id)) {
+              obj.set('id', toLoad[idx].id);
+              obj.set('pageId', toLoad[idx].pageId || 'page-1');
+              fcRef.current.add(obj);
+            }
+          });
+          requestRenderDebounced();
+        } finally {
+          applyingRemote.current = false;
+        }
       }
     };
 
@@ -841,7 +877,7 @@ export function useFabricCanvas({ canvasElRef, containerRef }) {
       if (!target) return;
       applyingRemote.current = true;
       canvas.remove(target);
-      canvas.requestRenderAll();
+      requestRenderDebounced();
       applyingRemote.current = false;
     };
     const applyClear = (payload) => {
@@ -854,14 +890,14 @@ export function useFabricCanvas({ canvasElRef, containerRef }) {
         if (targetPageId === curPage) {
           applyingRemote.current = true;
           canvas.remove(...canvas.getObjects());
-          canvas.requestRenderAll();
+          requestRenderDebounced();
           applyingRemote.current = false;
         }
       } else {
         storeByPageRef.current.clear();
         applyingRemote.current = true;
         canvas.remove(...canvas.getObjects());
-        canvas.requestRenderAll();
+        requestRenderDebounced();
         applyingRemote.current = false;
       }
     };
@@ -877,10 +913,13 @@ export function useFabricCanvas({ canvasElRef, containerRef }) {
       rt.on(EVENTS.OBJECT_REMOVE, applyRemove),
       rt.on(EVENTS.CANVAS_CLEAR, applyClear),
       rt.on(EVENTS.PAGE_LIST, applyPageList),
+      rt.on(EVENTS.CANVAS_SNAPSHOT, applySnapshot),
     ];
     return () => {
+      if (renderAf) cancelAnimationFrame(renderAf);
       unsubs.forEach((u) => u && u());
       rtRef.current = null;
     };
+
   }, [connected]);
 }

@@ -7,6 +7,8 @@ export const EVENTS = {
   OBJECT_REMOVE: 'object:remove',
   CANVAS_CLEAR: 'canvas:clear',
   PAGE_LIST: 'page:list',
+  CANVAS_SNAPSHOT: 'canvas:snapshot',
+
   // Chat (payload: message object)
   CHAT_MESSAGE: 'chat:message',
   // One-to-one friend direct message (payload: message object), sent on a

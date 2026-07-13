@@ -64,7 +64,12 @@ app.get('/users/:tag', (req, res) => {
 const server = http.createServer(app);
 const io = new Server(server, {
   cors: { origin: origins, methods: ['GET', 'POST'] },
+  pingTimeout: 60000,
+  pingInterval: 12000,
+  connectTimeout: 45000,
+  transports: ['websocket', 'polling'],
 });
+
 
 // Canvas events fold into per-room state for board replay; the rest just relay.
 const CANVAS_EVENTS = new Set(['object:add', 'object:modify', 'object:remove', 'canvas:clear', 'page:list']);
@@ -126,13 +131,15 @@ io.on('connection', (socket) => {
     };
     socket.emit('rt', { event: 'room:settings', payload: settingsPayload, sender: 'server' });
 
-    // Replay the current board so a late joiner sees everything already drawn.
-    // Sent only to this socket; sender="server" so it isn't echo-filtered.
-    for (const json of getBoardSnapshot(roomId)) {
-      socket.emit('rt', { event: 'object:add', payload: { json }, sender: 'server' });
+    // Replay the current board as a single batched snapshot so late joiners and reconnecting
+    // devices load instantly without flooding the event loop with individual object:add packets.
+    const snapshot = getBoardSnapshot(roomId);
+    if (snapshot.length > 0) {
+      socket.emit('rt', { event: 'canvas:snapshot', payload: { objects: snapshot }, sender: 'server' });
     }
     // Replay multi-page state
     socket.emit('rt', { event: 'page:list', payload: { pages: getRoomPages(roomId) }, sender: 'server' });
+
 
     // Replay a direct-message thread's full history — this is what makes a DM
     // conversation sync across devices, not just persist on the one that sent it.

@@ -10,11 +10,23 @@ const rooms = new Map(); // roomId -> { objects: Map, members: Map, pages: Array
 function getRoom(roomId) {
   let room = rooms.get(roomId);
   if (!room) {
-    room = { objects: new Map(), members: new Map(), pages: [{ id: 'page-1', title: 'Page 1' }] };
+    room = { objects: new Map(), members: new Map(), pages: [{ id: 'page-1', title: 'Page 1' }], emptySince: null };
     rooms.set(roomId, room);
+  } else {
+    room.emptySince = null;
   }
   return room;
 }
+
+// Periodic cleanup of abandoned rooms (> 24 hours empty)
+setInterval(() => {
+  const now = Date.now();
+  for (const [id, r] of rooms.entries()) {
+    if (r.members.size === 0 && r.emptySince && (now - r.emptySince > 24 * 60 * 60 * 1000)) {
+      rooms.delete(id);
+    }
+  }
+}, 10 * 60 * 1000);
 
 // Fold a relayed canvas event into the stored board so we can replay it later.
 export function applyCanvasEvent(roomId, event, payload) {
@@ -65,7 +77,9 @@ export function getRoomPages(roomId) {
 }
 
 export function addMember(roomId, senderId, user) {
-  getRoom(roomId).members.set(senderId, user || null);
+  const room = getRoom(roomId);
+  room.members.set(senderId, user || null);
+  room.emptySince = null;
 }
 
 export function removeMember(roomId, senderId) {
@@ -73,10 +87,12 @@ export function removeMember(roomId, senderId) {
   if (!room) return null;
   const user = room.members.get(senderId) || null;
   room.members.delete(senderId);
-  // Drop empty rooms so memory doesn't grow without bound.
-  if (room.members.size === 0) rooms.delete(roomId);
+  if (room.members.size === 0) {
+    room.emptySince = Date.now();
+  }
   return user;
 }
+
 
 export function roomStats() {
   return {

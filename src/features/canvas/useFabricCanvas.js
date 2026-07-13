@@ -210,6 +210,13 @@ export function useFabricCanvas({ canvasElRef, containerRef }) {
     ro.observe(container);
     resize();
 
+    const getClientXY = (e) => {
+      if (!e) return { x: 0, y: 0 };
+      if (e.touches && e.touches.length > 0) return { x: e.touches[0].clientX || 0, y: e.touches[0].clientY || 0 };
+      if (e.changedTouches && e.changedTouches.length > 0) return { x: e.changedTouches[0].clientX || 0, y: e.changedTouches[0].clientY || 0 };
+      return { x: e.clientX || 0, y: e.clientY || 0 };
+    };
+
     const scenePoint = (e) => (canvas.getScenePoint ? canvas.getScenePoint(e) : canvas.getPointer(e));
 
     // ---- broadcast local changes to peers ----
@@ -294,8 +301,9 @@ export function useFabricCanvas({ canvasElRef, containerRef }) {
       if (t === TOOLS.PAN || panRef.current.space) {
         panRef.current.active = true;
         canvas.selection = false;
-        panRef.current.lastX = opt.e.clientX;
-        panRef.current.lastY = opt.e.clientY;
+        const pt = getClientXY(opt.e);
+        panRef.current.lastX = pt.x;
+        panRef.current.lastY = pt.y;
         canvas.setCursor('grabbing');
         return;
       }
@@ -344,12 +352,17 @@ export function useFabricCanvas({ canvasElRef, containerRef }) {
         return;
       }
       if (panRef.current.active) {
-        const vpt = canvas.viewportTransform;
-        vpt[4] += opt.e.clientX - panRef.current.lastX;
-        vpt[5] += opt.e.clientY - panRef.current.lastY;
-        canvas.setViewportTransform(vpt);
-        panRef.current.lastX = opt.e.clientX;
-        panRef.current.lastY = opt.e.clientY;
+        const pt = getClientXY(opt.e);
+        const dx = pt.x - panRef.current.lastX;
+        const dy = pt.y - panRef.current.lastY;
+        if (!isNaN(dx) && !isNaN(dy) && (dx !== 0 || dy !== 0)) {
+          const vpt = canvas.viewportTransform;
+          vpt[4] += dx;
+          vpt[5] += dy;
+          canvas.setViewportTransform(vpt);
+          panRef.current.lastX = pt.x;
+          panRef.current.lastY = pt.y;
+        }
         return;
       }
       const draft = draftRef.current;
@@ -376,8 +389,10 @@ export function useFabricCanvas({ canvasElRef, containerRef }) {
       if (panRef.current.active) {
         panRef.current.active = false;
         canvas.selection = styleRef.current.tool === TOOLS.SELECT;
+        canvas.setCursor(styleRef.current.tool === TOOLS.PAN || panRef.current.space ? 'grab' : 'default');
         return;
       }
+
       const draft = draftRef.current;
       if (!draft) return;
       draftRef.current = null;
@@ -759,6 +774,7 @@ export function useFabricCanvas({ canvasElRef, containerRef }) {
     rtRef.current = rt;
 
     const findById = (id) => canvas.getObjects().find((o) => o.id === id);
+    const enliveningIds = new Set();
 
     const applyModify = ({ json }) => {
       if (!json) return;
@@ -775,7 +791,10 @@ export function useFabricCanvas({ canvasElRef, containerRef }) {
         }
         return undefined;
       }
-      if (!target) return applyAdd({ json });
+      if (!target) {
+        if (!enliveningIds.has(json.id)) applyAdd({ json });
+        return undefined;
+      }
       applyingRemote.current = true;
       target.set(json);
       if (typeof target.initDimensions === 'function') target.initDimensions();
@@ -785,24 +804,37 @@ export function useFabricCanvas({ canvasElRef, containerRef }) {
       return undefined;
     };
     const applyAdd = async ({ json }) => {
-      if (!json) return;
+      if (!json || !json.id) return;
       storeByPageRef.current.set(json.id, json);
       const curPage = styleRef.current.currentPageId || 'page-1';
       const objPage = json.pageId || 'page-1';
       if (objPage !== curPage) return;
-      if (findById(json.id)) {
+      const existing = findById(json.id);
+      if (existing) {
         applyModify({ json });
         return;
       }
-      const [obj] = await util.enlivenObjects([json]);
-      if (!obj) return;
-      obj.set('id', json.id);
-      obj.set('pageId', objPage);
-      applyingRemote.current = true;
-      canvas.add(obj);
-      canvas.requestRenderAll();
-      applyingRemote.current = false;
+      if (enliveningIds.has(json.id)) return;
+      enliveningIds.add(json.id);
+      try {
+        const [obj] = await util.enlivenObjects([json]);
+        enliveningIds.delete(json.id);
+        if (!obj || !fcRef.current) return;
+        if (findById(json.id)) {
+          applyModify({ json });
+          return;
+        }
+        obj.set('id', json.id);
+        obj.set('pageId', objPage);
+        applyingRemote.current = true;
+        canvas.add(obj);
+        canvas.requestRenderAll();
+        applyingRemote.current = false;
+      } catch {
+        enliveningIds.delete(json.id);
+      }
     };
+
     const applyRemove = ({ id }) => {
       if (id) storeByPageRef.current.delete(id);
       const target = findById(id);

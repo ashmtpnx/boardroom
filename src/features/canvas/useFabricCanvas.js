@@ -641,6 +641,7 @@ export function useFabricCanvas({ canvasElRef, containerRef }) {
       }
       const curPage = styleRef.current.currentPageId || 'page-1';
       img.set({ left, top, originX: 'center', originY: 'center', id: uid('image'), pageId: curPage });
+      img.__suppressSync = true;
       canvas.add(img);
       canvas.setActiveObject(img);
       const json = img.toObject(['id', 'pageId']);
@@ -671,25 +672,49 @@ export function useFabricCanvas({ canvasElRef, containerRef }) {
       dispatch(setZoom(1));
     };
 
+    const addText = (text, opts = {}) => {
+      if (!fcRef.current) return;
+      const c = fcRef.current;
+      const center = c.getVpCenter();
+      const curPage = styleRef.current.currentPageId || 'page-1';
+      const obj = createText({ left: center.x - 80, top: center.y - 20, fill: opts.color || '#202124' });
+      if (text) obj.set('text', text);
+      obj.set({ id: uid('text'), pageId: curPage });
+      obj.__suppressSync = true;
+      c.add(obj);
+      c.setActiveObject(obj);
+      const json = obj.toObject(['id', 'pageId']);
+      storeByPageRef.current.set(json.id, json);
+      rtRef.current?.emit(EVENTS.OBJECT_ADD, { json });
+      c.requestRenderAll();
+    };
+
     const addCodeNote = (text, opts = {}) => {
       if (!fcRef.current) return;
       const c = fcRef.current;
       const center = c.getVpCenter();
+      const curPage = styleRef.current.currentPageId || 'page-1';
       const note = createSticky({ left: center.x - 190, top: center.y - 120, color: opts.color || '#1e293b' });
       note.set({
+        id: uid('sticky'),
+        pageId: curPage,
         width: 380,
         fontSize: 13,
         fill: '#f8fafc',
         fontFamily: 'Fira Code, JetBrains Mono, Consolas, monospace',
         text: text || 'Code Note',
       });
+      note.__suppressSync = true;
       c.add(note);
       c.setActiveObject(note);
+      const json = note.toObject(['id', 'pageId']);
+      storeByPageRef.current.set(json.id, json);
+      rtRef.current?.emit(EVENTS.OBJECT_ADD, { json });
       c.requestRenderAll();
-      rtRef.current?.emit(EVENTS.OBJECT_ADD, { json: note.toJSON() });
     };
 
-    setCanvasApi({ getCanvas: () => fcRef.current, addImageFile, clearCanvas, zoomBy, resetView, undo, redo, addText: addCodeNote, addCodeNote });
+    setCanvasApi({ getCanvas: () => fcRef.current, addImageFile, clearCanvas, zoomBy, resetView, undo, redo, addText, addCodeNote });
+
 
 
     return () => {

@@ -201,6 +201,8 @@ export function useFabricCanvas({ canvasElRef, containerRef }) {
       fireRightClick: false,
     });
     fcRef.current = canvas;
+    if (canvasElRef.current) canvasElRef.current.fabricCanvas = canvas;
+
 
     const resize = () => {
       canvas.setDimensions({ width: container.clientWidth, height: container.clientHeight });
@@ -230,6 +232,11 @@ export function useFabricCanvas({ canvasElRef, containerRef }) {
       storeByPageRef.current.set(json.id, json);
       rtRef.current?.emit(EVENTS.OBJECT_MODIFY, { json });
     }, 80);
+
+    const emitCursorThrottled = throttleTrailing((x, y) => {
+      rtRef.current?.emit(EVENTS.ROOM_CURSOR, { x, y });
+    }, 60);
+
 
     canvas.on('object:added', (e) => {
       const obj = e.target;
@@ -345,7 +352,12 @@ export function useFabricCanvas({ canvasElRef, containerRef }) {
     });
 
     canvas.on('mouse:move', (opt) => {
+      if (opt.e) {
+        const sp = scenePoint(opt.e);
+        if (sp) emitCursorThrottled(sp.x, sp.y);
+      }
       if (styleRef.current.tool === TOOLS.ERASER && eraserRef.current.active) {
+
         const p = scenePoint(opt.e);
         const { eraserWidth: ew } = styleRef.current;
         erasePortionAt(canvas, p.x, p.y, Math.max(12, ew / 2), styleRef, storeByPageRef, rtRef, historyRef, dispatch, undoGuard);
@@ -754,16 +766,30 @@ export function useFabricCanvas({ canvasElRef, containerRef }) {
 
     canvas.selection = tool === TOOLS.SELECT;
     canvas.skipTargetFind = tool !== TOOLS.SELECT;
-    canvas.defaultCursor =
+
+    const targetCursor =
       tool === TOOLS.PAN
         ? 'grab'
         : tool === TOOLS.ERASER
           ? 'crosshair'
-          : SHAPE_TOOLS.includes(tool) || tool === TOOLS.STICKY || tool === TOOLS.TEXT
+          : SHAPE_TOOLS.includes(tool) || tool === TOOLS.STICKY || tool === TOOLS.TEXT || isDraw
             ? 'crosshair'
             : 'default';
+
+    canvas.freeDrawingCursor = 'crosshair';
+    canvas.defaultCursor = targetCursor;
+    canvas.hoverCursor = tool === TOOLS.PAN ? 'grab' : tool === TOOLS.SELECT ? 'move' : 'crosshair';
+    canvas.moveCursor = tool === TOOLS.PAN ? 'grabbing' : 'move';
+    canvas.setCursor(targetCursor);
+    if (canvas.upperCanvasEl && canvas.upperCanvasEl.style) {
+      canvas.upperCanvasEl.style.cursor = targetCursor;
+    }
+    if (canvas.lowerCanvasEl && canvas.lowerCanvasEl.style) {
+      canvas.lowerCanvasEl.style.cursor = targetCursor;
+    }
     canvas.requestRenderAll();
   }, [tool, strokeColor, fillColor, brushType, lineWidth]);
+
 
   // ----------------------------------- subscribe to remote object events
   useEffect(() => {

@@ -8,6 +8,7 @@
   touch-action: none;
   -webkit-user-select: none;
   user-select: none;
+  cursor: default;
 }
 
 /* Fabric injects a .canvas-container wrapper around the <canvas>; keep it pinned. */
@@ -15,3 +16,42 @@
   position: absolute !important;
   inset: 0;
 }
+
+.peerCursorOverlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 50;
+  overflow: hidden;
+}
+
+.peerCursor {
+  position: absolute;
+  top: 0;
+  left: 0;
+  pointer-events: none;
+  transition: transform 0.08s cubic-bezier(0.2, 0.8, 0.2, 1);
+  display: flex;
+  align-items: flex-start;
+  gap: 4px;
+}
+
+.peerArrow {
+  width: 18px;
+  height: 22px;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.25));
+}
+
+.peerNamePill {
+  padding: 2px 8px;
+  border-radius: 999px;
+  color: #ffffff;
+  font-size: 11px;
+  font-weight: 600;
+  white-space: nowrap;
+  letter-spacing: 0.2px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+  margin-top: 14px;
+  margin-left: -4px;
+}
+

@@ -643,6 +643,7 @@ export function useFabricCanvas({ canvasElRef, containerRef }) {
       img.set({ left, top, originX: 'center', originY: 'center', id: uid('image'), pageId: curPage });
       img.__suppressSync = true;
       canvas.add(img);
+      delete img.__suppressSync;
       canvas.setActiveObject(img);
       const json = img.toObject(['id', 'pageId']);
       storeByPageRef.current.set(json.id, json);
@@ -682,6 +683,7 @@ export function useFabricCanvas({ canvasElRef, containerRef }) {
       obj.set({ id: uid('text'), pageId: curPage });
       obj.__suppressSync = true;
       c.add(obj);
+      delete obj.__suppressSync;
       c.setActiveObject(obj);
       const json = obj.toObject(['id', 'pageId']);
       storeByPageRef.current.set(json.id, json);
@@ -706,6 +708,7 @@ export function useFabricCanvas({ canvasElRef, containerRef }) {
       });
       note.__suppressSync = true;
       c.add(note);
+      delete note.__suppressSync;
       c.setActiveObject(note);
       const json = note.toObject(['id', 'pageId']);
       storeByPageRef.current.set(json.id, json);
@@ -714,6 +717,7 @@ export function useFabricCanvas({ canvasElRef, containerRef }) {
     };
 
     setCanvasApi({ getCanvas: () => fcRef.current, addImageFile, clearCanvas, zoomBy, resetView, undo, redo, addText, addCodeNote });
+
 
 
 

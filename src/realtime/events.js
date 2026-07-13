@@ -34,4 +34,9 @@ export const EVENTS = {
   PRESENCE_JOIN: 'presence:join', // "I just arrived"
   PRESENCE_SYNC: 'presence:sync', // "here's who I am" (reply to a join)
   PRESENCE_LEAVE: 'presence:leave',
+  // Code / Compiler live interactions
+  CODE_UPDATE: 'code:update',
+  CODE_TYPING: 'code:typing',
+  CODE_RUN_RESULT: 'code:run_result',
 };
+

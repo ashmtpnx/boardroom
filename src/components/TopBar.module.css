@@ -7,24 +7,17 @@
   flex: 0 0 58px;
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 0 16px;
-  padding-left: max(16px, env(safe-area-inset-left));
-  padding-right: max(16px, env(safe-area-inset-right));
-  /* Solid opaque background (no backdrop-filter): Edge/Chromium renders a
-     frosted-glass bar blank when it's stacked over the Fabric <canvas> layer.
-     A plain surface always paints, so the navbar stays visible on every GPU. */
+  gap: 10px;
+  padding: 0 14px;
+  padding-left: max(14px, env(safe-area-inset-left));
+  padding-right: max(14px, env(safe-area-inset-right));
   background: var(--surface);
   border-bottom: 1px solid var(--border);
   box-shadow: 0 1px 0 rgba(255, 255, 255, 0.6), 0 6px 20px rgba(31, 41, 92, 0.08);
-  z-index: 100;
-  overflow-x: auto;
-  overflow-y: hidden;
-  scrollbar-width: none;
+  z-index: 1000;
+  overflow: visible;
 }
-.bar::-webkit-scrollbar {
-  display: none;
-}
+
 
 .brand {
   flex-shrink: 0;
@@ -252,16 +245,16 @@
 .actions {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
   flex-shrink: 0;
 }
 .btn {
   display: inline-flex;
   align-items: center;
-  gap: 7px;
-  height: 38px;
-  padding: 0 14px;
-  border-radius: 11px;
+  gap: 6px;
+  height: 36px;
+  padding: 0 11px;
+  border-radius: 10px;
   border: 1px solid var(--glass-border);
   background: var(--glass-bg-faint);
   box-shadow: var(--glass-highlight);
@@ -270,6 +263,7 @@
   font-weight: 500;
   white-space: nowrap;
   transition: background 0.15s, transform 0.15s, box-shadow 0.15s;
+  cursor: pointer;
 }
 .btn:hover {
   background: var(--glass-bg-strong);
@@ -295,6 +289,45 @@
   color: var(--danger);
 }
 
+.exportWrap {
+  position: relative;
+  display: inline-flex;
+}
+.exportDropdown {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.22);
+  padding: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  z-index: 2000;
+  min-width: 170px;
+}
+.exportItem {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border: none;
+  background: transparent;
+  color: var(--text);
+  font-size: 13px;
+  font-weight: 500;
+  border-radius: 8px;
+  cursor: pointer;
+  text-align: left;
+  white-space: nowrap;
+}
+.exportItem:hover {
+  background: var(--surface-2);
+  color: var(--accent);
+}
+
 .avatarBtn {
   margin-left: 4px;
   padding: 0;
@@ -305,6 +338,7 @@
   flex-shrink: 0;
   box-shadow: 0 0 0 0 var(--accent-weak);
   transition: box-shadow 0.12s;
+  cursor: pointer;
 }
 .avatarBtn:hover {
   box-shadow: 0 0 0 3px var(--accent-weak);
@@ -312,19 +346,20 @@
 
 /* ---------------------------------------------------------------- responsive */
 
-/* Medium/small desktop windows & tablets: drop button text to clean icons only so navbar never overflows */
-@media (max-width: 1250px) {
+/* Laptop screens and smaller desktop windows: drop button labels to icons only or compact layout so navbar NEVER overflows */
+@media (max-width: 1520px) {
   .bar {
-    gap: 8px;
+    gap: 6px;
   }
   .btnLabel {
     display: none;
   }
   .btn {
-    padding: 0 10px;
+    padding: 0 9px;
     gap: 0;
   }
 }
+
 
 /* Phones: hide the room chip and brand word, keep icons + avatar reachable. */
 @media (max-width: 560px) {

@@ -23,6 +23,8 @@ export default function TopBar() {
   const [copied, setCopied] = useState(false);
   const [roomCopied, setRoomCopied] = useState(false);
   const [showSettingsModal, setShowSettingsModal] = useState(false);
+  const [showExportMenu, setShowExportMenu] = useState(false);
+
 
   const share = async () => {
     try {
@@ -154,16 +156,42 @@ export default function TopBar() {
         >
           <Code2 size={16} /> <span className={styles.btnLabel}>Code IDE</span>
         </button>
-        <button className={styles.btn} onClick={onBoardPdf} title="Export board to PDF">
-          <Download size={16} /> <span className={styles.btnLabel}>Board PDF</span>
-        </button>
-        <button
-          className={styles.btn}
-          onClick={() => exportChatPdf(messages, { room: roomId })}
-          title="Export chat to PDF"
-        >
-          <Download size={16} /> <span className={styles.btnLabel}>Chat PDF</span>
-        </button>
+
+        <div className={styles.exportWrap}>
+          <button
+            type="button"
+            className={styles.btn}
+            onClick={() => setShowExportMenu((v) => !v)}
+            title="Download / Export Options"
+          >
+            <Download size={16} /> <span className={styles.btnLabel}>Export</span>
+          </button>
+          {showExportMenu && (
+            <div className={styles.exportDropdown}>
+              <button
+                type="button"
+                className={styles.exportItem}
+                onClick={() => {
+                  setShowExportMenu(false);
+                  onBoardPdf();
+                }}
+              >
+                📄 Board PDF
+              </button>
+              <button
+                type="button"
+                className={styles.exportItem}
+                onClick={() => {
+                  setShowExportMenu(false);
+                  exportChatPdf(messages, { room: roomId });
+                }}
+              >
+                💬 Chat PDF
+              </button>
+            </div>
+          )}
+        </div>
+
         <button className={`${styles.btn} ${styles.btnPrimary}`} onClick={share} title="Copy room link">
           <Share2 size={16} /> <span className={styles.btnLabel}>{copied ? 'Link copied!' : 'Share'}</span>
         </button>

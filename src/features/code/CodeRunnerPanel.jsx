@@ -543,12 +543,13 @@ export default function CodeRunnerPanel() {
   // Add code as a sticky note / formatted box on the whiteboard canvas
   const handlePinToCanvas = () => {
     const api = getCanvasApi();
-    if (api && api.addText) {
-      api.addText(`[${lang.toUpperCase()} CODE - BY ${currentUser?.name || 'ADMIN'}]\n\n${code}`);
+    if (api && (api.addCodeNote || api.addText)) {
+      (api.addCodeNote || api.addText)(`[${lang.toUpperCase()} CODE - BY ${currentUser?.name || 'ADMIN'}]\n\n${code}`);
     } else {
       alert('Open or click inside the whiteboard canvas to pin code notes!');
     }
   };
+
 
   // Line numbers calculation
   const linesCount = code.split('\n').length;

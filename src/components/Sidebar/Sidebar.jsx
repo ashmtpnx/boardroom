@@ -33,7 +33,8 @@ export default function Sidebar() {
   }
 
   return (
-    <aside className={styles.sidebar} style={{ width: activeTab === 'code' ? '480px' : '340px' }}>
+    <aside className={styles.sidebar} style={{ width: activeTab === 'code' ? '430px' : '340px' }}>
+
       <div className={styles.header}>
         <div className={styles.tabs}>
           <button

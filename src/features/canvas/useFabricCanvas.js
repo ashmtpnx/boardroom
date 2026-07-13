@@ -644,7 +644,26 @@ export function useFabricCanvas({ canvasElRef, containerRef }) {
       dispatch(setZoom(1));
     };
 
-    setCanvasApi({ getCanvas: () => fcRef.current, addImageFile, clearCanvas, zoomBy, resetView, undo, redo });
+    const addCodeNote = (text, opts = {}) => {
+      if (!fcRef.current) return;
+      const c = fcRef.current;
+      const center = c.getVpCenter();
+      const note = createSticky({ left: center.x - 190, top: center.y - 120, color: opts.color || '#1e293b' });
+      note.set({
+        width: 380,
+        fontSize: 13,
+        fill: '#f8fafc',
+        fontFamily: 'Fira Code, JetBrains Mono, Consolas, monospace',
+        text: text || 'Code Note',
+      });
+      c.add(note);
+      c.setActiveObject(note);
+      c.requestRenderAll();
+      rtRef.current?.emit(EVENTS.OBJECT_ADD, { json: note.toJSON() });
+    };
+
+    setCanvasApi({ getCanvas: () => fcRef.current, addImageFile, clearCanvas, zoomBy, resetView, undo, redo, addText: addCodeNote, addCodeNote });
+
 
     return () => {
       ro.disconnect();

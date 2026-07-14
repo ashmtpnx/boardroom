@@ -15,15 +15,18 @@ import {
   Info,
   Edit3,
   Sparkles,
+  Plus,
+  Send,
 } from 'lucide-react';
 import { getFriends, removeFriend, FRIENDS_EVENT } from '../../utils/friends';
 import { accountId, normalizeAccountId } from '../../utils/accountId';
 import { lookupAccount } from '../../utils/directory';
 import { sendFriendRequest } from '../../utils/friendRequests';
 import { getOutgoing, removeOutgoing, REQUESTS_EVENT } from '../../utils/requests';
-import { listConversations } from '../../utils/dm';
+import { listConversations, appendMessage } from '../../utils/dm';
 import { NOTIFICATIONS_EVENT } from '../../utils/notifications';
 import { goHome } from '../../utils/nav';
+import { uid } from '../../utils/ids';
 import Avatar from '../Avatar';
 import NotificationBell from '../Notifications/NotificationBell';
 import ThemeToggle from '../ThemeToggle/ThemeToggle';
@@ -42,11 +45,36 @@ function relTime(ts) {
   return day === 1 ? '1d' : `${day}d`;
 }
 
-const SAMPLE_FRIEND_NOTES = [
-  { note: 'Friday feeling... 🎉' },
-  { note: 'Building cool stuff 💻' },
-  { note: 'Vibe check ✨' },
-  { note: 'Apna Bana... 🎶' },
+const SAMPLE_WHATSAPP_STATUSES = [
+  {
+    text: 'Friday feeling... 🎉',
+    bg: 'linear-gradient(135deg, #059669, #10b981)',
+    time: '45m ago',
+  },
+  {
+    text: 'Building cool stuff in Boardroom 💻🚀',
+    bg: 'linear-gradient(135deg, #2563eb, #4f46e5)',
+    time: '2h ago',
+  },
+  {
+    text: 'Vibe check ✨ Out of office until Monday',
+    bg: 'linear-gradient(135deg, #7c3aed, #db2777)',
+    time: '4h ago',
+  },
+  {
+    text: 'Apna Bana... 🎶 Relaxing weekend ahead!',
+    bg: 'linear-gradient(135deg, #d97706, #ea580c)',
+    time: '5h ago',
+  },
+];
+
+const STATUS_BACKGROUND_PALETTE = [
+  'linear-gradient(135deg, #059669, #10b981)',
+  'linear-gradient(135deg, #2563eb, #4f46e5)',
+  'linear-gradient(135deg, #7c3aed, #db2777)',
+  'linear-gradient(135deg, #d97706, #ea580c)',
+  'linear-gradient(135deg, #1e293b, #334155)',
+  'linear-gradient(135deg, #be123c, #f43f5e)',
 ];
 
 export default function Messages() {
@@ -58,7 +86,19 @@ export default function Messages() {
   // Instagram Split View & Tabs State
   const [activeTag, setActiveTag] = useState(null);
   const [activeTab, setActiveTab] = useState('primary'); // 'primary' | 'general' | 'requests'
-  const [myNote, setMyNote] = useState(() => localStorage.getItem('boardroom:mynote') || '');
+
+  // WhatsApp Status State
+  const [myStatuses, setMyStatuses] = useState(() => {
+    try {
+      return JSON.parse(localStorage.getItem('boardroom:mystatuses') || '[]');
+    } catch {
+      return [];
+    }
+  });
+  const [statusModal, setStatusModal] = useState(null); // { type: 'create' } | { type: 'view', friendRow, status } | { type: 'viewMine', status }
+  const [newStatusText, setNewStatusText] = useState('');
+  const [newStatusBg, setNewStatusBg] = useState(STATUS_BACKGROUND_PALETTE[0]);
+  const [statusReplyText, setStatusReplyText] = useState('');
 
   // add-friend panel
   const [showAdd, setShowAdd] = useState(false);
@@ -130,13 +170,40 @@ export default function Messages() {
     setTimeout(() => setCopied(false), 1600);
   };
 
-  const onSetMyNote = () => {
-    const next = window.prompt('Share a thought with your friends (max 60 chars):', myNote);
-    if (next !== null) {
-      const trimmed = next.trim().slice(0, 60);
-      localStorage.setItem('boardroom:mynote', trimmed);
-      setMyNote(trimmed);
-    }
+  const postNewStatus = (e) => {
+    if (e) e.preventDefault();
+    const trimmed = newStatusText.trim();
+    if (!trimmed) return;
+    const item = {
+      id: uid('status'),
+      text: trimmed,
+      bg: newStatusBg,
+      ts: Date.now(),
+      time: 'Just now',
+    };
+    const next = [...myStatuses, item];
+    localStorage.setItem('boardroom:mystatuses', JSON.stringify(next));
+    setMyStatuses(next);
+    setNewStatusText('');
+    setStatusModal(null);
+  };
+
+  const sendStatusReply = (textReply) => {
+    if (!textReply.trim() || !statusModal?.friendRow || !me) return;
+    const tag = statusModal.friendRow.tag;
+    const msg = {
+      id: uid('dm'),
+      userId: me.id,
+      name: me.name,
+      color: me.color,
+      photoURL: me.photoURL || null,
+      text: `Replied to Status "${statusModal.status.text.slice(0, 25)}...": ${textReply}`,
+      ts: Date.now(),
+    };
+    appendMessage(tag, msg);
+    setStatusReplyText('');
+    setStatusModal(null);
+    refresh();
   };
 
   const q = query.trim().toLowerCase();
@@ -185,8 +252,8 @@ export default function Messages() {
         {/* Left Sidebar Pane (Hidden on phone when a chat is selected) */}
         <aside className={`${styles.sidebarPane} ${activeTag ? styles.sidebarHidden : ''}`}>
           <div className={styles.sidebarHeader}>
-            <div className={styles.sidebarUserGroup} title="Your Instagram Direct Inbox">
-              <Sparkles size={18} color="#6366f1" />
+            <div className={styles.sidebarUserGroup} title="Your Direct Inbox">
+              <Sparkles size={18} color="#10b981" />
               <span>{me?.name || 'boardroom_user'}</span>
             </div>
             <div className={styles.sidebarActions}>
@@ -226,33 +293,55 @@ export default function Messages() {
           </div>
 
           {activeTab !== 'requests' && (
-            <div className={styles.notesCarousel}>
-              {/* My Note */}
-              <div className={styles.noteItem} onClick={onSetMyNote} title="Click to share your note">
-                <div className={styles.noteAvatarWrap}>
-                  <div className={styles.noteBubble}>
-                    {myNote || 'Your note +'}
-                  </div>
+            <div className={styles.statusCarousel}>
+              {/* My Status */}
+              <div
+                className={styles.statusItem}
+                onClick={() =>
+                  myStatuses.length
+                    ? setStatusModal({ type: 'viewMine', status: myStatuses[myStatuses.length - 1] })
+                    : setStatusModal({ type: 'create' })
+                }
+                title="Click to view or add status update"
+              >
+                <div className={`${styles.statusRingWrap} ${myStatuses.length ? styles.myStatusRingActive : styles.myStatusRing}`}>
                   <Avatar user={me} size={56} />
+                  <span
+                    className={styles.statusAddBadge}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setStatusModal({ type: 'create' });
+                    }}
+                    title="Add WhatsApp Status"
+                  >
+                    <Plus size={14} strokeWidth={3} />
+                  </span>
                 </div>
-                <span className={styles.noteName}>Your note</span>
+                <span className={styles.statusName}>My status</span>
+                <span className={styles.statusTime}>{myStatuses.length ? 'Just now' : 'Add update'}</span>
               </div>
 
-              {/* Friends Notes */}
+              {/* Friends WhatsApp Status Updates */}
               {rows.slice(0, 8).map((r, idx) => {
-                const sampleNote = SAMPLE_FRIEND_NOTES[idx % SAMPLE_FRIEND_NOTES.length].note;
+                const sampleStatus = SAMPLE_WHATSAPP_STATUSES[idx % SAMPLE_WHATSAPP_STATUSES.length];
                 return (
                   <div
                     key={r.tag}
-                    className={styles.noteItem}
-                    onClick={() => setActiveTag(r.tag)}
-                    title={`Message ${r.friend.name}`}
+                    className={styles.statusItem}
+                    onClick={() =>
+                      setStatusModal({
+                        type: 'view',
+                        friendRow: r,
+                        status: sampleStatus,
+                      })
+                    }
+                    title={`View ${r.friend.name}'s Status update`}
                   >
-                    <div className={styles.noteAvatarWrap}>
-                      <div className={styles.noteBubble}>{sampleNote}</div>
+                    <div className={`${styles.statusRingWrap} ${styles.friendStatusRing}`}>
                       <Avatar user={{ ...r.friend, id: r.friend.id || r.tag, account: r.tag }} size={56} />
                     </div>
-                    <span className={styles.noteName}>{r.friend.name?.split(' ')[0]}</span>
+                    <span className={styles.statusName}>{r.friend.name?.split(' ')[0]}</span>
+                    <span className={styles.statusTime}>{sampleStatus.time}</span>
                   </div>
                 );
               })}
@@ -498,6 +587,153 @@ export default function Messages() {
           )}
         </section>
       </div>
+
+      {/* WhatsApp Status Story / Creator Modals */}
+      {statusModal && (
+        <div className={styles.statusModalOverlay} onClick={() => setStatusModal(null)}>
+          <div
+            className={styles.statusModalCard}
+            style={{
+              background:
+                statusModal.type === 'create'
+                  ? newStatusBg
+                  : statusModal.status?.bg || STATUS_BACKGROUND_PALETTE[0],
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {statusModal.type === 'create' ? (
+              <>
+                <div className={styles.statusModalTop}>
+                  <div className={styles.statusTopMeta}>
+                    <button
+                      type="button"
+                      className={styles.statusCloseBtn}
+                      onClick={() => setStatusModal(null)}
+                    >
+                      <X size={18} />
+                    </button>
+                    <span style={{ fontWeight: 700, fontSize: 15 }}>New Status Update</span>
+                    <button
+                      type="button"
+                      className={styles.statusCloseBtn}
+                      style={{ background: '#10b981' }}
+                      onClick={postNewStatus}
+                      disabled={!newStatusText.trim()}
+                      title="Post Status"
+                    >
+                      <Send size={16} />
+                    </button>
+                  </div>
+                </div>
+
+                <form className={styles.statusCreatorForm} onSubmit={postNewStatus}>
+                  <textarea
+                    className={styles.statusCreatorTextarea}
+                    placeholder="Type a WhatsApp status..."
+                    value={newStatusText}
+                    onChange={(e) => setNewStatusText(e.target.value)}
+                    autoFocus
+                    maxLength={150}
+                  />
+
+                  <div className={styles.statusBgPalette}>
+                    {STATUS_BACKGROUND_PALETTE.map((bg) => (
+                      <div
+                        key={bg}
+                        className={styles.statusBgDot}
+                        style={{ background: bg, transform: bg === newStatusBg ? 'scale(1.3)' : 'scale(1)' }}
+                        onClick={() => setNewStatusBg(bg)}
+                      />
+                    ))}
+                  </div>
+                </form>
+              </>
+            ) : (
+              <>
+                <div className={styles.statusModalTop}>
+                  <div className={styles.statusProgressWrap}>
+                    <div className={styles.statusProgressBar}>
+                      <div className={styles.statusProgressFill} />
+                    </div>
+                  </div>
+                  <div className={styles.statusTopMeta}>
+                    <div className={styles.statusUserGroup}>
+                      <Avatar
+                        user={
+                          statusModal.type === 'viewMine'
+                            ? me
+                            : statusModal.friendRow?.friend
+                        }
+                        size={36}
+                      />
+                      <div>
+                        <div style={{ fontWeight: 800, fontSize: 14 }}>
+                          {statusModal.type === 'viewMine'
+                            ? 'My status'
+                            : statusModal.friendRow?.friend?.name || 'Friend'}
+                        </div>
+                        <div style={{ fontSize: 11, opacity: 0.8 }}>
+                          {statusModal.status?.time || 'Just now'}
+                        </div>
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      className={styles.statusCloseBtn}
+                      onClick={() => setStatusModal(null)}
+                    >
+                      <X size={18} />
+                    </button>
+                  </div>
+                </div>
+
+                <div className={styles.statusStage}>
+                  {statusModal.status?.text}
+                </div>
+
+                {statusModal.type === 'view' && statusModal.friendRow && (
+                  <div className={styles.statusBottomBar}>
+                    <div className={styles.statusQuickEmojis}>
+                      {['😍', '😂', '😮', '😢', '🙏', '👏', '🔥'].map((emoji) => (
+                        <button
+                          key={emoji}
+                          type="button"
+                          className={styles.statusEmojiBtn}
+                          onClick={() => sendStatusReply(emoji)}
+                          title={`Send ${emoji} reply`}
+                        >
+                          {emoji}
+                        </button>
+                      ))}
+                    </div>
+                    <form
+                      className={styles.statusReplyRow}
+                      onSubmit={(e) => {
+                        e.preventDefault();
+                        if (statusReplyText.trim()) sendStatusReply(statusReplyText);
+                      }}
+                    >
+                      <input
+                        className={styles.statusReplyInput}
+                        placeholder={`Reply to ${statusModal.friendRow.friend?.name || 'friend'}...`}
+                        value={statusReplyText}
+                        onChange={(e) => setStatusReplyText(e.target.value)}
+                      />
+                      <button
+                        type="submit"
+                        className={styles.statusSendBtn}
+                        disabled={!statusReplyText.trim()}
+                      >
+                        <Send size={16} />
+                      </button>
+                    </form>
+                  </div>
+                )}
+              </>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

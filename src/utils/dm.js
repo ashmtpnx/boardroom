@@ -74,10 +74,15 @@ export function listConversations(friends = []) {
     .map((f) => {
       const thread = loadConversation(f.account);
       const last = thread.length ? thread[thread.length - 1] : null;
+      let lastText = last ? last.text : '';
+      if (last && !lastText) {
+        if (last.photoAttachment) lastText = '🖼️ Sent a photo';
+        else if (last.voiceNote) lastText = `🎙️ Voice note (${last.voiceDuration || '0:10'})`;
+      }
       return {
         friend: f,
         tag: normalizeAccountId(f.account),
-        lastText: last ? last.text : '',
+        lastText,
         lastTs: last ? last.ts : 0,
         lastUserId: last ? last.userId : null, // caller compares to their own id for a "You:" prefix
       };

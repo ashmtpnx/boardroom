@@ -33,7 +33,7 @@ const origins = ORIGIN === '*' ? true : ORIGIN.split(',').map((s) => s.trim());
 
 const app = express();
 app.use(cors({ origin: origins }));
-app.use(express.json({ limit: '256kb' })); // photoURL data-URLs can be largish
+app.use(express.json({ limit: '10mb' })); // photoURL & image/voice attachments can be large
 
 // Room settings & security (roomId -> { name, password, adminId, adminName })
 const roomSettings = new Map();
@@ -69,6 +69,7 @@ const io = new Server(server, {
   pingTimeout: 60000,
   pingInterval: 12000,
   connectTimeout: 45000,
+  maxHttpBufferSize: 10 * 1024 * 1024, // 10 MB for photo attachments & voice notes
   transports: ['websocket', 'polling'],
 });
 
@@ -228,7 +229,7 @@ io.on('connection', (socket) => {
             name: env.payload?.name || senderUser?.name || senderTag,
             photoURL: env.payload?.photoURL || senderUser?.photoURL || null,
             color: env.payload?.color || senderUser?.color || null,
-            text: (env.payload?.text || '').slice(0, 120),
+            text: (env.payload?.text || (env.payload?.photoAttachment ? '🖼️ Sent a photo' : env.payload?.voiceNote ? '🎙️ Sent a voice note' : '')).slice(0, 120),
           },
           sender: 'server',
         });

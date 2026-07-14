@@ -285,3 +285,130 @@
   font-size: 15px;
   font-weight: 500;
 }
+
+/* ================================================================
+   Instagram Composer Bar (Media, Voice, Heart, Recording)
+================================================================ */
+.composer {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 18px 16px;
+  border-top: 1px solid var(--border);
+  background: var(--surface);
+  position: relative;
+}
+
+.composerIconBtn {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: none;
+  background: transparent;
+  color: var(--text-2);
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: all 0.15s ease;
+}
+
+.composerIconBtn:hover {
+  background: var(--surface-2);
+  color: var(--text);
+  transform: scale(1.08);
+}
+
+.composerHeartBtn {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: none;
+  background: transparent;
+  color: #ef4444;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: all 0.15s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.composerHeartBtn:hover {
+  transform: scale(1.2) rotate(-8deg);
+  background: rgba(239, 68, 68, 0.1);
+}
+
+.composerActionsRight {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* Live Recording Bar */
+.recordingBar {
+  flex: 1;
+  height: 46px;
+  border-radius: 999px;
+  background: rgba(239, 68, 68, 0.12);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 16px;
+  animation: fadeInRecord 0.2s ease;
+}
+
+@keyframes fadeInRecord {
+  from { opacity: 0; transform: scale(0.98); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+.recordingStatus {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 700;
+  font-size: 14px;
+  color: #ef4444;
+}
+
+.recordingDot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #ef4444;
+  animation: pulseDot 1s infinite ease-in-out;
+}
+
+@keyframes pulseDot {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.3; transform: scale(0.75); }
+}
+
+.recordingTimer {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 13.5px;
+  color: var(--text);
+  font-weight: 600;
+}
+
+.recordingTrashBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text-2);
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.recordingTrashBtn:hover {
+  background: rgba(239, 68, 68, 0.15);
+  color: #ef4444;
+  border-color: rgba(239, 68, 68, 0.3);
+}

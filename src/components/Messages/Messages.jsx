@@ -47,6 +47,24 @@ function relTime(ts) {
   return day === 1 ? '1d' : `${day}d`;
 }
 
+function getSafeArray(key) {
+  try {
+    const val = JSON.parse(localStorage.getItem(key) || '[]');
+    return Array.isArray(val) ? val : [];
+  } catch {
+    return [];
+  }
+}
+
+function getSafeObject(key) {
+  try {
+    const val = JSON.parse(localStorage.getItem(key) || '{}');
+    return val && typeof val === 'object' && !Array.isArray(val) ? val : {};
+  } catch {
+    return {};
+  }
+}
+
 const SAMPLE_WHATSAPP_STATUSES = [
   {
     text: 'Friday feeling... 🎉',
@@ -81,8 +99,8 @@ const STATUS_BACKGROUND_PALETTE = [
 
 export default function Messages() {
   const me = useSelector((s) => s.session.currentUser);
-  const [rows, setRows] = useState(() => listConversations(getFriends()));
-  const [pending, setPending] = useState(() => getOutgoing());
+  const [rows, setRows] = useState(() => listConversations(getFriends()) || []);
+  const [pending, setPending] = useState(() => getOutgoing() || []);
   const [query, setQuery] = useState('');
 
   // WhatsApp / Instagram Tabs State (`chats` | `requests`)
@@ -90,20 +108,8 @@ export default function Messages() {
   const [activeTab, setActiveTab] = useState('chats'); // 'chats' | 'requests'
 
   // WhatsApp Status State
-  const [myStatuses, setMyStatuses] = useState(() => {
-    try {
-      return JSON.parse(localStorage.getItem('boardroom:mystatuses') || '[]');
-    } catch {
-      return [];
-    }
-  });
-  const [friendStatuses, setFriendStatuses] = useState(() => {
-    try {
-      return JSON.parse(localStorage.getItem('boardroom:friendstatuses') || '{}');
-    } catch {
-      return {};
-    }
-  });
+  const [myStatuses, setMyStatuses] = useState(() => getSafeArray('boardroom:mystatuses'));
+  const [friendStatuses, setFriendStatuses] = useState(() => getSafeObject('boardroom:friendstatuses'));
   const [statusModal, setStatusModal] = useState(null); // { type: 'create' } | { type: 'view', friendRow, status } | { type: 'viewMine', status }
   const [newStatusText, setNewStatusText] = useState('');
   const [newStatusBg, setNewStatusBg] = useState(STATUS_BACKGROUND_PALETTE[0]);
@@ -121,11 +127,10 @@ export default function Messages() {
   const myTag = accountId(me?.id || '');
 
   const refresh = () => {
-    setRows(listConversations(getFriends()));
-    setPending(getOutgoing());
-    try {
-      setFriendStatuses(JSON.parse(localStorage.getItem('boardroom:friendstatuses') || '{}'));
-    } catch {}
+    setRows(listConversations(getFriends()) || []);
+    setPending(getOutgoing() || []);
+    setFriendStatuses(getSafeObject('boardroom:friendstatuses'));
+    setMyStatuses(getSafeArray('boardroom:mystatuses'));
   };
 
   useEffect(() => {
@@ -133,30 +138,41 @@ export default function Messages() {
     const events = ['focus', 'storage', REQUESTS_EVENT, FRIENDS_EVENT, NOTIFICATIONS_EVENT];
     events.forEach((e) => window.addEventListener(e, refresh));
 
-    // Listen for real-time status updates across devices/tabs
-    const statusRt = createRealtime('boardroom:status:broadcast');
-    const offStatus = statusRt.on('status:update', (data) => {
-      if (!data || !data.tag || data.tag === myTag) return;
+    let cancelled = false;
+    let rt = null;
+    let offStatus = null;
+
+    // Connect real-time status broadcast channel safely
+    (async () => {
       try {
-        const stored = JSON.parse(localStorage.getItem('boardroom:friendstatuses') || '{}');
-        stored[data.tag] = {
-          text: data.status.text,
-          bg: data.status.bg,
-          time: 'Just now',
-          ts: Date.now(),
-          name: data.name,
-        };
-        localStorage.setItem('boardroom:friendstatuses', JSON.stringify(stored));
-        refresh();
+        rt = await createRealtime();
+        if (cancelled || !rt) return;
+        rt.connect('boardroom:status:broadcast', me);
+        offStatus = rt.on('status:update', (data) => {
+          if (!data || !data.tag || data.tag === myTag) return;
+          try {
+            const stored = getSafeObject('boardroom:friendstatuses');
+            stored[data.tag] = {
+              text: data.status?.text || 'New Status',
+              bg: data.status?.bg || STATUS_BACKGROUND_PALETTE[0],
+              time: 'Just now',
+              ts: Date.now(),
+              name: data.name || data.tag,
+            };
+            localStorage.setItem('boardroom:friendstatuses', JSON.stringify(stored));
+            refresh();
+          } catch {}
+        });
       } catch {}
-    });
+    })();
 
     return () => {
+      cancelled = true;
       events.forEach((e) => window.removeEventListener(e, refresh));
-      offStatus();
-      statusRt.disconnect();
+      if (offStatus) offStatus();
+      if (rt) rt.disconnect?.();
     };
-  }, [myTag]);
+  }, [myTag, me]);
 
   const onAddFriend = async () => {
     const normalized = normalizeAccountId(friendAccount);
@@ -216,21 +232,28 @@ export default function Messages() {
       ts: Date.now(),
       time: 'Just now',
     };
-    const next = [...myStatuses, item];
+    const currentList = getSafeArray('boardroom:mystatuses');
+    const next = [...currentList, item];
     localStorage.setItem('boardroom:mystatuses', JSON.stringify(next));
     setMyStatuses(next);
     setNewStatusText('');
     setStatusModal(null);
 
-    // Broadcast real-time status update to all teammates/friends
-    const rt = createRealtime('boardroom:status:broadcast');
-    rt.emit('status:update', {
-      userId: me?.id || myTag,
-      tag: myTag,
-      name: me?.name || myTag,
-      status: item,
-    });
-    setTimeout(() => rt.disconnect(), 600);
+    // Broadcast real-time status update safely
+    (async () => {
+      try {
+        const rt = await createRealtime();
+        if (!rt) return;
+        rt.connect('boardroom:status:broadcast', me);
+        rt.emit('status:update', {
+          userId: me?.id || myTag,
+          tag: myTag,
+          name: me?.name || myTag,
+          status: item,
+        });
+        setTimeout(() => rt.disconnect?.(), 600);
+      } catch {}
+    })();
   };
 
   const sendStatusReply = (textReply) => {
@@ -242,17 +265,23 @@ export default function Messages() {
       name: me.name,
       color: me.color,
       photoURL: me.photoURL || null,
-      text: `Replied to Status "${statusModal.status.text.slice(0, 25)}...": ${textReply}`,
+      text: `Replied to Status "${(statusModal.status?.text || '').slice(0, 25)}...": ${textReply}`,
       ts: Date.now(),
     };
     appendMessage(tag, msg);
 
-    // Broadcast reply over real-time direct chat channel
+    // Broadcast reply safely over real-time direct chat channel
     const room = dmRoomId(tag, myTag);
     if (room) {
-      const rt = createRealtime(room);
-      rt.emit(EVENTS.DM_MESSAGE, msg);
-      setTimeout(() => rt.disconnect(), 600);
+      (async () => {
+        try {
+          const rt = await createRealtime();
+          if (!rt) return;
+          rt.connect(room, me);
+          rt.emit(EVENTS.DM_MESSAGE, msg);
+          setTimeout(() => rt.disconnect?.(), 600);
+        } catch {}
+      })();
     }
 
     setStatusReplyText('');

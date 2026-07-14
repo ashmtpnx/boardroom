@@ -23,10 +23,12 @@ import { accountId, normalizeAccountId } from '../../utils/accountId';
 import { lookupAccount } from '../../utils/directory';
 import { sendFriendRequest } from '../../utils/friendRequests';
 import { getOutgoing, removeOutgoing, REQUESTS_EVENT } from '../../utils/requests';
-import { listConversations, appendMessage } from '../../utils/dm';
+import { listConversations, appendMessage, dmRoomId } from '../../utils/dm';
 import { NOTIFICATIONS_EVENT } from '../../utils/notifications';
 import { goHome } from '../../utils/nav';
 import { uid } from '../../utils/ids';
+import { createRealtime } from '../../realtime/RealtimeProvider';
+import { EVENTS } from '../../realtime/events';
 import Avatar from '../Avatar';
 import NotificationBell from '../Notifications/NotificationBell';
 import ThemeToggle from '../ThemeToggle/ThemeToggle';
@@ -83,9 +85,9 @@ export default function Messages() {
   const [pending, setPending] = useState(() => getOutgoing());
   const [query, setQuery] = useState('');
 
-  // Instagram Split View & Tabs State
+  // WhatsApp / Instagram Tabs State (`chats` | `requests`)
   const [activeTag, setActiveTag] = useState(null);
-  const [activeTab, setActiveTab] = useState('primary'); // 'primary' | 'general' | 'requests'
+  const [activeTab, setActiveTab] = useState('chats'); // 'chats' | 'requests'
 
   // WhatsApp Status State
   const [myStatuses, setMyStatuses] = useState(() => {
@@ -93,6 +95,13 @@ export default function Messages() {
       return JSON.parse(localStorage.getItem('boardroom:mystatuses') || '[]');
     } catch {
       return [];
+    }
+  });
+  const [friendStatuses, setFriendStatuses] = useState(() => {
+    try {
+      return JSON.parse(localStorage.getItem('boardroom:friendstatuses') || '{}');
+    } catch {
+      return {};
     }
   });
   const [statusModal, setStatusModal] = useState(null); // { type: 'create' } | { type: 'view', friendRow, status } | { type: 'viewMine', status }
@@ -114,14 +123,40 @@ export default function Messages() {
   const refresh = () => {
     setRows(listConversations(getFriends()));
     setPending(getOutgoing());
+    try {
+      setFriendStatuses(JSON.parse(localStorage.getItem('boardroom:friendstatuses') || '{}'));
+    } catch {}
   };
 
   useEffect(() => {
     refresh();
     const events = ['focus', 'storage', REQUESTS_EVENT, FRIENDS_EVENT, NOTIFICATIONS_EVENT];
     events.forEach((e) => window.addEventListener(e, refresh));
-    return () => events.forEach((e) => window.removeEventListener(e, refresh));
-  }, []);
+
+    // Listen for real-time status updates across devices/tabs
+    const statusRt = createRealtime('boardroom:status:broadcast');
+    const offStatus = statusRt.on('status:update', (data) => {
+      if (!data || !data.tag || data.tag === myTag) return;
+      try {
+        const stored = JSON.parse(localStorage.getItem('boardroom:friendstatuses') || '{}');
+        stored[data.tag] = {
+          text: data.status.text,
+          bg: data.status.bg,
+          time: 'Just now',
+          ts: Date.now(),
+          name: data.name,
+        };
+        localStorage.setItem('boardroom:friendstatuses', JSON.stringify(stored));
+        refresh();
+      } catch {}
+    });
+
+    return () => {
+      events.forEach((e) => window.removeEventListener(e, refresh));
+      offStatus();
+      statusRt.disconnect();
+    };
+  }, [myTag]);
 
   const onAddFriend = async () => {
     const normalized = normalizeAccountId(friendAccount);
@@ -186,6 +221,16 @@ export default function Messages() {
     setMyStatuses(next);
     setNewStatusText('');
     setStatusModal(null);
+
+    // Broadcast real-time status update to all teammates/friends
+    const rt = createRealtime('boardroom:status:broadcast');
+    rt.emit('status:update', {
+      userId: me?.id || myTag,
+      tag: myTag,
+      name: me?.name || myTag,
+      status: item,
+    });
+    setTimeout(() => rt.disconnect(), 600);
   };
 
   const sendStatusReply = (textReply) => {
@@ -201,6 +246,15 @@ export default function Messages() {
       ts: Date.now(),
     };
     appendMessage(tag, msg);
+
+    // Broadcast reply over real-time direct chat channel
+    const room = dmRoomId(tag, myTag);
+    if (room) {
+      const rt = createRealtime(room);
+      rt.emit(EVENTS.DM_MESSAGE, msg);
+      setTimeout(() => rt.disconnect(), 600);
+    }
+
     setStatusReplyText('');
     setStatusModal(null);
     refresh();
@@ -254,7 +308,7 @@ export default function Messages() {
           <div className={styles.sidebarHeader}>
             <div className={styles.sidebarUserGroup} title="Your Direct Inbox">
               <Sparkles size={18} color="#10b981" />
-              <span>{me?.name || 'boardroom_user'}</span>
+              <span style={{ fontSize: 16, fontWeight: 800 }}>Encrypted Chats</span>
             </div>
             <div className={styles.sidebarActions}>
               <button
@@ -271,17 +325,10 @@ export default function Messages() {
           <div className={styles.instagramTabs}>
             <button
               type="button"
-              className={`${styles.instagramTab} ${activeTab === 'primary' ? styles.instagramTabActive : ''}`}
-              onClick={() => setActiveTab('primary')}
+              className={`${styles.instagramTab} ${activeTab === 'chats' ? styles.instagramTabActive : ''}`}
+              onClick={() => setActiveTab('chats')}
             >
-              Primary
-            </button>
-            <button
-              type="button"
-              className={`${styles.instagramTab} ${activeTab === 'general' ? styles.instagramTabActive : ''}`}
-              onClick={() => setActiveTab('general')}
-            >
-              General
+              Chats
             </button>
             <button
               type="button"
@@ -323,7 +370,8 @@ export default function Messages() {
 
               {/* Friends WhatsApp Status Updates */}
               {rows.slice(0, 8).map((r, idx) => {
-                const sampleStatus = SAMPLE_WHATSAPP_STATUSES[idx % SAMPLE_WHATSAPP_STATUSES.length];
+                const live = friendStatuses[r.tag];
+                const sampleStatus = live || SAMPLE_WHATSAPP_STATUSES[idx % SAMPLE_WHATSAPP_STATUSES.length];
                 return (
                   <div
                     key={r.tag}
@@ -341,7 +389,7 @@ export default function Messages() {
                       <Avatar user={{ ...r.friend, id: r.friend.id || r.tag, account: r.tag }} size={56} />
                     </div>
                     <span className={styles.statusName}>{r.friend.name?.split(' ')[0]}</span>
-                    <span className={styles.statusTime}>{sampleStatus.time}</span>
+                    <span className={styles.statusTime}>{sampleStatus.time || relTime(sampleStatus.ts)}</span>
                   </div>
                 );
               })}

@@ -5,6 +5,7 @@ import { getCanvasApi } from '../features/canvas/canvasApi';
 import { exportBoardPdf, exportChatPdf } from '../utils/exportPdf';
 import { goHome, goToAccount, goToMessages } from '../utils/nav';
 import { setActiveTab } from '../features/ui/uiSlice';
+import { getBoardTheme } from '../utils/boardTheme';
 import Avatar from './Avatar';
 import NotificationBell from './Notifications/NotificationBell';
 import RoomSettingsModal from './RoomSettingsModal/RoomSettingsModal';
@@ -25,6 +26,9 @@ export default function TopBar() {
   const [showSettingsModal, setShowSettingsModal] = useState(false);
   const [showExportMenu, setShowExportMenu] = useState(false);
 
+  const roomTitle = roomSettings?.name || roomId || '…';
+  const theme = getBoardTheme(roomTitle);
+  const BoardIcon = theme.icon;
 
   const share = async () => {
     try {
@@ -73,8 +77,10 @@ export default function TopBar() {
         onClick={() => setShowSettingsModal(true)}
         title="Click to manage Room Name & Admin Entrance Security"
       >
-        <span className={styles.roomLabel}>Room ·</span>
-        <strong>{roomSettings?.name || roomId || '…'}</strong>
+        <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 22, height: 22, borderRadius: 6, background: theme.color, color: '#fff', marginRight: 6 }}>
+          <BoardIcon size={13} />
+        </span>
+        <strong>{roomTitle}</strong>
         {roomSettings?.hasPassword ? <Lock size={14} className={styles.secIcon} /> : <ShieldCheck size={14} className={styles.secIcon} />}
       </button>
 

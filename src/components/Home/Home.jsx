@@ -11,6 +11,7 @@ import {
 import { startNewBoard, goToRoom, goToAccount, goToMessages, normalizeCode } from '../../utils/nav';
 import { roomCode } from '../../utils/ids';
 import { getRecentBoards, forgetBoard, rememberBoard } from '../../utils/recentBoards';
+import { getBoardTheme } from '../../utils/boardTheme';
 import Avatar from '../Avatar';
 import BoardPreview from './BoardPreview';
 import NotificationBell from '../Notifications/NotificationBell';
@@ -536,6 +537,9 @@ export default function Home() {
               <div className={styles.recentGrid}>
                 {filteredRecent.map((b, i) => {
                   const isStarred = starredCodes.includes(b.code);
+                  const title = b.name || `Board ${b.code.toUpperCase()}`;
+                  const theme = getBoardTheme(title);
+                  const IconComponent = theme.icon;
                   return (
                     <div
                       key={b.code}
@@ -545,15 +549,15 @@ export default function Home() {
                       <button
                         className={styles.recentCardBody}
                         onClick={() => goToRoom(b.code)}
-                        title={`Open board ${b.name || b.code}`}
+                        title={`Open board ${title}`}
                       >
-                        <div className={styles.recentArt} style={{ background: boardColor(b.code) }}>
-                          <Layers size={22} />
+                        <div className={styles.recentArt} style={{ background: theme.color }}>
+                          <IconComponent size={22} />
                           <div className={styles.recentArtDots} />
                         </div>
                         <div className={styles.recentInfo}>
                           <div className={styles.recentNameRow}>
-                            <span className={styles.recentName}>{b.name || `Board ${b.code.toUpperCase()}`}</span>
+                            <span className={styles.recentName}>{title}</span>
                             {isStarred && <Star size={13} fill="#f59e0b" color="#f59e0b" title="Starred board" />}
                           </div>
                           <span className={styles.recentCode}>#{b.code}</span>

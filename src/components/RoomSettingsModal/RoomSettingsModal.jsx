@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useSelector } from 'react-redux';
 import { X, ShieldCheck, KeyRound, Check, Sparkles, AlertCircle } from 'lucide-react';
 import { getRealtimeClient } from '../../realtime/client';
+import { getBoardTheme } from '../../utils/boardTheme';
 import styles from './RoomSettingsModal.module.css';
 
 export default function RoomSettingsModal({ onClose }) {
@@ -16,6 +17,9 @@ export default function RoomSettingsModal({ onClose }) {
   const [hasPassword, setHasPassword] = useState(settings?.hasPassword || false);
   const [saving, setSaving] = useState(false);
   const [statusMsg, setStatusMsg] = useState(null);
+
+  const theme = getBoardTheme(name || roomId);
+  const HeaderIcon = theme.icon;
 
   const handleSave = async (e) => {
     e.preventDefault();
@@ -48,16 +52,19 @@ export default function RoomSettingsModal({ onClose }) {
       <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
         <header className={styles.header}>
           <div className={styles.headerTitle}>
-            <ShieldCheck size={22} className={styles.adminIcon} />
+            <div style={{ display: 'grid', placeItems: 'center', width: 42, height: 42, borderRadius: 12, background: theme.color, color: '#fff', flexShrink: 0, boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}>
+              <HeaderIcon size={22} />
+            </div>
             <div>
               <h3>Room Security & Admin Settings</h3>
-              <span>Personalize this board & manage entrance access</span>
+              <span>Personalize this board ({theme.label}) & manage entrance access</span>
             </div>
           </div>
           <button className={styles.closeBtn} onClick={onClose}>
             <X size={20} />
           </button>
         </header>
+
 
         <form onSubmit={handleSave} className={styles.body}>
           {!isAdmin && (

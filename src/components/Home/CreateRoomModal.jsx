@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { X, Lock, KeyRound, Sparkles, ArrowRight, ShieldCheck, User } from 'lucide-react';
 import { goToRoom, normalizeCode } from '../../utils/nav';
 import { roomCode } from '../../utils/ids';
+import { getBoardTheme } from '../../utils/boardTheme';
 import styles from './CreateRoomModal.module.css';
 
 export default function CreateRoomModal({ onClose }) {
@@ -9,6 +10,9 @@ export default function CreateRoomModal({ onClose }) {
   const [customCode, setCustomCode] = useState(() => roomCode());
   const [password, setPassword] = useState('');
   const [requirePassword, setRequirePassword] = useState(false);
+
+  const previewTheme = getBoardTheme(roomName.trim() || customCode);
+  const PreviewIcon = previewTheme.icon;
 
   const handleLaunch = (e) => {
     e.preventDefault();
@@ -36,13 +40,14 @@ export default function CreateRoomModal({ onClose }) {
       <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
         <header className={styles.header}>
           <div className={styles.headerLeft}>
-            <div className={styles.iconChip}>
-              <Sparkles size={20} className={styles.sparkleIcon} />
+            <div className={styles.iconChip} style={{ background: previewTheme.color, border: 'none', color: '#fff' }}>
+              <PreviewIcon size={20} />
             </div>
             <div>
               <h2 className={styles.title}>Create Personal Board</h2>
               <p className={styles.subtitle}>Customize your room name and security entrance</p>
             </div>
+
           </div>
           <button className={styles.closeBtn} onClick={onClose} aria-label="Close">
             <X size={20} />

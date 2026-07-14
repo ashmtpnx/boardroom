@@ -765,63 +765,96 @@
 .templatesGrid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
-  gap: 18px;
+  gap: 22px;
 }
 .templateCard {
+  position: relative;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
   text-align: left;
-  padding: 24px;
-  background: var(--glass-bg);
-  -webkit-backdrop-filter: var(--glass-blur);
-  backdrop-filter: var(--glass-blur);
-  border: 1px solid var(--glass-border);
-  border-radius: 20px;
-  box-shadow: var(--glass-highlight);
+  padding: 28px 24px 24px;
+  background: var(--surface);
+  -webkit-backdrop-filter: blur(20px);
+  backdrop-filter: blur(20px);
+  border: 1px solid var(--border);
+  border-radius: 24px;
+  box-shadow:
+    0 10px 30px -10px rgba(15, 23, 42, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.8);
   cursor: pointer;
-  transition: transform 0.22s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.22s, border-color 0.22s;
+  overflow: hidden;
+  transition: all 0.28s cubic-bezier(0.22, 1, 0.36, 1);
   animation: cardSlideIn 0.45s ease both;
 }
+.templateCard::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, #3b82f6, #6366f1, #8b5cf6, #ec4899);
+  opacity: 0.75;
+  transition: opacity 0.28s, height 0.28s;
+}
 .templateCard:hover {
-  transform: translateY(-5px);
-  border-color: rgba(99, 102, 241, 0.3);
-  box-shadow: var(--glass-shadow), var(--glass-highlight);
+  transform: translateY(-6px);
+  background: var(--glass-bg);
+  border-color: rgba(99, 102, 241, 0.35);
+  box-shadow:
+    0 24px 48px -12px rgba(15, 23, 42, 0.16),
+    0 0 0 1px rgba(99, 102, 241, 0.15),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9);
+}
+.templateCard:hover::before {
+  opacity: 1;
+  height: 5px;
 }
 .templateHeader {
   display: flex;
   align-items: center;
   justify-content: space-between;
   width: 100%;
-  margin-bottom: 16px;
+  margin-bottom: 18px;
 }
 .templateIconBox {
-  width: 44px;
-  height: 44px;
+  width: 48px;
+  height: 48px;
   display: grid;
   place-items: center;
-  border-radius: 12px;
+  border-radius: 14px;
   color: #fff;
-  box-shadow: 0 4px 12px -2px rgba(0, 0, 0, 0.18);
+  box-shadow:
+    0 8px 20px -4px rgba(99, 102, 241, 0.35),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+  transition: transform 0.28s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.templateCard:hover .templateIconBox {
+  transform: scale(1.08) rotate(-3deg);
 }
 .templateTag {
-  font-size: 11.5px;
-  font-weight: 600;
-  padding: 4px 10px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  padding: 5px 12px;
   border-radius: 999px;
-  background: var(--surface-2);
-  color: var(--text-2);
-  border: 1px solid var(--border);
+  background: rgba(99, 102, 241, 0.08);
+  color: #6366f1;
+  border: 1px solid rgba(99, 102, 241, 0.2);
 }
 .templateTitle {
-  margin: 0 0 8px;
-  font-size: 17px;
-  font-weight: 700;
+  margin: 0 0 10px;
+  font-size: 18px;
+  font-weight: 800;
+  letter-spacing: -0.01em;
   color: var(--text);
+  line-height: 1.35;
 }
 .templateDesc {
-  margin: 0 0 20px;
-  font-size: 13.5px;
+  margin: 0 0 22px;
+  font-size: 14px;
   line-height: 1.6;
   color: var(--text-2);
   flex: 1;
@@ -829,14 +862,15 @@
 .templateLaunchFooter {
   display: flex;
   align-items: center;
-  gap: 6px;
-  font-size: 13.5px;
+  gap: 8px;
+  font-size: 14px;
   font-weight: 700;
   color: #6366f1;
-  transition: gap 0.18s;
+  transition: gap 0.22s, color 0.22s;
 }
 .templateCard:hover .templateLaunchFooter {
-  gap: 10px;
+  gap: 12px;
+  color: #4f46e5;
 }
 
 /* ================================================================ recent boards section */

@@ -4,13 +4,13 @@ import styles from './Home.module.css';
 
 // An interactive, dynamic mini-playground right on the hero landing page.
 // Visitors can actually drag sticky notes, drop new items, toggle tools, and
-// watch simulated real-time collaborators (Maya & Leo) interact live.
+// watch simulated real-time collaborators (Gulu & 21-09) interact live.
 export default function BoardPreview() {
   const [activeTool, setActiveTool] = useState('select');
   const [notes, setNotes] = useState([
     { id: 1, text: 'Roadmap Q3', left: 58, top: 24, color: '#fff3a8', rot: 3, author: 'You' },
-    { id: 2, text: 'Ship v2 PRO 🎉', left: 24, top: 62, color: '#cdeafe', rot: -4, author: 'Maya' },
-    { id: 3, text: 'Zero latency engine', left: 66, top: 68, color: '#d8ffd6', rot: -2, author: 'Leo' },
+    { id: 2, text: 'Ship v2 PRO 🎉', left: 24, top: 62, color: '#cdeafe', rot: -4, author: 'Gulu' },
+    { id: 3, text: 'Zero latency engine', left: 66, top: 68, color: '#d8ffd6', rot: -2, author: '21-09' },
   ]);
   const [shapes, setShapes] = useState([
     { id: 's1', type: 'rect', left: 16, top: 22, width: 32, height: 28, color: '#ea4335' },
@@ -19,12 +19,12 @@ export default function BoardPreview() {
   const [draggingId, setDraggingId] = useState(null);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
   const [remoteCursors, setRemoteCursors] = useState([
-    { id: 'maya', name: 'Maya', x: 45, y: 35, color: '#10b981', action: 'Drawing...' },
-    { id: 'leo', name: 'Leo', x: 72, y: 55, color: '#8b5cf6', action: 'Typing note' },
+    { id: 'gulu', name: 'Gulu', x: 45, y: 35, color: '#10b981', action: 'Drawing...' },
+    { id: '21-09', name: '21-09', x: 72, y: 55, color: '#8b5cf6', action: 'Typing note' },
   ]);
   const containerRef = useRef(null);
 
-  // Simulated live remote activity (Maya & Leo gliding and interacting)
+  // Simulated live remote activity (Gulu & 21-09 gliding and interacting)
   useEffect(() => {
     const interval = setInterval(() => {
       setRemoteCursors((prev) =>
@@ -116,8 +116,8 @@ export default function BoardPreview() {
     e.stopPropagation();
     setNotes([
       { id: 1, text: 'Roadmap Q3', left: 58, top: 24, color: '#fff3a8', rot: 3, author: 'You' },
-      { id: 2, text: 'Ship v2 PRO 🎉', left: 24, top: 62, color: '#cdeafe', rot: -4, author: 'Maya' },
-      { id: 3, text: 'Zero latency engine', left: 66, top: 68, color: '#d8ffd6', rot: -2, author: 'Leo' },
+      { id: 2, text: 'Ship v2 PRO 🎉', left: 24, top: 62, color: '#cdeafe', rot: -4, author: 'Gulu' },
+      { id: 3, text: 'Zero latency engine', left: 66, top: 68, color: '#d8ffd6', rot: -2, author: '21-09' },
     ]);
     setShapes([{ id: 's1', type: 'rect', left: 16, top: 22, width: 32, height: 28, color: '#ea4335' }]);
     setReactions([]);

@@ -6,7 +6,7 @@ import {
   Pencil, Type, StickyNote, Image, Share2, Smile,
   Copy, Check, ExternalLink, Trash2, MoreHorizontal,
   Star, Search, LayoutTemplate, Code, CheckCircle2,
-  Terminal, Lock, Compass, Cpu, Rocket,
+  Terminal, Lock, Compass, Cpu, Rocket, BookOpen, Calendar, GitBranch, Bug,
 } from 'lucide-react';
 import { startNewBoard, goToRoom, goToAccount, goToMessages, normalizeCode } from '../../utils/nav';
 import { roomCode } from '../../utils/ids';
@@ -30,12 +30,11 @@ function relativeTime(ts) {
   return day === 1 ? 'yesterday' : `${day}d ago`;
 }
 
-// Derive a consistent color from the board code for visual variety
-function boardColor(code) {
+
+function getBoardColor(code = '') {
   const COLORS = [
     'linear-gradient(135deg, #3b82f6, #6366f1)',
-    'linear-gradient(135deg, #8b5cf6, #a855f7)',
-    'linear-gradient(135deg, #ec4899, #f43f5e)',
+    'linear-gradient(135deg, #8b5cf6, #ec4899)',
     'linear-gradient(135deg, #f59e0b, #ef4444)',
     'linear-gradient(135deg, #10b981, #06b6d4)',
     'linear-gradient(135deg, #6366f1, #ec4899)',
@@ -51,52 +50,52 @@ function boardColor(code) {
 
 const TEMPLATES = [
   {
-    slug: 'retrospective',
-    name: 'Agile Sprint Retrospective',
-    tag: 'Sprint · Teams',
-    icon: Rocket,
+    slug: 'lecture',
+    name: 'Interactive Classroom Lecture & Q&A',
+    tag: 'Education · Lecture',
+    icon: BookOpen,
     gradient: 'linear-gradient(135deg, #3b82f6, #06b6d4)',
-    desc: 'What went well, what can be improved, and action items with categorized sticky note columns.',
+    desc: 'Clean whiteboard space for teaching concepts with a dedicated Student Q&A and doubt-solving column.',
   },
   {
-    slug: 'architecture',
-    name: 'System Architecture Flowchart',
-    tag: 'Engineering · Diagrams',
-    icon: Cpu,
-    gradient: 'linear-gradient(135deg, #8b5cf6, #a855f7)',
-    desc: 'Microservices, databases, API gateways, and cloud architecture wiring ready for discussion.',
+    slug: 'studyplan',
+    name: 'Student Exam & Study Roadmap',
+    tag: 'Student · Revision',
+    icon: Calendar,
+    gradient: 'linear-gradient(135deg, #8b5cf6, #ec4899)',
+    desc: 'Organize subjects, track syllabus progress, and structure daily revision schedules before exams.',
   },
   {
-    slug: 'wireframe',
-    name: 'UI Wireframe & Design Critique',
-    tag: 'Product · UX',
-    icon: LayoutTemplate,
-    gradient: 'linear-gradient(135deg, #ec4899, #f43f5e)',
-    desc: 'Mobile and desktop device frames with annotation tools for rapid wireframing and feedback.',
+    slug: 'codeflow',
+    name: 'Algorithm & Code Logic Flowchart',
+    tag: 'Programmer · Logic',
+    icon: GitBranch,
+    gradient: 'linear-gradient(135deg, #6366f1, #3b82f6)',
+    desc: 'Map out program logic, data structures, and function flows cleanly before writing code.',
   },
   {
-    slug: 'codereview',
-    name: 'Real-Time Algorithm Review',
-    tag: 'Code · Compiler',
-    icon: Code,
+    slug: 'debug',
+    name: 'Collaborative Debugging & Walkthrough',
+    tag: 'Programmer · Debug',
+    icon: Bug,
     gradient: 'linear-gradient(135deg, #10b981, #06b6d4)',
-    desc: 'Collaborative code editor session with real-time execution across JavaScript, Python, and C++.',
+    desc: 'Inspect buggy code snippets, trace variable states, and document fixes with your peers or mentor.',
   },
   {
-    slug: 'brainstorm',
-    name: 'Brainstorming & Ideas Matrix',
-    tag: 'Strategy · Ideas',
-    icon: Sparkles,
+    slug: 'groupwork',
+    name: 'Student Group Project Workspace',
+    tag: 'Education · Group',
+    icon: Users,
     gradient: 'linear-gradient(135deg, #f59e0b, #f97316)',
-    desc: 'Infinite grid of vibrant sticky notes and clustering frames for high-velocity team ideation.',
+    desc: 'Assign tasks, share research links, and collaborate on group presentations and assignments.',
   },
   {
     slug: 'blank',
-    name: 'Blank Infinite Canvas',
+    name: 'Blank Infinite Whiteboard',
     tag: 'Freehand · Clean',
     icon: Layers,
-    gradient: 'linear-gradient(135deg, #6366f1, #3b82f6)',
-    desc: 'An unbounded canvas with all 8+ professional drawing, text, shape, and image tools.',
+    gradient: 'linear-gradient(135deg, #64748b, #475569)',
+    desc: 'An open, uncluttered canvas for freehand teaching, sketching algorithms, and limitless creativity.',
   },
 ];
 

@@ -52,12 +52,12 @@ export function getBoardTheme(titleOrCode = '') {
     };
   }
 
-  // 3. Engineering / Code / Architecture / Systems / API / Bugs
-  if (/\b(code|dev|tech|architecture|api|system|backend|frontend|bug|test|testing|app|software|server|cloud|db|database|react|node|python|git|compiler)\b/.test(lower)) {
+  // 3. Engineering / Code / Architecture / Systems / API / Bugs / Logic
+  if (/\b(code|dev|tech|architecture|api|system|backend|frontend|bug|debug|test|testing|app|software|server|cloud|db|database|react|node|python|git|compiler|codeflow)\b/.test(lower)) {
     return {
-      icon: lower.includes('architecture') || lower.includes('flow') || lower.includes('system') ? Cpu : lower.includes('bug') || lower.includes('test') ? Bug : lower.includes('terminal') ? Terminal : Code,
+      icon: lower.includes('architecture') || lower.includes('flow') || lower.includes('system') || lower.includes('codeflow') ? GitBranch : lower.includes('bug') || lower.includes('debug') || lower.includes('test') ? Bug : lower.includes('terminal') ? Terminal : Code,
       color: 'linear-gradient(135deg, #10b981, #06b6d4)',
-      label: 'Engineering',
+      label: 'Engineering & Logic',
     };
   }
 
@@ -79,12 +79,12 @@ export function getBoardTheme(titleOrCode = '') {
     };
   }
 
-  // 6. Education / Study / School / Science / Math / Research / Lecture
-  if (/\b(school|study|math|physics|chemistry|biology|science|lecture|book|class|exam|research|thesis|learn|course)\b/.test(lower)) {
+  // 6. Education / Study / School / Science / Math / Research / Lecture / Groupwork
+  if (/\b(school|study|studyplan|math|physics|chemistry|biology|science|lecture|book|class|exam|research|thesis|learn|course|groupwork|student|teacher)\b/.test(lower)) {
     return {
-      icon: lower.includes('math') || lower.includes('calc') ? Calculator : lower.includes('science') || lower.includes('physics') ? Compass : BookOpen,
+      icon: lower.includes('studyplan') || lower.includes('exam') ? Calendar : lower.includes('groupwork') || lower.includes('team') ? Users : lower.includes('math') || lower.includes('calc') ? Calculator : lower.includes('science') || lower.includes('physics') ? Compass : BookOpen,
       color: 'linear-gradient(135deg, #14b8a6, #3b82f6)',
-      label: 'Education & Research',
+      label: 'Education & Academic',
     };
   }
 

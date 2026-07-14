@@ -1,5 +1,5 @@
 // ============================================================================
-// Boardroom Pro — One-Click Professional Template Starters
+// Boardroom Pro — One-Click Professional Template Starters for Students, Teachers & Programmers
 // Generates clean, spacious domain containers with titles matching each
 // template name, without pre-filled text or clutter inside.
 // ============================================================================
@@ -13,11 +13,11 @@ function fallbackUid(prefix = 'tpl') {
 export function getTemplateSlugFromRoomCode(roomCode) {
   if (!roomCode || typeof roomCode !== 'string') return null;
   const lower = roomCode.toLowerCase();
-  if (lower.includes('-retrospective') || lower === 'retrospective') return 'retrospective';
-  if (lower.includes('-architecture') || lower === 'architecture') return 'architecture';
-  if (lower.includes('-wireframe') || lower === 'wireframe') return 'wireframe';
-  if (lower.includes('-codereview') || lower === 'codereview') return 'codereview';
-  if (lower.includes('-brainstorm') || lower === 'brainstorm') return 'brainstorm';
+  if (lower.includes('-lecture') || lower === 'lecture') return 'lecture';
+  if (lower.includes('-studyplan') || lower === 'studyplan') return 'studyplan';
+  if (lower.includes('-codeflow') || lower === 'codeflow') return 'codeflow';
+  if (lower.includes('-debug') || lower === 'debug') return 'debug';
+  if (lower.includes('-groupwork') || lower === 'groupwork') return 'groupwork';
   if (lower.includes('-blank') || lower === 'blank') return 'blank';
   return null;
 }
@@ -59,21 +59,21 @@ export function getTemplateStarterObjects(templateSlug) {
   ];
 
   switch (templateSlug) {
-    case 'retrospective': {
+    case 'lecture': {
       return [
-        ...createTitleBar('🚀 Agile Sprint Retrospective · Team Alignment & Action Plan'),
-        // Domain 1: What Went Well
+        ...createTitleBar('👨‍🏫 Interactive Classroom Lecture & Q&A · Live Teaching Board'),
+        // Domain 1: Teacher's Whiteboard Zone
         {
           type: 'rect',
           version: '6.0.0',
-          id: fallbackUid('col_green'),
+          id: fallbackUid('box_teach'),
           pageId: 'page-1',
           left: 60,
           top: 135,
-          width: 360,
+          width: 720,
           height: 560,
-          fill: '#f0fdf4',
-          stroke: '#22c55e',
+          fill: '#eff6ff',
+          stroke: '#3b82f6',
           strokeWidth: 2,
           rx: 16,
           ry: 16,
@@ -82,23 +82,92 @@ export function getTemplateStarterObjects(templateSlug) {
         {
           type: 'i-text',
           version: '6.0.0',
-          id: fallbackUid('title_green'),
+          id: fallbackUid('txt_teach'),
           pageId: 'page-1',
           left: 85,
           top: 160,
-          text: 'What Went Well? 🎉',
+          text: "👨‍🏫 Teacher's Lecture & Whiteboard Zone",
           fontSize: 20,
           fontWeight: 'bold',
-          fill: '#15803d',
+          fill: '#1d4ed8',
           fontFamily: 'Inter, system-ui, sans-serif',
           selectable: true,
         },
 
-        // Domain 2: What Needs Improvement
+        // Domain 2: Student Q&A Zone
         {
           type: 'rect',
           version: '6.0.0',
-          id: fallbackUid('col_yellow'),
+          id: fallbackUid('box_qa'),
+          pageId: 'page-1',
+          left: 810,
+          top: 135,
+          width: 410,
+          height: 560,
+          fill: '#ecfdf5',
+          stroke: '#10b981',
+          strokeWidth: 2,
+          rx: 16,
+          ry: 16,
+          selectable: false,
+        },
+        {
+          type: 'i-text',
+          version: '6.0.0',
+          id: fallbackUid('txt_qa'),
+          pageId: 'page-1',
+          left: 835,
+          top: 160,
+          text: '🙋‍♂️ Student Questions & Doubt Solver',
+          fontSize: 20,
+          fontWeight: 'bold',
+          fill: '#047857',
+          fontFamily: 'Inter, system-ui, sans-serif',
+          selectable: true,
+        },
+      ];
+    }
+
+    case 'studyplan': {
+      return [
+        ...createTitleBar('📚 Student Exam & Semester Study Roadmap · Revision Goals'),
+        // Domain 1: High Priority Subjects
+        {
+          type: 'rect',
+          version: '6.0.0',
+          id: fallbackUid('col_sub'),
+          pageId: 'page-1',
+          left: 60,
+          top: 135,
+          width: 360,
+          height: 560,
+          fill: '#f3e8ff',
+          stroke: '#8b5cf6',
+          strokeWidth: 2,
+          rx: 16,
+          ry: 16,
+          selectable: false,
+        },
+        {
+          type: 'i-text',
+          version: '6.0.0',
+          id: fallbackUid('title_sub'),
+          pageId: 'page-1',
+          left: 85,
+          top: 160,
+          text: '📌 High Priority Subjects & Syllabus',
+          fontSize: 19,
+          fontWeight: 'bold',
+          fill: '#6b21a8',
+          fontFamily: 'Inter, system-ui, sans-serif',
+          selectable: true,
+        },
+
+        // Domain 2: Daily Revision & Practice Goals
+        {
+          type: 'rect',
+          version: '6.0.0',
+          id: fallbackUid('col_goals'),
           pageId: 'page-1',
           left: 460,
           top: 135,
@@ -114,25 +183,62 @@ export function getTemplateStarterObjects(templateSlug) {
         {
           type: 'i-text',
           version: '6.0.0',
-          id: fallbackUid('title_yellow'),
+          id: fallbackUid('title_goals'),
           pageId: 'page-1',
           left: 485,
           top: 160,
-          text: 'What Needs Improvement? 🔧',
-          fontSize: 20,
+          text: '📝 Daily Revision & Practice Goals',
+          fontSize: 19,
           fontWeight: 'bold',
           fill: '#b45309',
           fontFamily: 'Inter, system-ui, sans-serif',
           selectable: true,
         },
 
-        // Domain 3: Action Items
+        // Domain 3: Completed & Exam Ready
         {
           type: 'rect',
           version: '6.0.0',
-          id: fallbackUid('col_blue'),
+          id: fallbackUid('col_done'),
           pageId: 'page-1',
           left: 860,
+          top: 135,
+          width: 360,
+          height: 560,
+          fill: '#f0fdf4',
+          stroke: '#22c55e',
+          strokeWidth: 2,
+          rx: 16,
+          ry: 16,
+          selectable: false,
+        },
+        {
+          type: 'i-text',
+          version: '6.0.0',
+          id: fallbackUid('title_done'),
+          pageId: 'page-1',
+          left: 885,
+          top: 160,
+          text: '✅ Completed & Exam Ready',
+          fontSize: 19,
+          fontWeight: 'bold',
+          fill: '#15803d',
+          fontFamily: 'Inter, system-ui, sans-serif',
+          selectable: true,
+        },
+      ];
+    }
+
+    case 'codeflow': {
+      return [
+        ...createTitleBar('⚡ Algorithm & Code Logic Flowchart · Data & Control Flow'),
+        // Domain 1: Inputs & Data Structures
+        {
+          type: 'rect',
+          version: '6.0.0',
+          id: fallbackUid('box_in'),
+          pageId: 'page-1',
+          left: 60,
           top: 135,
           width: 360,
           height: 560,
@@ -146,65 +252,28 @@ export function getTemplateStarterObjects(templateSlug) {
         {
           type: 'i-text',
           version: '6.0.0',
-          id: fallbackUid('title_blue'),
+          id: fallbackUid('txt_in'),
           pageId: 'page-1',
-          left: 885,
+          left: 85,
           top: 160,
-          text: 'Action Items & Owners ⚡',
-          fontSize: 20,
+          text: '📥 Inputs & Data Structures',
+          fontSize: 19,
           fontWeight: 'bold',
           fill: '#1d4ed8',
           fontFamily: 'Inter, system-ui, sans-serif',
           selectable: true,
         },
-      ];
-    }
 
-    case 'architecture': {
-      return [
-        ...createTitleBar('⚡ System Architecture & Microservices Flowchart · Cloud Topology'),
-        // Domain 1: Client Tier
+        // Domain 2: Processing & Core Logic
         {
           type: 'rect',
           version: '6.0.0',
-          id: fallbackUid('box_client'),
+          id: fallbackUid('box_proc'),
           pageId: 'page-1',
-          left: 80,
-          top: 140,
-          width: 340,
-          height: 540,
-          fill: '#eff6ff',
-          stroke: '#3b82f6',
-          strokeWidth: 2,
-          rx: 16,
-          ry: 16,
-          selectable: false,
-        },
-        {
-          type: 'i-text',
-          version: '6.0.0',
-          id: fallbackUid('txt_client'),
-          pageId: 'page-1',
-          left: 105,
-          top: 165,
-          text: '🖥️ Client & Presentation Tier',
-          fontSize: 19,
-          fontWeight: 'bold',
-          fill: '#1e40af',
-          fontFamily: 'Inter, system-ui, sans-serif',
-          selectable: true,
-        },
-
-        // Domain 2: Gateway Tier
-        {
-          type: 'rect',
-          version: '6.0.0',
-          id: fallbackUid('box_gateway'),
-          pageId: 'page-1',
-          left: 450,
-          top: 140,
+          left: 460,
+          top: 135,
           width: 360,
-          height: 540,
+          height: 560,
           fill: '#f3e8ff',
           stroke: '#8b5cf6',
           strokeWidth: 2,
@@ -215,11 +284,11 @@ export function getTemplateStarterObjects(templateSlug) {
         {
           type: 'i-text',
           version: '6.0.0',
-          id: fallbackUid('txt_gateway'),
+          id: fallbackUid('txt_proc'),
           pageId: 'page-1',
-          left: 475,
-          top: 165,
-          text: '⚡ Edge Relay Gateway Tier',
+          left: 485,
+          top: 160,
+          text: '⚙️ Processing & Core Logic',
           fontSize: 19,
           fontWeight: 'bold',
           fill: '#6b21a8',
@@ -227,16 +296,16 @@ export function getTemplateStarterObjects(templateSlug) {
           selectable: true,
         },
 
-        // Domain 3: Core Directory & State Tier
+        // Domain 3: Output & Error Handling
         {
           type: 'rect',
           version: '6.0.0',
-          id: fallbackUid('box_auth'),
+          id: fallbackUid('box_out'),
           pageId: 'page-1',
-          left: 840,
-          top: 140,
-          width: 380,
-          height: 540,
+          left: 860,
+          top: 135,
+          width: 360,
+          height: 560,
           fill: '#ecfdf5',
           stroke: '#10b981',
           strokeWidth: 2,
@@ -247,35 +316,35 @@ export function getTemplateStarterObjects(templateSlug) {
         {
           type: 'i-text',
           version: '6.0.0',
-          id: fallbackUid('txt_auth'),
+          id: fallbackUid('txt_out'),
           pageId: 'page-1',
-          left: 865,
-          top: 165,
-          text: '🔒 Core Directory & State Tier',
+          left: 885,
+          top: 160,
+          text: '📤 Output & Error Handling',
           fontSize: 19,
           fontWeight: 'bold',
-          fill: '#065f46',
+          fill: '#047857',
           fontFamily: 'Inter, system-ui, sans-serif',
           selectable: true,
         },
       ];
     }
 
-    case 'wireframe': {
+    case 'debug': {
       return [
-        ...createTitleBar('🎨 UI Wireframe & Design Critique · Mobile & Desktop Flows'),
-        // Domain 1: Mobile phone flow container
+        ...createTitleBar('🐞 Collaborative Debugging & Code Walkthrough · Root Cause Analysis'),
+        // Domain 1: Bug Description & Stack Trace
         {
           type: 'rect',
           version: '6.0.0',
-          id: fallbackUid('wire_col'),
+          id: fallbackUid('box_bug'),
           pageId: 'page-1',
-          left: 80,
+          left: 60,
           top: 135,
-          width: 440,
+          width: 550,
           height: 560,
-          fill: '#f8fafc',
-          stroke: '#334155',
+          fill: '#fef2f2',
+          stroke: '#ef4444',
           strokeWidth: 2,
           rx: 16,
           ry: 16,
@@ -284,196 +353,23 @@ export function getTemplateStarterObjects(templateSlug) {
         {
           type: 'i-text',
           version: '6.0.0',
-          id: fallbackUid('wire_col_txt'),
+          id: fallbackUid('txt_bug'),
           pageId: 'page-1',
-          left: 105,
+          left: 85,
           top: 160,
-          text: '📱 Mobile App Flow Domain',
+          text: '🐞 Bug Description & Stack Trace',
           fontSize: 20,
           fontWeight: 'bold',
-          fill: '#334155',
-          fontFamily: 'Inter, system-ui, sans-serif',
-          selectable: true,
-        },
-        // Phone frame inside
-        {
-          type: 'rect',
-          version: '6.0.0',
-          id: fallbackUid('phone_bg'),
-          pageId: 'page-1',
-          left: 140,
-          top: 200,
-          width: 320,
-          height: 465,
-          fill: '#ffffff',
-          stroke: '#475569',
-          strokeWidth: 3,
-          rx: 32,
-          ry: 32,
-          selectable: false,
-        },
-        {
-          type: 'rect',
-          version: '6.0.0',
-          id: fallbackUid('wire_topbar'),
-          pageId: 'page-1',
-          left: 165,
-          top: 235,
-          width: 270,
-          height: 46,
-          fill: '#e2e8f0',
-          stroke: '#cbd5e1',
-          rx: 8,
-          ry: 8,
-          selectable: true,
-        },
-        {
-          type: 'i-text',
-          version: '6.0.0',
-          id: fallbackUid('wire_topbar_txt'),
-          pageId: 'page-1',
-          left: 185,
-          top: 248,
-          text: 'Navigation Header Zone',
-          fontSize: 14,
-          fontWeight: 'bold',
-          fill: '#475569',
-          fontFamily: 'Inter, system-ui, sans-serif',
-          selectable: true,
-        },
-        {
-          type: 'rect',
-          version: '6.0.0',
-          id: fallbackUid('wire_hero'),
-          pageId: 'page-1',
-          left: 165,
-          top: 300,
-          width: 270,
-          height: 260,
-          fill: '#cbd5e1',
-          stroke: '#94a3b8',
-          rx: 12,
-          ry: 12,
-          selectable: true,
-        },
-        {
-          type: 'i-text',
-          version: '6.0.0',
-          id: fallbackUid('wire_hero_txt'),
-          pageId: 'page-1',
-          left: 185,
-          top: 420,
-          text: 'Interactive Whiteboard Zone',
-          fontSize: 13,
-          fontWeight: 'bold',
-          fill: '#334155',
-          fontFamily: 'Inter, system-ui, sans-serif',
-          selectable: true,
-        },
-        {
-          type: 'rect',
-          version: '6.0.0',
-          id: fallbackUid('wire_cta'),
-          pageId: 'page-1',
-          left: 165,
-          top: 580,
-          width: 270,
-          height: 52,
-          fill: '#3b82f6',
-          stroke: '#2563eb',
-          rx: 12,
-          ry: 12,
-          selectable: true,
-        },
-        {
-          type: 'i-text',
-          version: '6.0.0',
-          id: fallbackUid('wire_cta_txt'),
-          pageId: 'page-1',
-          left: 205,
-          top: 597,
-          text: 'Primary CTA Button',
-          fontSize: 15,
-          fontWeight: 'bold',
-          fill: '#ffffff',
+          fill: '#b91c1c',
           fontFamily: 'Inter, system-ui, sans-serif',
           selectable: true,
         },
 
-        // Domain 2: Critique & Feedback Domain
+        // Domain 2: Root Cause & Proposed Fix
         {
           type: 'rect',
           version: '6.0.0',
-          id: fallbackUid('critique_box'),
-          pageId: 'page-1',
-          left: 550,
-          top: 135,
-          width: 670,
-          height: 560,
-          fill: '#fff1f2',
-          stroke: '#f43f5e',
-          strokeWidth: 2,
-          rx: 16,
-          ry: 16,
-          selectable: false,
-        },
-        {
-          type: 'i-text',
-          version: '6.0.0',
-          id: fallbackUid('critique_txt'),
-          pageId: 'page-1',
-          left: 580,
-          top: 160,
-          text: '💬 Design Critique & Feedback Domain',
-          fontSize: 20,
-          fontWeight: 'bold',
-          fill: '#be123c',
-          fontFamily: 'Inter, system-ui, sans-serif',
-          selectable: true,
-        },
-      ];
-    }
-
-    case 'codereview': {
-      return [
-        ...createTitleBar('💻 Real-Time Algorithm Review & Architecture · Live Code Walkthrough'),
-        // Domain 1: Problem Specifications
-        {
-          type: 'rect',
-          version: '6.0.0',
-          id: fallbackUid('box_prob'),
-          pageId: 'page-1',
-          left: 80,
-          top: 135,
-          width: 530,
-          height: 560,
-          fill: '#eff6ff',
-          stroke: '#3b82f6',
-          strokeWidth: 2,
-          rx: 16,
-          ry: 16,
-          selectable: false,
-        },
-        {
-          type: 'i-text',
-          version: '6.0.0',
-          id: fallbackUid('txt_prob_h'),
-          pageId: 'page-1',
-          left: 110,
-          top: 160,
-          text: '📌 Problem & Algorithm Specifications',
-          fontSize: 20,
-          fontWeight: 'bold',
-          fill: '#1d4ed8',
-          fontFamily: 'Inter, system-ui, sans-serif',
-          selectable: true,
-        },
-
-        // Domain 2: Complexity & Architecture Domain
-        {
-          type: 'rect',
-          version: '6.0.0',
-          id: fallbackUid('box_comp'),
+          id: fallbackUid('box_fix'),
           pageId: 'page-1',
           left: 640,
           top: 135,
@@ -489,11 +385,11 @@ export function getTemplateStarterObjects(templateSlug) {
         {
           type: 'i-text',
           version: '6.0.0',
-          id: fallbackUid('txt_comp_h'),
+          id: fallbackUid('txt_fix'),
           pageId: 'page-1',
-          left: 670,
+          left: 665,
           top: 160,
-          text: '⚡ Complexity & Architecture Domain',
+          text: '🔍 Root Cause & Proposed Fix',
           fontSize: 20,
           fontWeight: 'bold',
           fill: '#047857',
@@ -503,48 +399,16 @@ export function getTemplateStarterObjects(templateSlug) {
       ];
     }
 
-    case 'brainstorm': {
+    case 'groupwork': {
       return [
-        ...createTitleBar('✨ Product Innovation Matrix · High-Velocity Ideation & Clustering'),
-        // Domain 1: Q1 Top Left
+        ...createTitleBar('🎯 Student Group Project Workspace · Collaboration & Deliverables'),
+        // Domain 1: Project Topic & Guidelines
         {
           type: 'rect',
           version: '6.0.0',
-          id: fallbackUid('q1_box'),
+          id: fallbackUid('q1_top'),
           pageId: 'page-1',
           left: 60,
-          top: 135,
-          width: 550,
-          height: 275,
-          fill: '#ecfdf5',
-          stroke: '#10b981',
-          strokeWidth: 2,
-          rx: 16,
-          ry: 16,
-          selectable: false,
-        },
-        {
-          type: 'i-text',
-          version: '6.0.0',
-          id: fallbackUid('q1_txt'),
-          pageId: 'page-1',
-          left: 85,
-          top: 160,
-          text: 'High Impact / Low Effort (Do First 🚀)',
-          fontSize: 18,
-          fontWeight: 'bold',
-          fill: '#065f46',
-          fontFamily: 'Inter, system-ui, sans-serif',
-          selectable: true,
-        },
-
-        // Domain 2: Q2 Top Right
-        {
-          type: 'rect',
-          version: '6.0.0',
-          id: fallbackUid('q2_box'),
-          pageId: 'page-1',
-          left: 640,
           top: 135,
           width: 550,
           height: 275,
@@ -558,23 +422,55 @@ export function getTemplateStarterObjects(templateSlug) {
         {
           type: 'i-text',
           version: '6.0.0',
-          id: fallbackUid('q2_txt'),
+          id: fallbackUid('q1_txt'),
           pageId: 'page-1',
-          left: 665,
+          left: 85,
           top: 160,
-          text: 'High Impact / High Effort (Strategic Plan 🎯)',
+          text: '📌 Project Topic & Guidelines',
           fontSize: 18,
           fontWeight: 'bold',
-          fill: '#1e40af',
+          fill: '#1d4ed8',
           fontFamily: 'Inter, system-ui, sans-serif',
           selectable: true,
         },
 
-        // Domain 3: Q3 Bottom Left
+        // Domain 2: Task Assignments & Roles
         {
           type: 'rect',
           version: '6.0.0',
-          id: fallbackUid('q3_box'),
+          id: fallbackUid('q2_top'),
+          pageId: 'page-1',
+          left: 640,
+          top: 135,
+          width: 550,
+          height: 275,
+          fill: '#f3e8ff',
+          stroke: '#8b5cf6',
+          strokeWidth: 2,
+          rx: 16,
+          ry: 16,
+          selectable: false,
+        },
+        {
+          type: 'i-text',
+          version: '6.0.0',
+          id: fallbackUid('q2_txt'),
+          pageId: 'page-1',
+          left: 665,
+          top: 160,
+          text: '👥 Task Assignments & Roles',
+          fontSize: 18,
+          fontWeight: 'bold',
+          fill: '#6b21a8',
+          fontFamily: 'Inter, system-ui, sans-serif',
+          selectable: true,
+        },
+
+        // Domain 3: Research & Reference Links
+        {
+          type: 'rect',
+          version: '6.0.0',
+          id: fallbackUid('q3_bot'),
           pageId: 'page-1',
           left: 60,
           top: 430,
@@ -594,7 +490,7 @@ export function getTemplateStarterObjects(templateSlug) {
           pageId: 'page-1',
           left: 85,
           top: 455,
-          text: 'Low Impact / Low Effort (Quick Wins ⚡)',
+          text: '🔍 Research & Reference Links',
           fontSize: 18,
           fontWeight: 'bold',
           fill: '#b45309',
@@ -602,18 +498,18 @@ export function getTemplateStarterObjects(templateSlug) {
           selectable: true,
         },
 
-        // Domain 4: Q4 Bottom Right
+        // Domain 4: Presentation & Deliverables
         {
           type: 'rect',
           version: '6.0.0',
-          id: fallbackUid('q4_box'),
+          id: fallbackUid('q4_bot'),
           pageId: 'page-1',
           left: 640,
           top: 430,
           width: 550,
           height: 275,
-          fill: '#fef2f2',
-          stroke: '#ef4444',
+          fill: '#ecfdf5',
+          stroke: '#10b981',
           strokeWidth: 2,
           rx: 16,
           ry: 16,
@@ -626,10 +522,10 @@ export function getTemplateStarterObjects(templateSlug) {
           pageId: 'page-1',
           left: 665,
           top: 455,
-          text: 'Low Impact / High Effort (Deprioritize 🗑️)',
+          text: '💡 Presentation & Deliverables',
           fontSize: 18,
           fontWeight: 'bold',
-          fill: '#991b1b',
+          fill: '#047857',
           fontFamily: 'Inter, system-ui, sans-serif',
           selectable: true,
         },

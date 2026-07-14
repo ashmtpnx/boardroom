@@ -346,7 +346,7 @@
 
 /* ---------------------------------------------------------------- responsive */
 
-/* Laptop screens and smaller desktop windows: drop button labels to icons only or compact layout so navbar NEVER overflows */
+/* Laptops & Tablets (max-width: 1520px): drop button labels to icons only so navbar NEVER overflows */
 @media (max-width: 1520px) {
   .bar {
     gap: 6px;
@@ -360,13 +360,31 @@
   }
 }
 
-
-/* Phones: hide the room chip and brand word, keep icons + avatar reachable. */
-@media (max-width: 560px) {
+/* Tablets (max-width: 900px): keep room badge compact and zoom buttons tight */
+@media (max-width: 900px) {
   .bar {
-    gap: 6px;
+    padding: 0 10px;
     padding-left: max(10px, env(safe-area-inset-left));
     padding-right: max(10px, env(safe-area-inset-right));
+  }
+  .roomLabel {
+    display: none;
+  }
+  .room {
+    padding: 5px 10px;
+  }
+}
+
+/* Mobile Phones (max-width: 640px): streamline navbar for touch and safe-area notch */
+@media (max-width: 640px) {
+  .bar {
+    height: 54px;
+    min-height: 54px;
+    flex: 0 0 54px;
+    gap: 4px;
+    padding: 0 8px;
+    padding-left: max(8px, env(safe-area-inset-left));
+    padding-right: max(8px, env(safe-area-inset-right));
   }
   .brandText {
     display: none;
@@ -378,19 +396,28 @@
     gap: 0;
   }
   .zoomVal {
-    min-width: 40px;
+    min-width: 36px;
+    font-size: 11.5px;
+  }
+  .zoomBtn {
+    width: 26px;
+    height: 26px;
   }
   .actions {
-    gap: 4px;
+    gap: 3px;
   }
   .btn {
     height: 34px;
-    padding: 0 9px;
+    padding: 0 8px;
+    border-radius: 8px;
+  }
+  .avatarsStack {
+    padding: 3px 6px;
+    gap: 4px;
   }
 }
 
-/* Very narrow (Galaxy Fold, etc.): drop the PDF exports from the bar — they
-   stay available from the board once opened on a wider screen. */
+/* Very narrow screens (max-width: 380px): drop zoom controls to keep core actions reachable */
 @media (max-width: 380px) {
   .zoom {
     display: none;

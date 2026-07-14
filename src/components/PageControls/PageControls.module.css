@@ -142,19 +142,22 @@
 
 @media (max-width: 640px) {
   .controls {
-    bottom: 12px;
-    padding: 4px 8px;
-    gap: 4px;
+    top: 68px;
+    bottom: auto;
+    padding: 5px 12px;
+    gap: 6px;
+    max-width: calc(100% - 20px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
   }
   .addText {
     display: none;
   }
   .addBtn {
-    padding: 0 8px;
+    padding: 0 10px;
     width: 32px;
     justify-content: center;
   }
   .pageTitle {
-    max-width: 60px;
+    max-width: 80px;
   }
 }

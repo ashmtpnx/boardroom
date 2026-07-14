@@ -1623,116 +1623,176 @@
   color: #94a3b8;
 }
 
-/* ================================================================ responsive */
+/* ================================================================ 
+   TABLET TIER (641px — 1024px): Split Hybrid & 2-Column Master Layout
+================================================================ */
 @media (max-width: 1024px) {
-  .featureGrid {
-    grid-template-columns: repeat(2, 1fr);
+  .header {
+    padding: 0 24px;
+    padding-left: max(24px, env(safe-area-inset-left));
+    padding-right: max(24px, env(safe-area-inset-right));
   }
-  .useCasesGrid {
-    grid-template-columns: 1fr;
+  .clusterStatusPill {
+    padding: 4px 12px;
+    font-size: 11.5px;
   }
-  .showcasePane {
-    grid-template-columns: 1fr;
-  }
-}
-
-@media (max-width: 940px) {
   .main {
     grid-template-columns: 1fr;
-    gap: 36px;
-    padding-top: 24px;
-  }
-  .previewWrap {
-    order: 2;
-    justify-content: center;
-    width: 100%;
+    gap: 48px;
+    padding: 36px 28px 40px;
+    max-width: 860px;
   }
   .hero {
     order: 1;
-  }
-  .howGrid {
-    flex-direction: column;
-    gap: 28px;
-    align-items: center;
-  }
-  .howStep {
-    max-width: 360px;
-  }
-  .howDivider {
-    width: 80px;
-    height: 1px;
-    min-height: 0;
-    margin-top: 0;
-    background: linear-gradient(90deg, transparent, var(--border), transparent);
-  }
-}
-
-@media (max-width: 760px) {
-  .featureGrid {
-    grid-template-columns: 1fr;
-  }
-  .recentGrid {
-    grid-template-columns: 1fr;
-  }
-  .templatesGrid {
-    grid-template-columns: 1fr;
-  }
-  .footerInner {
+    display: flex;
     flex-direction: column;
     align-items: center;
     text-align: center;
   }
-  .footerRight {
+  .title {
+    font-size: clamp(38px, 6vw, 48px);
+    max-width: 22ch;
+    margin: 0 auto 18px;
+  }
+  .subtitle {
+    margin: 0 auto 32px;
+    font-size: 16px;
+    max-width: 38ch;
+  }
+  .actions {
+    justify-content: center;
+    width: 100%;
+    max-width: 580px;
+  }
+  .newBtn {
+    flex: 1;
+    justify-content: center;
+  }
+  .joinGroup {
+    flex: 1.2;
+  }
+  .statsRow {
+    justify-content: center;
+    gap: 40px;
+    width: 100%;
+  }
+  .previewWrap {
+    order: 2;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+  }
+  .preview {
+    max-width: 760px;
+    aspect-ratio: 16 / 10;
+  }
+  .featureGrid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 18px;
+  }
+  .templatesGrid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 18px;
+  }
+  .recentGrid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 18px;
+  }
+  .useCasesGrid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 18px;
+  }
+  .showcasePane {
+    grid-template-columns: 1fr;
+    gap: 28px;
+  }
+  .howGrid {
+    flex-direction: column;
     align-items: center;
+    gap: 24px;
+  }
+  .howStep {
+    max-width: 480px;
+    text-align: center;
+  }
+  .howDivider {
+    width: 120px;
+    height: 1px;
+    min-height: 0;
+    margin: 0 auto;
+    background: linear-gradient(90deg, transparent, var(--border), transparent);
   }
 }
 
-@media (max-width: 560px) {
+/* ================================================================ 
+   MOBILE PHONE TIER (max-width: 640px): Tailored App-Like Experience
+================================================================ */
+@media (max-width: 640px) {
   .header {
-    padding: 0 14px;
-    padding-left: max(14px, env(safe-area-inset-left));
-    padding-right: max(14px, env(safe-area-inset-right));
+    height: 64px;
+    padding: 0 16px;
+    padding-left: max(16px, env(safe-area-inset-left));
+    padding-right: max(16px, env(safe-area-inset-right));
+    background: var(--surface);
+    box-shadow: 0 1px 0 var(--border);
   }
   .clusterStatusPill {
     display: none;
   }
+  .userName {
+    display: none;
+  }
+  .userChip {
+    padding: 4px;
+  }
   .main {
-    padding: 16px 14px 24px;
+    padding: 24px 16px 32px;
     gap: 32px;
+    grid-template-columns: 1fr;
+  }
+  .hero {
+    order: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
   }
   .badge {
-    font-size: 10.5px;
-    padding: 5px 12px;
-    margin-bottom: 14px;
+    font-size: 11px;
+    padding: 6px 14px;
+    margin: 0 auto 16px;
+    border-radius: 999px;
   }
   .title {
-    font-size: clamp(32px, 8.2vw, 42px);
-    line-height: 1.15;
-    margin-bottom: 16px;
-    max-width: 100%;
+    font-size: clamp(34px, 8.5vw, 42px);
+    line-height: 1.12;
+    margin: 0 auto 16px;
+    max-width: 15ch;
   }
   .subtitle {
     font-size: 15px;
     line-height: 1.6;
-    margin-bottom: 24px;
+    margin: 0 auto 26px;
+    max-width: 32ch;
   }
   .actions {
+    display: flex;
     flex-direction: column;
     align-items: stretch;
     gap: 12px;
     width: 100%;
   }
   .newBtn {
-    justify-content: center;
-    height: 52px;
-    font-size: 16px;
-    border-radius: 14px;
     width: 100%;
+    height: 54px;
+    justify-content: center;
+    font-size: 16px;
+    border-radius: 16px;
   }
   .joinGroup {
     width: 100%;
-    height: 52px;
-    border-radius: 14px;
+    height: 54px;
+    border-radius: 16px;
   }
   .joinInput {
     flex: 1;
@@ -1743,84 +1803,189 @@
   }
   .joinSubmitBtn {
     height: 100%;
-    padding: 0 18px;
+    padding: 0 20px;
+    border-radius: 12px;
   }
   .statsRow {
-    gap: 16px;
-    flex-wrap: wrap;
-    margin-top: 8px;
+    gap: 20px;
+    justify-content: space-around;
+    width: 100%;
+    margin-top: 12px;
+    padding-top: 20px;
   }
+  .statValue {
+    font-size: 22px;
+  }
+  .statLabel {
+    font-size: 11px;
+  }
+  
+  /* Interactive Sandbox Mobile Card */
   .previewWrap {
     order: 2;
     width: 100%;
-    margin-top: 12px;
+    margin-top: 4px;
   }
   .preview {
+    max-width: 100%;
     aspect-ratio: 16 / 13;
-    border-radius: 18px;
+    border-radius: 20px;
   }
   .sandboxHeader {
-    top: 8px;
-    left: 8px;
-    right: 8px;
-    padding: 6px 10px;
-    border-radius: 10px;
+    top: 10px;
+    left: 10px;
+    right: 10px;
+    padding: 6px 12px;
+  }
+  .sandboxTitle {
+    font-size: 11.5px;
   }
   .sandboxHint {
     display: none;
   }
   .sandboxResetBtn {
-    padding: 3px 8px;
-    font-size: 10.5px;
+    padding: 4px 10px;
+    font-size: 11px;
   }
   .previewSticky {
-    padding: 7px 9px;
-    min-width: 80px;
-    max-width: 110px;
+    padding: 8px 10px;
+    min-width: 85px;
+    max-width: 115px;
     font-size: 11px;
   }
   .stickyText {
+    font-size: 11px;
     margin-bottom: 4px;
-    font-size: 10.5px;
   }
   .sandboxToolbar {
-    max-width: calc(100% - 16px);
+    bottom: 10px;
+    max-width: calc(100% - 20px);
     overflow-x: auto;
     scrollbar-width: none;
-    padding: 4px;
-    gap: 4px;
-    bottom: 8px;
+    padding: 5px 6px;
+    gap: 6px;
   }
   .sandboxToolbar::-webkit-scrollbar {
     display: none;
   }
   .sandboxToolBtn {
-    padding: 5px 8px;
-    font-size: 10.5px;
+    padding: 6px 10px;
+    font-size: 11px;
     white-space: nowrap;
   }
-  .recentSection {
-    padding: 32px 0 28px;
+
+  /* One-Click Templates Mobile App-Card Layout */
+  .templatesSection {
+    padding: 36px 0;
   }
   .sectionContainer {
-    padding: 0 14px;
+    padding: 0 16px;
   }
-  .showcaseSection {
-    padding: 40px 0 36px;
+  .templatesGrid {
+    grid-template-columns: 1fr;
+    gap: 14px;
   }
-  .showcasePane {
+  .templateCard {
+    padding: 20px;
+    border-radius: 20px;
+  }
+  .templateLaunchFooter {
+    margin-top: 14px;
+    padding-top: 14px;
+  }
+
+  /* Dashboard Cards Mobile Layout */
+  .recentSection {
+    padding: 36px 0;
+  }
+  .recentHeaderBar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 16px;
+  }
+  .recentToolbar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+  .recentSearchBox {
+    width: 100%;
+  }
+  .recentFilterTabs {
+    width: 100%;
+    justify-content: space-between;
+  }
+  .recentTabBtn {
+    flex: 1;
+    justify-content: center;
+  }
+  .recentGrid {
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+  .recentCard {
     padding: 16px;
   }
+
+  /* Showcase Tabs & Feature Grid Mobile Layout */
+  .showcaseSection {
+    padding: 40px 0;
+  }
+  .showcaseTabsRow {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    scrollbar-width: none;
+    padding-bottom: 4px;
+  }
+  .showcaseTabsRow::-webkit-scrollbar {
+    display: none;
+  }
+  .showcaseTabBtn {
+    flex-shrink: 0;
+    padding: 10px 16px;
+  }
+  .showcasePane {
+    padding: 18px;
+    gap: 20px;
+  }
+  .showcasePre {
+    font-size: 12px;
+    max-height: 240px;
+  }
+  .featureGrid {
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
   .useCasesSection {
-    padding: 40px 0 36px;
+    padding: 40px 0;
+  }
+  .useCasesGrid {
+    grid-template-columns: 1fr;
+    gap: 16px;
   }
   .howSection {
-    padding: 40px 0 36px;
+    padding: 40px 0;
   }
   .howInner {
-    padding: 0 14px;
+    padding: 0 16px;
+  }
+  .howGrid {
+    flex-direction: column;
+    gap: 28px;
+  }
+  .howStep {
+    max-width: 100%;
   }
   .footer {
-    padding: 24px 14px calc(24px + env(safe-area-inset-bottom));
+    padding: 32px 16px calc(28px + env(safe-area-inset-bottom));
+  }
+  .footerInner {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 20px;
+  }
+  .footerRight {
+    align-items: center;
   }
 }

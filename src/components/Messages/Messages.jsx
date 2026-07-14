@@ -148,6 +148,7 @@ export default function Messages() {
         rt = await createRealtime();
         if (cancelled || !rt) return;
         rt.connect('boardroom:status:broadcast', me);
+        await rt.whenReady?.();
         offStatus = rt.on('status:update', (data) => {
           if (!data || !data.tag || data.tag === myTag) return;
           try {
@@ -239,19 +240,46 @@ export default function Messages() {
     setNewStatusText('');
     setStatusModal(null);
 
-    // Broadcast real-time status update safely
+    const payload = {
+      userId: me?.id || myTag,
+      tag: myTag,
+      name: me?.name || myTag,
+      status: item,
+    };
+
+    // 1. Broadcast directly to every friend's persistent inbox channel using emitAck + whenReady!
+    const friends = getFriends();
+    friends.forEach((f) => {
+      if (!f?.account) return;
+      (async () => {
+        try {
+          const rt = await createRealtime();
+          if (!rt) return;
+          rt.connect(`inbox-${f.account}`, me);
+          await rt.whenReady?.();
+          if (rt.emitAck) {
+            await rt.emitAck('status:update', payload, 5000);
+          } else {
+            rt.emit('status:update', payload);
+          }
+          setTimeout(() => rt.disconnect?.(), 200);
+        } catch {}
+      })();
+    });
+
+    // 2. Also broadcast to global status channel
     (async () => {
       try {
         const rt = await createRealtime();
         if (!rt) return;
         rt.connect('boardroom:status:broadcast', me);
-        rt.emit('status:update', {
-          userId: me?.id || myTag,
-          tag: myTag,
-          name: me?.name || myTag,
-          status: item,
-        });
-        setTimeout(() => rt.disconnect?.(), 600);
+        await rt.whenReady?.();
+        if (rt.emitAck) {
+          await rt.emitAck('status:update', payload, 5000);
+        } else {
+          rt.emit('status:update', payload);
+        }
+        setTimeout(() => rt.disconnect?.(), 200);
       } catch {}
     })();
   };
@@ -278,8 +306,13 @@ export default function Messages() {
           const rt = await createRealtime();
           if (!rt) return;
           rt.connect(room, me);
-          rt.emit(EVENTS.DM_MESSAGE, msg);
-          setTimeout(() => rt.disconnect?.(), 600);
+          await rt.whenReady?.();
+          if (rt.emitAck) {
+            await rt.emitAck(EVENTS.DM_MESSAGE, msg, 5000);
+          } else {
+            rt.emit(EVENTS.DM_MESSAGE, msg);
+          }
+          setTimeout(() => rt.disconnect?.(), 200);
         } catch {}
       })();
     }

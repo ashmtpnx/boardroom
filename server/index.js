@@ -81,7 +81,7 @@ const DM_MESSAGE = 'dm:message';
 // Inbox events are queued until the recipient connects and acknowledges them, so
 // a friend request sent while they're offline still lands. Typing pings are
 // transient and never persisted.
-const INBOX_EVENTS = new Set(['friend:request', 'friend:accept', 'friend:decline']);
+const INBOX_EVENTS = new Set(['friend:request', 'friend:accept', 'friend:decline', 'status:update']);
 
 io.on('connection', (socket) => {
   // Client joins exactly one room (room id = URL hash on the frontend).

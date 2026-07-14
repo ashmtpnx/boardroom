@@ -112,6 +112,24 @@ export default function InboxProvider() {
           name: p.name || p.fromTag,
         });
       }));
+
+      // Real-time WhatsApp Status updates from friends/teammates arriving via inbox channel
+      offs.push(client.on('status:update', (data) => {
+        if (!data || !data.tag || data.tag === myTag) return;
+        try {
+          const stored = JSON.parse(localStorage.getItem('boardroom:friendstatuses') || '{}');
+          const validStored = stored && typeof stored === 'object' && !Array.isArray(stored) ? stored : {};
+          validStored[data.tag] = {
+            text: data.status?.text || 'New Status',
+            bg: data.status?.bg || 'linear-gradient(135deg, #059669, #10b981)',
+            time: 'Just now',
+            ts: Date.now(),
+            name: data.name || data.tag,
+          };
+          localStorage.setItem('boardroom:friendstatuses', JSON.stringify(validStored));
+          window.dispatchEvent(new Event('storage'));
+        } catch {}
+      }));
     })();
 
     return () => {

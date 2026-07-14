@@ -1,3 +1,5 @@
+import { getTemplateSlugFromRoomCode, getTemplateStarterObjects } from '../src/features/canvas/templateStarters.js';
+
 // In-memory room state. Each room keeps:
 //   - objects: Map<id, json>  the live canvas (so late joiners get a full board)
 //   - members: Map<senderId, user>  who is present (for disconnect cleanup)
@@ -11,6 +13,13 @@ function getRoom(roomId) {
   let room = rooms.get(roomId);
   if (!room) {
     room = { objects: new Map(), members: new Map(), pages: [{ id: 'page-1', title: 'Page 1' }], emptySince: null };
+    const slug = getTemplateSlugFromRoomCode(roomId);
+    if (slug && slug !== 'blank') {
+      const starters = getTemplateStarterObjects(slug);
+      starters.forEach((obj) => {
+        if (obj && obj.id) room.objects.set(obj.id, obj);
+      });
+    }
     rooms.set(roomId, room);
   } else {
     room.emptySince = null;

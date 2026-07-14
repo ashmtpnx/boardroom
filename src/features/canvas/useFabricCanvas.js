@@ -13,6 +13,7 @@ import {
 import { setTool, setZoom, setPages, setHistoryState } from './canvasSlice';
 import { TOOLS, BRUSHES } from './tools';
 import { createRect, createCircle, createTriangle, createText, createSticky } from './fabricFactories';
+import { getTemplateSlugFromRoomCode, getTemplateStarterObjects } from './templateStarters';
 import { setCanvasApi } from './canvasApi';
 import { getRealtimeClient } from '../../realtime/client';
 import { EVENTS } from '../../realtime/events';
@@ -903,6 +904,37 @@ export function useFabricCanvas({ canvasElRef, containerRef }) {
     const applySnapshot = async ({ objects }) => {
       if (!Array.isArray(objects) || !fcRef.current) return;
       const curPage = styleRef.current.currentPageId || 'page-1';
+
+      if (objects.length === 0 && storeByPageRef.current.size === 0 && fcRef.current.getObjects().length === 0) {
+        const roomId = window.location.hash ? window.location.hash.replace(/^#/, '') : '';
+        const slug = getTemplateSlugFromRoomCode(roomId);
+        if (slug && slug !== 'blank') {
+          const starters = getTemplateStarterObjects(slug);
+          starters.forEach((json) => {
+            if (json && json.id) {
+              storeByPageRef.current.set(json.id, json);
+              rtRef.current?.emit(EVENTS.OBJECT_ADD, { json });
+            }
+          });
+          applyingRemote.current = true;
+          try {
+            const enlivened = await util.enlivenObjects(starters);
+            if (!fcRef.current) return;
+            enlivened.forEach((obj, idx) => {
+              if (obj && starters[idx] && !findById(starters[idx].id)) {
+                obj.set('id', starters[idx].id);
+                obj.set('pageId', starters[idx].pageId || 'page-1');
+                fcRef.current.add(obj);
+              }
+            });
+            requestRenderDebounced();
+          } finally {
+            applyingRemote.current = false;
+          }
+          return;
+        }
+      }
+
       objects.forEach((json) => {
         if (json && json.id) storeByPageRef.current.set(json.id, json);
       });
@@ -970,7 +1002,39 @@ export function useFabricCanvas({ canvasElRef, containerRef }) {
       rt.on(EVENTS.PAGE_LIST, applyPageList),
       rt.on(EVENTS.CANVAS_SNAPSHOT, applySnapshot),
     ];
+
+    const checkTemplateStarterTimeout = setTimeout(async () => {
+      if (!fcRef.current) return;
+      const roomId = window.location.hash ? window.location.hash.replace(/^#/, '') : '';
+      const slug = getTemplateSlugFromRoomCode(roomId);
+      if (slug && slug !== 'blank' && storeByPageRef.current.size === 0 && fcRef.current.getObjects().length === 0) {
+        const starters = getTemplateStarterObjects(slug);
+        starters.forEach((json) => {
+          if (json && json.id) {
+            storeByPageRef.current.set(json.id, json);
+            rtRef.current?.emit(EVENTS.OBJECT_ADD, { json });
+          }
+        });
+        applyingRemote.current = true;
+        try {
+          const enlivened = await util.enlivenObjects(starters);
+          if (!fcRef.current) return;
+          enlivened.forEach((obj, idx) => {
+            if (obj && starters[idx] && !findById(starters[idx].id)) {
+              obj.set('id', starters[idx].id);
+              obj.set('pageId', starters[idx].pageId || 'page-1');
+              fcRef.current.add(obj);
+            }
+          });
+          requestRenderDebounced();
+        } finally {
+          applyingRemote.current = false;
+        }
+      }
+    }, 500);
+
     return () => {
+      clearTimeout(checkTemplateStarterTimeout);
       if (renderAf) cancelAnimationFrame(renderAf);
       unsubs.forEach((u) => u && u());
       rtRef.current = null;

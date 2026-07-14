@@ -7,6 +7,7 @@ import { getFriendByTag } from '../../utils/friends';
 import { goToMessages } from '../../utils/nav';
 import Avatar from '../Avatar';
 import ChatThread from './ChatThread';
+import ThemeToggle from '../ThemeToggle/ThemeToggle';
 import styles from './FriendChat.module.css';
 
 // The full-page one-to-one chat route (#dm/BR-XXXX-YYYY). It owns only the page
@@ -68,6 +69,9 @@ export default function FriendChat({ friendTag }) {
             </div>
             <span className={styles.peerTag}>{tag}</span>
           </div>
+        </div>
+        <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <ThemeToggle />
         </div>
       </header>
 

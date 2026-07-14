@@ -11,6 +11,7 @@ import { NOTIFICATIONS_EVENT } from '../../utils/notifications';
 import { goHome, goToFriendChat } from '../../utils/nav';
 import Avatar from '../Avatar';
 import NotificationBell from '../Notifications/NotificationBell';
+import ThemeToggle from '../ThemeToggle/ThemeToggle';
 import styles from './Messages.module.css';
 
 function relTime(ts) {
@@ -130,6 +131,7 @@ export default function Messages() {
           </div>
         </div>
         <div className={styles.headerActions}>
+          <ThemeToggle />
           <NotificationBell />
           <button
             className={`${styles.addBtn} ${showAdd ? styles.addBtnOpen : ''}`}

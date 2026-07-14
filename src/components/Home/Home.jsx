@@ -16,6 +16,7 @@ import Avatar from '../Avatar';
 import BoardPreview from './BoardPreview';
 import NotificationBell from '../Notifications/NotificationBell';
 import CreateRoomModal from './CreateRoomModal';
+import ThemeToggle from '../ThemeToggle/ThemeToggle';
 import styles from './Home.module.css';
 
 function relativeTime(ts) {
@@ -350,6 +351,7 @@ export default function Home() {
         {user ? (
           <div className={styles.headerActions}>
             <NotificationBell />
+            <ThemeToggle />
             <button className={styles.msgBtn} onClick={goToMessages} title="Direct Messages" aria-label="Messages">
               <MessageCircle size={19} />
             </button>
@@ -360,6 +362,7 @@ export default function Home() {
           </div>
         ) : (
           <div className={styles.headerActions}>
+            <ThemeToggle />
             <button className={styles.newBtnSmall} onClick={() => setShowCreateModal(true)}>
               <Plus size={16} /> New Board
             </button>

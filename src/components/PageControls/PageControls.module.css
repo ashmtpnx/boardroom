@@ -29,6 +29,17 @@
   box-shadow: 0 10px 36px rgba(31, 41, 92, 0.22), 0 4px 12px rgba(0, 0, 0, 0.08);
 }
 
+:global([data-theme="dark"]) .controls {
+  background: var(--glass-bg-strong, rgba(17, 24, 39, 0.9));
+  border-color: var(--glass-border, rgba(255, 255, 255, 0.14));
+  box-shadow: var(--glass-shadow), var(--glass-highlight);
+}
+
+:global([data-theme="dark"]) .controls:hover {
+  box-shadow: 0 14px 44px rgba(0, 0, 0, 0.7), var(--glass-highlight);
+}
+
+
 .navGroup,
 .actionGroup {
   display: flex;

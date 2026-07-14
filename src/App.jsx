@@ -146,6 +146,16 @@ function Root() {
   const [restoring, setRestoring] = useState(true);
   const [viewingProfile, setViewingProfile] = useState(null);
 
+  // Initialize global theme from storage
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem('boardroom_theme') || (window.matchMedia?.('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+      document.documentElement.setAttribute('data-theme', stored);
+    } catch {
+      document.documentElement.setAttribute('data-theme', 'light');
+    }
+  }, []);
+
   // Try to restore an existing session (Google or guest) without prompting.
   useEffect(() => {
     let cancelled = false;

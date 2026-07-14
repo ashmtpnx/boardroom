@@ -25,6 +25,7 @@ import {
 } from '../../utils/socialFollow';
 import Avatar from '../Avatar';
 import { viewUserProfile } from '../../utils/profileView';
+import ThemeToggle from '../ThemeToggle/ThemeToggle';
 import styles from './Account.module.css';
 
 // Dynamic icon resolver for badges
@@ -237,6 +238,7 @@ export default function Account() {
           </div>
         </div>
         <div className={styles.headerRight}>
+          <ThemeToggle />
           <button className={styles.navMsgBtn} onClick={goToMessages} title="Direct Messages">
             <MessageSquare size={16} />
             <span>Messages</span>

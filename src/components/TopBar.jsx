@@ -9,6 +9,7 @@ import { getBoardTheme } from '../utils/boardTheme';
 import Avatar from './Avatar';
 import NotificationBell from './Notifications/NotificationBell';
 import RoomSettingsModal from './RoomSettingsModal/RoomSettingsModal';
+import ThemeToggle from './ThemeToggle/ThemeToggle';
 import styles from './TopBar.module.css';
 
 export default function TopBar() {
@@ -148,6 +149,7 @@ export default function TopBar() {
       </div>
 
       <div className={styles.actions}>
+        <ThemeToggle />
         {user && <NotificationBell />}
         {user && (
           <button className={styles.btn} onClick={goToMessages} title="Messages">

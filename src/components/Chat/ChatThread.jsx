@@ -205,7 +205,13 @@ export default function ChatThread({ friendTag, active = true, onActivity }) {
     <>
       <div className={styles.messages}>
         {messages.length === 0 && (
-          <div className={styles.empty}>No messages yet. Say hello 👋</div>
+          <div className={styles.emptyCard}>
+            <div className={styles.emptyCardIcon}>🔒</div>
+            <div className={styles.emptyCardTitle}>Encrypted Direct Conversation</div>
+            <div className={styles.emptyCardText}>
+              You are now connected with {friend?.name || tag}. Messages sent here are synchronized instantly across active devices and protected by end-to-end encryption. Say hello or paste formatted code snippets using ``` blocks!
+            </div>
+          </div>
         )}
         {messages.map((m) => (
           <ChatMessage key={m.id} message={m} mine={m.userId === me.id} />
@@ -216,14 +222,14 @@ export default function ChatThread({ friendTag, active = true, onActivity }) {
       {peerTyping && (
         <div className={styles.typing} aria-live="polite">
           <span className={styles.typingDots}><span /><span /><span /></span>
-          {friend?.name || 'Friend'} is typing…
+          <span className={styles.typingText}>{friend?.name || 'Friend'} is typing…</span>
         </div>
       )}
 
       <form className={styles.composer} onSubmit={submit}>
         <input
           className={styles.input}
-          placeholder={`Message ${friend?.name || 'your friend'}…`}
+          placeholder={`Message ${friend?.name || 'your friend'} (use \`\`\` for code snippets)…`}
           value={text}
           onChange={(e) => onType(e.target.value)}
           maxLength={1000}
@@ -235,3 +241,4 @@ export default function ChatThread({ friendTag, active = true, onActivity }) {
     </>
   );
 }
+

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
-import { ArrowLeft, UserPlus, MessageSquare, Search, X, Copy, Check, Loader } from 'lucide-react';
+import { ArrowLeft, UserPlus, MessageSquare, Search, X, Copy, Check, Loader, ShieldCheck } from 'lucide-react';
 import { getFriends, removeFriend, FRIENDS_EVENT } from '../../utils/friends';
 import { accountId, normalizeAccountId } from '../../utils/accountId';
 import { lookupAccount } from '../../utils/directory';
@@ -118,10 +118,17 @@ export default function Messages() {
   return (
     <div className={styles.page}>
       <header className={styles.header}>
-        <button className={styles.back} onClick={goHome} aria-label="Back to home">
-          <ArrowLeft size={18} /> <span>Home</span>
-        </button>
-        <h1 className={styles.title}>Messages</h1>
+        <div className={styles.headerLeft}>
+          <button className={styles.back} onClick={goHome} aria-label="Back to home">
+            <ArrowLeft size={18} /> <span>Home</span>
+          </button>
+          <div className={styles.titleGroup}>
+            <h1 className={styles.title}>Messages</h1>
+            <span className={styles.e2eBadge}>
+              <ShieldCheck size={12} className={styles.e2eIcon} /> E2E Encrypted
+            </span>
+          </div>
+        </div>
         <div className={styles.headerActions}>
           <NotificationBell />
           <button
@@ -138,21 +145,24 @@ export default function Messages() {
       <main className={styles.body}>
         {showAdd && (
           <div className={styles.addPanel}>
+            <div className={styles.addPanelHeader}>
+              <span className={styles.addPanelTitle}>Share Account ID or Add Teammates</span>
+              <span className={styles.addPanelHint}>Direct messages sync in real-time across your devices</span>
+            </div>
             <div className={styles.yourId}>
               <div className={styles.yourIdMeta}>
-                <span className={styles.yourIdLabel}>Your account ID</span>
+                <span className={styles.yourIdLabel}>Your Account ID</span>
                 <span className={styles.mono}>{myTag}</span>
               </div>
               <button className={styles.copyBtn} onClick={onCopyMyId} title="Copy your account ID">
-                {copied ? <><Check size={15} /> Copied</> : <><Copy size={15} /> Copy</>}
+                {copied ? <><Check size={15} className={styles.checkIcon} /> Copied!</> : <><Copy size={15} /> Copy ID</>}
               </button>
             </div>
-            <p className={styles.addHint}>Share your ID so friends can add you — or enter theirs below.</p>
 
             <div className={styles.addRow}>
               <input
                 className={`${styles.field} ${styles.mono}`}
-                placeholder="Account ID — e.g. BR-4K7P-2QX9"
+                placeholder="Friend's ID — e.g. BR-4K7P-2QX9"
                 value={friendAccount}
                 maxLength={20}
                 autoFocus
@@ -161,7 +171,7 @@ export default function Messages() {
               />
               <input
                 className={styles.field}
-                placeholder="Name (optional)"
+                placeholder="Name (optional nickname)"
                 value={friendName}
                 maxLength={40}
                 onChange={(e) => setFriendName(e.target.value)}
@@ -172,7 +182,7 @@ export default function Messages() {
                 onClick={onAddFriend}
                 disabled={!friendAccount.trim() || adding}
               >
-                {adding ? <><Loader size={15} className={styles.spin} /> Sending…</> : <><UserPlus size={15} /> Send request</>}
+                {adding ? <><Loader size={15} className={styles.spin} /> Sending…</> : <><UserPlus size={15} /> Send Request</>}
               </button>
             </div>
             {error && <p className={styles.error}>{error}</p>}
@@ -182,18 +192,21 @@ export default function Messages() {
 
         {pending.length > 0 && (
           <div className={styles.pending}>
-            <div className={styles.pendingLabel}>Sent requests · waiting to accept</div>
+            <div className={styles.pendingLabel}>Sent Requests · Waiting for Acceptance</div>
             <ul className={styles.pendingList}>
               {pending.map((r) => (
                 <li key={r.toTag} className={styles.pendingRow}>
-                  <Avatar user={{ id: r.toTag, account: r.toTag, name: r.name, color: r.color, photoURL: r.photoURL }} size={34} />
-                  <span className={styles.pendingName}>{r.name || r.toTag}</span>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginLeft: 'auto' }}>
+                  <Avatar user={{ id: r.toTag, account: r.toTag, name: r.name, color: r.color, photoURL: r.photoURL }} size={36} />
+                  <div className={styles.pendingInfo}>
+                    <span className={styles.pendingName}>{r.name || r.toTag}</span>
+                    <span className={styles.pendingSub}>{r.toTag}</span>
+                  </div>
+                  <div className={styles.pendingActions}>
                     <span className={styles.pendingState}><Loader size={13} className={styles.spin} /> Requested</span>
                     <button
                       type="button"
+                      className={styles.pendingCancelBtn}
                       onClick={(e) => { e.stopPropagation(); removeOutgoing(r.toTag); refresh(); }}
-                      style={{ background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer', display: 'flex', alignItems: 'center', padding: '4px' }}
                       title="Cancel request"
                     >
                       <X size={15} />
@@ -210,7 +223,7 @@ export default function Messages() {
             <Search size={16} className={styles.searchIcon} />
             <input
               className={styles.search}
-              placeholder="Search messages"
+              placeholder="Search conversations by name or ID..."
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               aria-label="Search conversations"
@@ -220,13 +233,13 @@ export default function Messages() {
 
         {rows.length === 0 ? (
           <div className={styles.empty}>
-            <div className={styles.emptyIcon}><MessageSquare size={30} /></div>
-            <p className={styles.emptyTitle}>Your messages</p>
+            <div className={styles.emptyIcon}><MessageSquare size={34} /></div>
+            <h2 className={styles.emptyTitle}>Your Encrypted Inbox</h2>
             <p className={styles.emptyBody}>
-              Add a friend by their account ID to start a conversation. Messages sync across your devices.
+              Direct messages in Boardroom use end-to-end encryption. Add a friend or teammate by their Account ID (`BR-XXXX-YYYY`) to begin sharing notes, snippets, or whiteboards.
             </p>
             <button className={styles.emptyCta} onClick={() => { setShowAdd(true); setError(''); }}>
-              <UserPlus size={16} /> Add a friend
+              <UserPlus size={16} /> Start a Conversation
             </button>
           </div>
         ) : shown.length === 0 ? (
@@ -235,6 +248,7 @@ export default function Messages() {
           <ul className={styles.list}>
             {shown.map((r) => {
               const mine = r.lastUserId && me?.id && r.lastUserId === me.id;
+              const isRecent = r.lastTs > 0 && Date.now() - r.lastTs < 15 * 60 * 1000;
               return (
                 <li key={r.friend.id} className={styles.rowWrap}>
                   <button
@@ -242,10 +256,14 @@ export default function Messages() {
                     onClick={() => goToFriendChat(r.tag)}
                     title={`Message ${r.friend.name}`}
                   >
-                    <Avatar user={{ ...r.friend, id: r.friend.id || r.tag, account: r.tag }} size={52} />
+                    <div className={styles.avatarWrap}>
+                      <Avatar user={{ ...r.friend, id: r.friend.id || r.tag, account: r.tag }} size={52} />
+                      {isRecent && <span className={styles.onlineDot} title="Active recently" />}
+                    </div>
                     <div className={styles.meta}>
                       <div className={styles.metaTop}>
                         <span className={styles.name}>{r.friend.name}</span>
+                        <span className={styles.friendTagBadge}>{r.tag}</span>
                         {r.lastTs > 0 && <span className={styles.time}>{relTime(r.lastTs)}</span>}
                       </div>
                       <div className={styles.preview}>
@@ -258,7 +276,7 @@ export default function Messages() {
                   <button
                     className={styles.rowRemove}
                     onClick={(e) => onRemove(e, r.friend)}
-                    title="Remove"
+                    title="Remove conversation"
                     aria-label={`Remove ${r.friend.name}`}
                   >
                     <X size={16} />

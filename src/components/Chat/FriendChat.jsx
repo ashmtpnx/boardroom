@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, ShieldCheck } from 'lucide-react';
 import { normalizeAccountId } from '../../utils/accountId';
 import { lookupAccount } from '../../utils/directory';
 import { getFriendByTag } from '../../utils/friends';
@@ -55,9 +55,17 @@ export default function FriendChat({ friendTag }) {
           <ArrowLeft size={18} /> <span>Messages</span>
         </button>
         <div className={styles.peer}>
-          <Avatar user={friend} size={34} />
+          <div className={styles.avatarWrap}>
+            <Avatar user={friend} size={38} />
+            <span className={styles.onlineDot} title="Online / Synchronized" />
+          </div>
           <div className={styles.peerMeta}>
-            <span className={styles.peerName}>{friend?.name || tag}</span>
+            <div className={styles.peerNameRow}>
+              <span className={styles.peerName}>{friend?.name || tag}</span>
+              <span className={styles.e2eBadge}>
+                <ShieldCheck size={12} className={styles.e2eIcon} /> E2E
+              </span>
+            </div>
             <span className={styles.peerTag}>{tag}</span>
           </div>
         </div>
@@ -69,3 +77,4 @@ export default function FriendChat({ friendTag }) {
     </div>
   );
 }
+

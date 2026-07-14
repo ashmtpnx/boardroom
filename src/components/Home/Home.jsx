@@ -378,9 +378,7 @@ export default function Home() {
           </div>
 
           <h1 className={styles.title}>
-            Where teams sketch, code
-            <br />
-            &amp; <span className={styles.titleGradient}>build together.</span>
+            Where teams sketch, code &amp; <span className={styles.titleGradient}>build together.</span>
           </h1>
 
           <p className={styles.subtitle}>

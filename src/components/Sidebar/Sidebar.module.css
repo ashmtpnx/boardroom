@@ -1,27 +1,28 @@
 .sidebar {
-  width: 324px;
+  width: 334px;
   flex-shrink: 0;
   display: flex;
   flex-direction: column;
   background: var(--glass-bg-strong);
-  -webkit-backdrop-filter: var(--glass-blur);
-  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur-strong);
+  backdrop-filter: var(--glass-blur-strong);
   border-left: 1px solid var(--glass-border);
-  box-shadow: var(--glass-highlight);
+  box-shadow: -10px 0 36px rgba(15, 23, 42, 0.12), var(--glass-highlight);
   min-height: 0;
   height: 100%;
   position: relative;
   z-index: 10;
+  transition: width 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .header {
   flex-shrink: 0;
   width: 100%;
-  min-height: 56px;
+  min-height: 62px;
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 10px 12px;
+  gap: 10px;
+  padding: 12px 14px;
   border-bottom: 1px solid var(--border);
   background: var(--surface);
 }
@@ -32,8 +33,9 @@
   gap: 4px;
   background: var(--glass-bg-faint);
   border: 1px solid var(--glass-border);
-  border-radius: 12px;
-  padding: 4px;
+  box-shadow: inset 0 1px 3px rgba(15, 23, 42, 0.05);
+  border-radius: 14px;
+  padding: 5px;
 }
 .tab {
   flex: 1;
@@ -45,30 +47,35 @@
   background: transparent;
   color: var(--text-2);
   font-size: 13px;
-  font-weight: 500;
-  padding: 7px 8px;
-  border-radius: 7px;
+  font-weight: 600;
+  padding: 8px 10px;
+  border-radius: 10px;
   cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 .tab:hover {
   color: var(--text);
+  background: rgba(255, 255, 255, 0.4);
 }
 .tabActive {
   background: var(--surface);
   color: var(--accent);
-  box-shadow: 0 2px 8px rgba(31, 41, 92, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.6);
+  font-weight: 700;
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.8);
+  transform: scale(1.02);
 }
 .badge {
   min-width: 18px;
   height: 18px;
-  padding: 0 5px;
+  padding: 0 6px;
   border-radius: 9px;
-  background: var(--accent);
+  background: linear-gradient(135deg, var(--accent), #6366f1);
   color: #fff;
   font-size: 11px;
-  font-weight: 600;
+  font-weight: 800;
   display: inline-grid;
   place-items: center;
+  box-shadow: 0 2px 6px rgba(37, 99, 235, 0.35);
 }
 
 .content {
@@ -85,46 +92,57 @@
   height: 38px;
   display: grid;
   place-items: center;
-  border-radius: 10px;
-  border: none;
+  border-radius: 11px;
+  border: 1px solid transparent;
   background: transparent;
   color: var(--text-2);
   position: relative;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  cursor: pointer;
 }
 .iconBtn:hover {
   background: var(--surface-2);
+  border-color: var(--border);
   color: var(--text);
+  transform: scale(1.08);
 }
 
 /* ---- collapsed rail ---- */
 .collapsed {
-  width: 56px;
+  width: 60px;
   flex-shrink: 0;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 8px;
-  padding: 12px 0;
+  gap: 10px;
+  padding: 14px 0;
   background: var(--glass-bg-strong);
-  -webkit-backdrop-filter: var(--glass-blur);
-  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur-strong);
+  backdrop-filter: var(--glass-blur-strong);
   border-left: 1px solid var(--glass-border);
-  box-shadow: var(--glass-highlight);
+  box-shadow: -6px 0 24px rgba(15, 23, 42, 0.1), var(--glass-highlight);
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 }
 .miniBadge {
   position: absolute;
   top: 2px;
   right: 2px;
-  min-width: 16px;
-  height: 16px;
-  padding: 0 4px;
-  border-radius: 8px;
-  background: var(--accent);
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 9px;
+  background: linear-gradient(135deg, #ef4444, #f97316);
   color: #fff;
-  font-size: 10px;
-  font-weight: 600;
+  font-size: 10.5px;
+  font-weight: 800;
   display: grid;
   place-items: center;
+  box-shadow: 0 2px 8px rgba(239, 68, 68, 0.45);
+  animation: popBadge 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+@keyframes popBadge {
+  from { transform: scale(0.6); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
 }
 
 /* ---------------------------------------------------------------- responsive */

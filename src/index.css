@@ -10,30 +10,29 @@
   --danger: #ef4444;
   --success: #10b981;
 
-  --shadow-1: 0 1px 3px 0 rgba(15, 23, 42, 0.08), 0 1px 2px -1px rgba(15, 23, 42, 0.08);
-  --shadow-2: 0 10px 25px -5px rgba(15, 23, 42, 0.1), 0 8px 10px -6px rgba(15, 23, 42, 0.08);
+  --shadow-1: 0 2px 6px 0 rgba(15, 23, 42, 0.06), 0 1px 2px -1px rgba(15, 23, 42, 0.06);
+  --shadow-2: 0 14px 32px -6px rgba(15, 23, 42, 0.14), 0 8px 12px -6px rgba(15, 23, 42, 0.08);
+  --shadow-elevated: 0 20px 50px -12px rgba(37, 99, 235, 0.22), 0 10px 24px -8px rgba(15, 23, 42, 0.12);
 
-  --radius: 12px;
+  --radius: 14px;
   --radius-sm: 8px;
   --radius-lg: 20px;
 
-  /* ---- Liquid glass material ----
-     Translucent panes that frost whatever floats behind them, ringed by a soft
-     specular highlight and lifted off the page with layered ambient shadow. */
-  --glass-bg: rgba(255, 255, 255, 0.65);
-  --glass-bg-strong: rgba(255, 255, 255, 0.85);
-  --glass-bg-faint: rgba(255, 255, 255, 0.45);
-  --glass-border: rgba(255, 255, 255, 0.8);
+  /* ---- Liquid glass material ---- */
+  --glass-bg: rgba(255, 255, 255, 0.72);
+  --glass-bg-strong: rgba(255, 255, 255, 0.88);
+  --glass-bg-faint: rgba(255, 255, 255, 0.48);
+  --glass-border: rgba(255, 255, 255, 0.85);
   --glass-stroke: rgba(15, 23, 42, 0.08);
-  --glass-blur: saturate(190%) blur(24px);
-  --glass-blur-strong: saturate(200%) blur(32px);
-  /* Ambient drop shadow + inner top highlight — the "floating in space" read. */
+  --glass-blur: saturate(200%) blur(28px);
+  --glass-blur-strong: saturate(220%) blur(36px);
   --glass-shadow:
-    0 20px 45px -10px rgba(15, 23, 42, 0.12),
-    0 4px 12px -2px rgba(15, 23, 42, 0.05);
-  --glass-highlight: inset 0 1px 0 rgba(255, 255, 255, 0.9),
-    inset 0 0 0 1px rgba(255, 255, 255, 0.2);
-  --accent-glow: 0 8px 25px -4px rgba(37, 99, 235, 0.45);
+    0 24px 50px -12px rgba(15, 23, 42, 0.15),
+    0 4px 14px -2px rgba(15, 23, 42, 0.06);
+  --glass-highlight: inset 0 1px 0 rgba(255, 255, 255, 0.95),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.25);
+  --accent-glow: 0 8px 30px -4px rgba(37, 99, 235, 0.5);
+  --neon-gradient: linear-gradient(135deg, #3b82f6, #6366f1, #a855f7);
 }
 
 :root[data-theme="dark"] {
@@ -48,20 +47,22 @@
   --danger: #f87171;
   --success: #34d399;
 
-  --shadow-1: 0 1px 3px 0 rgba(0, 0, 0, 0.45), 0 1px 2px -1px rgba(0, 0, 0, 0.45);
-  --shadow-2: 0 10px 25px -5px rgba(0, 0, 0, 0.55), 0 8px 10px -6px rgba(0, 0, 0, 0.45);
+  --shadow-1: 0 2px 6px 0 rgba(0, 0, 0, 0.5), 0 1px 2px -1px rgba(0, 0, 0, 0.45);
+  --shadow-2: 0 14px 32px -6px rgba(0, 0, 0, 0.65), 0 8px 12px -6px rgba(0, 0, 0, 0.5);
+  --shadow-elevated: 0 20px 50px -12px rgba(59, 130, 246, 0.35), 0 10px 24px -8px rgba(0, 0, 0, 0.6);
 
-  --glass-bg: rgba(17, 24, 39, 0.76);
-  --glass-bg-strong: rgba(17, 24, 39, 0.92);
-  --glass-bg-faint: rgba(17, 24, 39, 0.52);
-  --glass-border: rgba(255, 255, 255, 0.14);
-  --glass-stroke: rgba(255, 255, 255, 0.08);
+  --glass-bg: rgba(17, 24, 39, 0.78);
+  --glass-bg-strong: rgba(17, 24, 39, 0.93);
+  --glass-bg-faint: rgba(17, 24, 39, 0.55);
+  --glass-border: rgba(255, 255, 255, 0.16);
+  --glass-stroke: rgba(255, 255, 255, 0.09);
   --glass-shadow:
-    0 20px 45px -10px rgba(0, 0, 0, 0.6),
-    0 4px 12px -2px rgba(0, 0, 0, 0.4);
-  --glass-highlight: inset 0 1px 0 rgba(255, 255, 255, 0.15),
-    inset 0 0 0 1px rgba(255, 255, 255, 0.08);
-  --accent-glow: 0 8px 25px -4px rgba(59, 130, 246, 0.55);
+    0 24px 50px -12px rgba(0, 0, 0, 0.7),
+    0 4px 14px -2px rgba(0, 0, 0, 0.45);
+  --glass-highlight: inset 0 1px 0 rgba(255, 255, 255, 0.18),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.1);
+  --accent-glow: 0 8px 30px -4px rgba(59, 130, 246, 0.6);
+  --neon-gradient: linear-gradient(135deg, #60a5fa, #818cf8, #c084fc);
 }
 
 * {

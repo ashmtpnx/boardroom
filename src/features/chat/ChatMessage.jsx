@@ -1,9 +1,9 @@
-import { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef } from 'react';
 import { Copy, Check, Code2, Play, Pause, Volume2 } from 'lucide-react';
 import Avatar from '../../components/Avatar';
 import styles from './ChatPanel.module.css';
 
-function VoiceNotePlayer({ src, duration, mine }) {
+const VoiceNotePlayer = React.memo(function VoiceNotePlayer({ src, duration, mine }) {
   const audioRef = useRef(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
@@ -54,8 +54,6 @@ function VoiceNotePlayer({ src, duration, mine }) {
   };
 
   const progressPct = totalTime > 0 ? Math.min(100, (currentTime / totalTime) * 100) : 0;
-
-  // Generate 16 simulated waveform bars for visual aesthetic
   const bars = [35, 65, 45, 85, 100, 75, 50, 90, 60, 40, 80, 95, 70, 45, 60, 35];
 
   return (
@@ -107,9 +105,9 @@ function VoiceNotePlayer({ src, duration, mine }) {
       </div>
     </div>
   );
-}
+});
 
-export default function ChatMessage({ message, mine }) {
+function ChatMessage({ message, mine, isGroupStart = true, isGroupEnd = true }) {
   const [copied, setCopied] = useState(false);
   const [reactions, setReactions] = useState([]);
   const time = new Date(message.ts).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
@@ -131,106 +129,129 @@ export default function ChatMessage({ message, mine }) {
     );
   };
 
-  // Check if message is a code snippet (starts with ``` or contains multi-line code)
-  const isCode = (message.text || '').startsWith('```') || (((message.text || '').includes('\n')) && ((message.text || '').includes('function') || (message.text || '').includes('const ') || (message.text || '').includes('import ')));
+  // Check if message is code or snippet
+  const isCode = (message.text || '').startsWith('```') || 
+    (((message.text || '').includes('\n')) && ((message.text || '').includes('function ') || (message.text || '').includes('const ') || (message.text || '').includes('import ') || (message.text || '').includes('return ')));
   const cleanText = (message.text || '').replace(/^```[a-z]*\n?/i, '').replace(/\n?```$/, '');
 
-  return (
-    <div className={`${styles.msg} ${mine ? styles.msgMine : ''}`}>
-      <Avatar
-        user={{
-          id: message.fromTag || message.id || message.name,
-          account: message.fromTag || message.id || message.name,
-          name: message.name,
-          color: message.color,
-          photoURL: message.photoURL,
-        }}
-        size={34}
-        clickable={!mine}
-        className={styles.avatar}
-      />
-      <div className={styles.bubbleWrap}>
-        <div className={styles.meta}>
-          <span className={styles.name}>{mine ? 'You' : message.name}</span>
-          <span className={styles.time}>{time}</span>
-          {isCode && (
-            <span className={styles.codeBadge}>
-              <Code2 size={11} /> Code Snippet
-            </span>
-          )}
-        </div>
+  // Calculate bubble corner radius styling for message clusters
+  const getBubbleRadiusClass = () => {
+    if (isGroupStart && isGroupEnd) return '';
+    if (isGroupStart && !isGroupEnd) return styles.bubbleGroupStart;
+    if (!isGroupStart && !isGroupEnd) return styles.bubbleGroupMiddle;
+    if (!isGroupStart && isGroupEnd) return styles.bubbleGroupEnd;
+    return '';
+  };
 
-        <div className={styles.bubbleContainer}>
-          {message.photoAttachment && (
-            <div className={styles.photoAttachmentWrap}>
-              <img
-                src={message.photoAttachment}
-                alt="Shared attachment"
-                className={styles.photoAttachmentImg}
-                onClick={() => window.open(message.photoAttachment, '_blank')}
-                loading="lazy"
-              />
+  return (
+    <div className={`${styles.msgWrap} ${!isGroupStart ? styles.msgGrouped : ''}`}>
+      <div className={`${styles.msg} ${mine ? styles.msgMine : ''}`}>
+        {isGroupEnd ? (
+          <div className={styles.avatarWrap}>
+            <Avatar
+              user={{
+                id: message.fromTag || message.id || message.name,
+                account: message.fromTag || message.id || message.name,
+                name: message.name,
+                color: message.color,
+                photoURL: message.photoURL,
+              }}
+              size={34}
+              clickable={!mine}
+              className={styles.avatar}
+            />
+          </div>
+        ) : (
+          <div className={styles.avatarWrapEmpty} />
+        )}
+
+        <div className={styles.bubbleWrap}>
+          {isGroupStart && (
+            <div className={styles.meta}>
+              <span className={styles.name}>{mine ? 'You' : message.name}</span>
+              <span className={styles.time}>{time}</span>
+              {isCode && (
+                <span className={styles.codeBadge}>
+                  <Code2 size={11} /> Code Snippet
+                </span>
+              )}
             </div>
           )}
 
-          {message.voiceNote && (
-            <VoiceNotePlayer src={message.voiceNote} duration={message.voiceDuration} mine={mine} />
-          )}
-
-          {message.text && (
-            isCode ? (
-              <div className={styles.codeBubble}>
-                <div className={styles.codeHeader}>
-                  <span className={styles.codeDots}><span /><span /><span /></span>
-                  <span className={styles.codeLang}>Snippet</span>
-                  <button className={styles.codeCopyBtn} onClick={onCopy} title="Copy code">
-                    {copied ? <Check size={12} className={styles.checkIcon} /> : <Copy size={12} />}
-                    <span>{copied ? 'Copied' : 'Copy'}</span>
-                  </button>
-                </div>
-                <pre className={styles.codeContent}>{cleanText}</pre>
+          <div className={styles.bubbleContainer}>
+            {message.photoAttachment && (
+              <div className={styles.photoAttachmentWrap}>
+                <img
+                  src={message.photoAttachment}
+                  alt="Shared attachment"
+                  className={styles.photoAttachmentImg}
+                  onClick={() => window.open(message.photoAttachment, '_blank')}
+                  loading="lazy"
+                />
               </div>
-            ) : (
-              <div className={styles.bubble}>
-                {message.text}
-                <div className={styles.bubbleActions}>
-                  <button
-                    type="button"
-                    className={styles.actionBtn}
-                    onClick={onCopy}
-                    title="Copy text"
-                    aria-label="Copy message text"
-                  >
-                    {copied ? <Check size={13} className={styles.checkIcon} /> : <Copy size={13} />}
-                  </button>
-                  <div className={styles.quickRxGroup}>
-                    {['❤️', '🔥', '👍'].map((rx) => (
-                      <button
-                        key={rx}
-                        type="button"
-                        className={styles.actionRxBtn}
-                        onClick={(e) => onQuickReact(rx, e)}
-                        title={`React ${rx}`}
-                      >
-                        {rx}
-                      </button>
-                    ))}
+            )}
+
+            {message.voiceNote && (
+              <VoiceNotePlayer src={message.voiceNote} duration={message.voiceDuration} mine={mine} />
+            )}
+
+            {message.text && (
+              isCode ? (
+                <div className={styles.codeBubble}>
+                  <div className={styles.codeHeader}>
+                    <span className={styles.codeDots}><span /><span /><span /></span>
+                    <span className={styles.codeLang}>Snippet</span>
+                    <button className={styles.codeCopyBtn} onClick={onCopy} title="Copy code">
+                      {copied ? <Check size={12} className={styles.checkIcon} /> : <Copy size={12} />}
+                      <span>{copied ? 'Copied' : 'Copy'}</span>
+                    </button>
+                  </div>
+                  <pre className={styles.codeContent}>{cleanText}</pre>
+                </div>
+              ) : (
+                <div className={`${styles.bubble} ${getBubbleRadiusClass()}`}>
+                  {message.text}
+                  <div className={styles.bubbleActions}>
+                    <button
+                      type="button"
+                      className={styles.actionBtn}
+                      onClick={onCopy}
+                      title="Copy text"
+                      aria-label="Copy message text"
+                    >
+                      {copied ? <Check size={13} className={styles.checkIcon} /> : <Copy size={13} />}
+                    </button>
+                    <div className={styles.quickRxGroup}>
+                      {['❤️', '🔥', '👍', '🚀', '👏'].map((rx) => (
+                        <button
+                          key={rx}
+                          type="button"
+                          className={styles.actionRxBtn}
+                          onClick={(e) => onQuickReact(rx, e)}
+                          title={`React ${rx}`}
+                        >
+                          {rx}
+                        </button>
+                      ))}
+                    </div>
                   </div>
                 </div>
-              </div>
-            )
-          )}
+              )
+            )}
 
-          {reactions.length > 0 && (
-            <div className={styles.messageReactions}>
-              {reactions.map((rx, idx) => (
-                <span key={idx} className={styles.rxBadge}>{rx}</span>
-              ))}
-            </div>
-          )}
+            {reactions.length > 0 && (
+              <div className={styles.messageReactions}>
+                {reactions.map((rx, idx) => (
+                  <span key={idx} className={styles.rxBadge}>{rx}</span>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </div>
   );
 }
+
+export default React.memo(ChatMessage);
 

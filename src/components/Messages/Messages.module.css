@@ -634,12 +634,12 @@
 }
 
 /* ================================================================
-   WhatsApp Status Updates (`Status Carousel & Modal`)
+   WhatsApp & Telegram Status Updates (`Status Carousel & Modal`)
 ================================================================ */
 .statusCarousel {
   display: flex;
   align-items: flex-start;
-  gap: 18px;
+  gap: 16px;
   padding: 16px 20px;
   overflow-x: auto;
   border-bottom: 1px solid var(--border);
@@ -657,15 +657,15 @@
   flex-direction: column;
   align-items: center;
   gap: 6px;
-  width: 70px;
+  width: 68px;
   flex-shrink: 0;
   cursor: pointer;
   position: relative;
-  transition: transform 0.18s ease;
+  transition: transform 0.2s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .statusItem:hover {
-  transform: scale(1.05);
+  transform: translateY(-3px) scale(1.06);
 }
 
 .statusRingWrap {
@@ -675,6 +675,7 @@
   justify-content: center;
   padding: 3px;
   border-radius: 50%;
+  transition: all 0.2s ease;
 }
 
 .myStatusRing {
@@ -683,12 +684,21 @@
 
 .myStatusRingActive {
   border: 2.5px solid #10b981;
+  box-shadow: 0 0 12px rgba(16, 185, 129, 0.35);
+  animation: ringPulse 2.5s infinite ease-in-out;
+}
+
+@keyframes ringPulse {
+  0%, 100% { box-shadow: 0 0 12px rgba(16, 185, 129, 0.35); }
+  50% { box-shadow: 0 0 20px rgba(16, 185, 129, 0.65); }
 }
 
 .friendStatusRing {
-  border: 2.5px solid #10b981;
-  background: linear-gradient(135deg, #10b981, #3b82f6);
+  border: 2.5px solid transparent;
+  background: linear-gradient(var(--surface), var(--surface)) padding-box,
+              linear-gradient(135deg, #10b981, #3b82f6, #6366f1) border-box;
   padding: 2.5px;
+  box-shadow: 0 4px 14px rgba(59, 130, 246, 0.2);
 }
 
 .statusAddBadge {
@@ -698,12 +708,16 @@
   width: 22px;
   height: 22px;
   border-radius: 50%;
-  background: #10b981;
+  background: linear-gradient(135deg, #10b981, #059669);
   color: #fff;
   border: 2px solid var(--surface);
   display: grid;
   place-items: center;
-  box-shadow: 0 2px 6px rgba(16, 185, 129, 0.4);
+  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.5);
+  transition: transform 0.18s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.statusItem:hover .statusAddBadge {
+  transform: scale(1.15) rotate(90deg);
 }
 
 .statusName {
@@ -717,7 +731,7 @@
 }
 
 .statusTime {
-  font-size: 10px;
+  font-size: 10.5px;
   font-weight: 600;
   color: var(--text-2);
 }
@@ -964,19 +978,37 @@
   align-items: center;
   gap: 14px;
   width: 100%;
-  padding: 10px 12px;
+  padding: 11px 14px;
   border-radius: 16px;
-  border: none;
+  border: 1px solid transparent;
   background: transparent;
   color: var(--text);
   text-align: left;
   cursor: pointer;
-  transition: all 0.15s ease;
+  transition: all 0.18s cubic-bezier(0.22, 1, 0.36, 1);
+  position: relative;
 }
 
-.sidebarRow:hover,
-.sidebarRowActive {
+.sidebarRow:hover {
   background: var(--surface-2);
+  transform: translateX(3px);
+  border-color: var(--border);
+}
+
+.sidebarRowActive {
+  background: linear-gradient(135deg, rgba(37, 99, 235, 0.1), rgba(99, 102, 241, 0.12)) !important;
+  border-color: rgba(37, 99, 235, 0.3) !important;
+  box-shadow: 0 4px 14px rgba(37, 99, 235, 0.08);
+}
+.sidebarRowActive::before {
+  content: '';
+  position: absolute;
+  left: 3px;
+  top: 18%;
+  height: 64%;
+  width: 4px;
+  border-radius: 4px;
+  background: linear-gradient(180deg, #3b82f6, #6366f1);
 }
 
 /* Instagram Chat Top Bar */
@@ -1023,25 +1055,73 @@
   transform: scale(1.08);
 }
 
-/* Empty Instagram Chat Splash */
+/* Empty Instagram / WhatsApp Chat Splash */
 .emptyChatSplash {
   margin: auto;
   text-align: center;
-  max-width: 340px;
-  padding: 30px 20px;
+  max-width: 420px;
+  padding: 40px 28px;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 12px;
+  gap: 14px;
+  border-radius: 28px;
+  background: var(--glass-bg);
+  -webkit-backdrop-filter: var(--glass-blur);
+  backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--glass-stroke);
+  box-shadow: 0 20px 50px -12px rgba(0, 0, 0, 0.08);
 }
 
 .emptySplashCircle {
-  width: 90px;
-  height: 90px;
+  width: 86px;
+  height: 86px;
   border-radius: 50%;
-  border: 2px solid var(--text);
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.15), rgba(99, 102, 241, 0.2));
+  border: 1px solid rgba(99, 102, 241, 0.3);
   display: grid;
   place-items: center;
-  font-size: 40px;
-  margin-bottom: 6px;
+  color: #6366f1;
+  margin-bottom: 4px;
+  box-shadow: 0 10px 25px -6px rgba(99, 102, 241, 0.3);
+}
+
+.emptySplashIcon {
+  color: #6366f1;
+}
+
+.emptySplashTitle {
+  font-size: 22px;
+  font-weight: 800;
+  color: var(--text);
+  margin: 0;
+  letter-spacing: -0.02em;
+}
+
+.emptySplashText {
+  color: var(--text-2);
+  font-size: 14.5px;
+  line-height: 1.6;
+  margin: 0;
+}
+
+.emptyFeatureChips {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 4px;
+}
+
+.featureChip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 12px;
+  border-radius: 999px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-2);
 }

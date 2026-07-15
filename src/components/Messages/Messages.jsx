@@ -27,6 +27,7 @@ import { listConversations, appendMessage, dmRoomId } from '../../utils/dm';
 import { NOTIFICATIONS_EVENT } from '../../utils/notifications';
 import { goHome } from '../../utils/nav';
 import { uid } from '../../utils/ids';
+import { viewUserProfile } from '../../utils/profileView';
 import { createRealtime } from '../../realtime/RealtimeProvider';
 import { EVENTS } from '../../realtime/events';
 import Avatar from '../Avatar';
@@ -414,7 +415,7 @@ export default function Messages() {
                 title="Click to view or add status update"
               >
                 <div className={`${styles.statusRingWrap} ${myStatuses.length ? styles.myStatusRingActive : styles.myStatusRing}`}>
-                  <Avatar user={me} size={56} />
+                  <Avatar user={me} size={56} clickable={false} />
                   <span
                     className={styles.statusAddBadge}
                     onClick={(e) => {
@@ -448,7 +449,7 @@ export default function Messages() {
                     title={`View ${r.friend.name}'s Status update`}
                   >
                     <div className={`${styles.statusRingWrap} ${styles.friendStatusRing}`}>
-                      <Avatar user={{ ...r.friend, id: r.friend.id || r.tag, account: r.tag }} size={56} />
+                      <Avatar user={{ ...r.friend, id: r.friend.id || r.tag, account: r.tag }} size={56} clickable={false} />
                     </div>
                     <span className={styles.statusName}>{r.friend.name?.split(' ')[0]}</span>
                     <span className={styles.statusTime}>{sampleStatus.time || relTime(sampleStatus.ts)}</span>
@@ -580,7 +581,7 @@ export default function Messages() {
                         title={`Message ${r.friend.name}`}
                       >
                         <div className={styles.avatarWrap}>
-                          <Avatar user={{ ...r.friend, id: r.friend.id || r.tag, account: r.tag }} size={52} />
+                          <Avatar user={{ ...r.friend, id: r.friend.id || r.tag, account: r.tag }} size={52} clickable={false} />
                           {isRecent && <span className={styles.onlineDot} title="Active recently" />}
                         </div>
                         <div className={styles.meta}>
@@ -616,12 +617,18 @@ export default function Messages() {
           {activeTag ? (
             <>
               <header className={styles.chatTopBar}>
-                <div className={styles.chatPeerGroup} onClick={() => {}}>
+                <div
+                  className={styles.chatPeerGroup}
+                  onClick={() => {
+                    viewUserProfile({ ...(activeFriendRow?.friend || {}), id: activeTag, account: activeTag });
+                  }}
+                  title="Click to view profile info"
+                >
                   <button
                     type="button"
                     className={styles.back}
                     style={{ marginRight: 8, display: window.innerWidth < 768 ? 'inline-flex' : 'none' }}
-                    onClick={() => setActiveTag(null)}
+                    onClick={(e) => { e.stopPropagation(); setActiveTag(null); }}
                     aria-label="Back to conversations list"
                   >
                     <ArrowLeft size={18} />
@@ -632,14 +639,15 @@ export default function Messages() {
                       id: activeTag,
                       account: activeTag,
                     }}
-                    size={38}
+                    size={40}
+                    clickable={false}
                   />
                   <div>
                     <div style={{ fontWeight: 800, fontSize: 16 }}>
                       {activeFriendRow?.friend?.name || activeTag}
                     </div>
                     <div style={{ fontSize: 12, color: '#10b981', display: 'flex', alignItems: 'center', gap: 4, fontWeight: 600 }}>
-                      <ShieldCheck size={13} /> E2E Encrypted
+                      <ShieldCheck size={13} /> E2E Encrypted & Verified
                     </div>
                   </div>
                 </div>
@@ -680,15 +688,21 @@ export default function Messages() {
             </>
           ) : (
             <div className={styles.emptyChatSplash}>
-              <div className={styles.emptySplashCircle}>💬</div>
-              <h2 style={{ fontSize: 22, fontWeight: 800, margin: 0 }}>Your Messages</h2>
-              <p style={{ color: 'var(--text-2)', fontSize: 14.5, lineHeight: 1.5, margin: 0 }}>
-                Send private photos, voice notes, and end-to-end encrypted messages to a friend or teammate.
+              <div className={styles.emptySplashCircle}>
+                <MessageSquare size={40} className={styles.emptySplashIcon} />
+              </div>
+              <h2 className={styles.emptySplashTitle}>Your Messages</h2>
+              <p className={styles.emptySplashText}>
+                Send private photos, voice notes, and end-to-end encrypted direct messages to a teammate or colleague.
               </p>
+              <div className={styles.emptyFeatureChips}>
+                <span className={styles.featureChip}><ShieldCheck size={13} /> E2E Encrypted</span>
+                <span className={styles.featureChip}><Sparkles size={13} /> Zero-Lag Sync</span>
+              </div>
               <button
                 type="button"
                 className={styles.emptyCta}
-                style={{ marginTop: 12 }}
+                style={{ marginTop: 16 }}
                 onClick={() => setShowAdd(true)}
               >
                 <UserPlus size={16} /> Send Message / Add Teammate
@@ -774,7 +788,8 @@ export default function Messages() {
                             ? me
                             : statusModal.friendRow?.friend
                         }
-                        size={36}
+                        size={38}
+                        clickable={false}
                       />
                       <div>
                         <div style={{ fontWeight: 800, fontSize: 14 }}>
